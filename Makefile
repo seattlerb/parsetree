@@ -13,9 +13,10 @@ docs:
 	rdoc -d -I png --main SexpProcessor -x test_\* -x something.rb
 
 install:
-	cp -f parse_tree.rb test_sexp_processor.rb sexp_processor.rb composite_sexp_processor.rb $(RUBY_LIB)
-	cp -f show.rb $(PREFIX)/bin/parse_tree_show
-	cp -f abc.rb $(PREFIX)/bin/parse_tree_abc
+	cp -f lib/parse_tree.rb lib/sexp_processor.rb lib/composite_sexp_processor.rb $(RUBY_LIB)
+	cp -f test/test_sexp_processor.rb $(RUBY_LIB)
+	cp -f bin/parse_tree_show $(PREFIX)/bin
+	cp -f bin/parse_tree_abc  $(PREFIX)/bin
 	chmod 444 $(RUBY_LIB)/parse_tree.rb $(RUBY_LIB)/sexp_processor.rb $(RUBY_LIB)/composite_sexp_processor.rb $(RUBY_LIB)/test_sexp_processor.rb
 	chmod 555 $(PREFIX)/bin/parse_tree_show $(PREFIX)/bin/parse_tree_abc
 
