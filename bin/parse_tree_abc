@@ -6,7 +6,12 @@
 #
 # A simple way to measure the complexity of a function or method.
 
-require 'parse_tree'
+begin
+  require 'rubygems'
+  require_gem 'ParseTree'
+rescue LoadError
+  require 'parse_tree'
+end
 
 old_classes = []
 ObjectSpace.each_object(Module) do |klass|
@@ -26,7 +31,18 @@ score = {}
 
 new_classes -= old_classes
 
-p "scanning #{new_classes}"
+def sexp_types(exp)
+  result = []
+  if Array === exp.first then
+    result = sexp_types(exp.first)
+  else
+    result << exp.shift
+    exp.grep(Array).each do |subexp|
+      result.concat(sexp_types(subexp))
+    end
+  end
+  result
+end
 
 klasses = ParseTree.new.parse_tree(*new_classes)
 klasses.each do |klass|
@@ -39,7 +55,7 @@ klasses.each do |klass|
     a=b=c=0
     defn.shift
     methodname = defn.shift
-    tokens = defn.flatten.find_all { |t| Symbol === t }
+    tokens = sexp_types(defn)
     tokens.each do |token|
       case token
       when :attrasgn, :attrset, :dasgn_curr, :iasgn, :lasgn, :masgn then
@@ -48,7 +64,7 @@ klasses.each do |klass|
         b += 1
       when :call, :fcall, :super, :vcall, :yield then
         c += 1
-      when :args, :argscat, :array, :begin, :block, :bool, :cfunc, :colon2, :const, :cvar, :defined, :defn, :dregx, :dstr, :dvar, :dxstr, :ensure, :false, :fbody, :gvar, :hash, :ivar, :lit, :long, :lvar, :match2, :match3, :nil, :not, :nth_ref, :return, :scope, :self, :splat, :str, :to_ary, :true, :unknown, :value, :void, :zarray, :zarray, :zclass, :zsuper then
+      when :args, :argscat, :array, :begin, :block, :block_arg, :block_pass, :bool, :cfunc, :colon2, :const, :cvar, :defined, :defn, :dregx, :dstr, :dvar, :dxstr, :ensure, :false, :fbody, :gvar, :hash, :ivar, :lit, :long, :lvar, :match2, :match3, :nil, :not, :nth_ref, :return, :scope, :self, :splat, :str, :to_ary, :true, :unknown, :value, :void, :zarray, :zarray, :zclass, :zsuper then
         # ignore
       else
         puts "unhandled token #{token.inspect}" if $VERBOSE

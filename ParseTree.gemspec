@@ -17,7 +17,7 @@ spec = Gem::Specification.new do |s|
   s.requirements << "RubyInline."
   s.files = IO.readlines("Manifest.txt").map {|f| f.chomp }
 
-  s.require_path = 'lib' 
+  s.require_paths = ['lib', 'test']
   s.autorequire = 'parse_tree'
 
   s.bindir = "bin"

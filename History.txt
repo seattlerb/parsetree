@@ -1,11 +1,21 @@
 *** 1.2.0 / 2004-??-??
 
-+ N minor enhancements
-	+ Switched ParseTree to return symbols for all data except in :str and :lit.
-	+ This WILL break existing code, if there is any outside of ruby2c.
-	+ Added -f to show.rb for uber fast demos.
-+ N bug fixes
++ 9 minor enhancements
+	+ ParseTree now returns symbols for all data except in :str and :lit.
+		+ This WILL break existing code! (as if any exists)
+	+ ParseTree.parse_tree now takes a list of classes, no optional method.
+	+ ParseTree.parse_tree_for_method(klass, method) added.
+	+ ParseTree.parse_tree now returns a list of :class/:module nodes.
+	+ Added -f to parse_tree_show for uber fast demos.
+	+ Added -q to parse_tree_show to NOT use pp so it is mucho faster.
+	+ running with $DEBUG will trace the methods and nodes as processed.
 	+ Added rdoc to everything.
+	+ Gemified
++ 4 bug fixes
+	+ Bus error in iter/for nodes where arg list is empty now fixed.
+	+ Bus error when handling 'def method(*)' is now fixed.
+	+ Unnamed classes and superclasses (ugh) are now handled.
+	+ parse_tree_abc now enumerates actual types rather than every token.
 
 *** 1.1.0 / 2004-11-12
 

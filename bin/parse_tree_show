@@ -1,7 +1,13 @@
 #!/usr/local/bin/ruby -ws
 
 require 'pp'
-require 'parse_tree'
+
+begin
+  require 'rubygems'
+  require_gem 'ParseTree'
+rescue LoadError
+  require 'parse_tree'
+end
 
 def discover_new_classes_from
   old_classes = []
@@ -34,6 +40,10 @@ new_classes = discover_new_classes_from do
   end
 end
 
-new_classes.each do |klass|
-  pp ParseTree.new.parse_tree(klass)
+result = ParseTree.new.parse_tree(*new_classes)
+unless defined? $q then
+  pp result
+else
+  p result
 end
+

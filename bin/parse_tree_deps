@@ -5,7 +5,14 @@ old_classes = []; new_classes = []
 ObjectSpace.each_object(Module) { |klass| old_classes << klass } if defined? $a
 
 require 'pp'
-require 'parse_tree'
+
+begin
+  require 'rubygems'
+  require_gem 'ParseTree'
+rescue LoadError
+  require 'parse_tree'
+end
+
 require 'sexp_processor'
 
 ObjectSpace.each_object(Module) { |klass| old_classes << klass } unless defined? $a

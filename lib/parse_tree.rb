@@ -45,12 +45,23 @@ class ParseTree
   def parse_tree(*klasses)
     result = []
     klasses.each do |klass|
+      puts "parse_tree > #{klass.inspect}: #{klass.name.inspect}"
       raise "You should call parse_tree_for_method(#{klasses.first}, #{klass}) instead of parse_tree" if Symbol === klass or String === klass
-      klassname = klass.name.to_sym
-      superclass = klass.superclass
-      superclass = superclass.name.to_sym unless superclass.nil?
-      code = [:class, klassname, superclass]
+      klassname = klass.name
+      klassname = "UnnamedClass_#{klass.object_id}" if klassname.empty?
+      klassname = klassname.to_sym
+
+      code = if Class === klass then
+               superclass = klass.superclass.name
+               superclass = "nil" if superclass.empty?
+               superclass = superclass.to_sym
+               [:class, klassname, superclass]
+             else
+               [:module, klassname]
+             end
+
       klass.instance_methods(false).sort.each do |m|
+        $stderr.puts "parse_tree_for_method(#{klass}, #{m}):" if $DEBUG
         code << parse_tree_for_method(klass, m.to_sym)
       end
       result << code
@@ -66,7 +77,7 @@ class ParseTree
   #   [:defn, :name, :body]
 
   def parse_tree_for_method(klass, method)
-    parse_tree_for_meth(klass, method.to_s)
+    parse_tree_for_meth(klass, method.to_sym)
   end
 
   inline do |builder|
@@ -153,6 +164,10 @@ again:
 
   if (node) {
     node_name = ID2SYM(rb_intern(node_type_string[nd_type(node)]));
+    if (RTEST(ruby_debug)) {
+      fputs(node_type_string[nd_type(node)], stderr);
+      fputs("\n", stderr);
+    }
   } else {
     node_name = ID2SYM(rb_intern("ICKY"));
   }
@@ -257,7 +272,9 @@ again_no_block:
   case NODE_ITER:
   case NODE_FOR:
     add_to_parse_tree(current, node->nd_iter);
-    if (node->nd_var != (NODE *)-1 && node->nd_var != NULL) {
+    if (node->nd_var != (NODE *)1
+        && node->nd_var != (NODE *)2
+        && node->nd_var != NULL) {
       add_to_parse_tree(current, node->nd_var);
     } else {
       rb_ary_push(current, Qnil);
@@ -493,12 +510,22 @@ again_no_block:
 	i++;
 	optnode = optnode->nd_next;
       }
-      if (node->nd_rest != -1) {
+
+      long arg_count = node->nd_rest;
+      if (arg_count > 0) {
         // *arg name
         rb_ary_push(current, ID2SYM(dump_local_tbl[node->nd_rest + 1]));
+      } else if (arg_count == -1) {
+        // nothing to do in this case, handled above
+      } else if (arg_count == -2) {
+        // nothing to do in this case, no name == no use
+      } else {
+        puts("not a clue what this arg value is");
+        exit(1);
       }
+
       optnode = node->nd_opt;
-      // 
+      // block?
       if (optnode) {
 	add_to_parse_tree(current, node->nd_opt);
       }
