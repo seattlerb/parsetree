@@ -11,7 +11,9 @@ class TestParseTree < Test::Unit::TestCase
   @@missing = [nil]
   @@empty = [:defn, :empty,
     [:scope,
-      [:args]]]
+      [:block,
+        [:args],
+        [:nil]]]]
   @@stupid = [:defn, :stupid,
     [:scope,
       [:block,

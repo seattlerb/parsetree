@@ -68,8 +68,14 @@ end
 puts "Method = assignments + branches + calls = total"
 puts
 count = 1
+ta = tb = tc = tval = 0
 score.sort_by { |k,v| v }.reverse.each do |key,val|
   name, a, b, c = *key
+  ta += a
+  tb += b
+  tc += c
+  tval += val
   printf "%3d) %-50s = %2d + %2d + %2d = %3d\n", count, name, a, b, c, val
   count += 1
 end
+printf "%3d) %-50s = %2d + %2d + %2d = %3d\n", count, "Total", ta, tb, tc, tval
