@@ -6,6 +6,8 @@
 #
 # A simple way to measure the complexity of a function or method.
 
+PARSE_TREE_ABC=true
+
 begin
   require 'rubygems'
   require_gem 'ParseTree'
@@ -21,7 +23,11 @@ ObjectSpace.each_object(Module) do |klass|
 end
 
 ARGV.each do |name|
-  require name
+  begin
+    require name
+  rescue NameError => err
+    $stderr.puts "ERROR requiring #{name}. Perhaps you need to add some -I's?\n\n#{err}"
+  end
 end
 
 new_classes = []
@@ -60,12 +66,12 @@ klasses.each do |klass|
       end
     end
     key = ["#{klassname}.#{methodname}", a, b, c]
-    val = a+b+c
+    val = Math.sqrt(a*a+b*b+c*c)
     score[key] = val
   end
 end
 
-puts "Method = assignments + branches + calls = total"
+puts "|ABC| = Math.sqrt(assignments^2 + branches^2 + calls^2)"
 puts
 count = 1
 ta = tb = tc = tval = 0
@@ -75,7 +81,7 @@ score.sort_by { |k,v| v }.reverse.each do |key,val|
   tb += b
   tc += c
   tval += val
-  printf "%3d) %-50s = %2d + %2d + %2d = %3d\n", count, name, a, b, c, val
+  printf "%3d) %-50s = %2d + %2d + %2d = %6.2f\n", count, name, a, b, c, val
   count += 1
 end
-printf "%3d) %-50s = %2d + %2d + %2d = %3d\n", count, "Total", ta, tb, tc, tval
+printf "%3d) %-50s = %2d + %2d + %2d = %6.2f\n", count, "Total", ta, tb, tc, tval

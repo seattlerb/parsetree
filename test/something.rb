@@ -164,11 +164,18 @@ class Something
     self.type = other.type
   end
 
-  def xbegin
+  # TODO: sort list
+  def bbegin
     begin
-      2+2
+      1
+    rescue SyntaxError => e1
+      2
+    rescue Exception => e2
+      3
+    else
+      4
     ensure
-      1+1
+      5
     end
   end
 

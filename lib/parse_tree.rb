@@ -339,6 +339,7 @@ again_no_block:
   case NODE_RESCUE:
       add_to_parse_tree(current, node->nd_1st, newlines, locals);
       add_to_parse_tree(current, node->nd_2nd, newlines, locals);
+      add_to_parse_tree(current, node->nd_3rd, newlines, locals);
     break;
 
   // rescue body:
