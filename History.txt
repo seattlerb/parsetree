@@ -1,3 +1,13 @@
+*** 1.3.3 / 2005-01-28
+
++ 3 minor enhancement
+	+ Cleaned up parse_tree_abc output
+	+ Patched up null class names (delegate classes are weird!)
+	+ Added UnknownNodeError and switched SyntaxError over to it.
++ 2 bug fixes
+	+ Fixed BEGIN node handling to recurse instead of going flat.
+	+ FINALLY fixed the weird compiler errors seen on some versions of gcc 3.4.x related to type punned pointers.
+
 *** 1.3.2 / 2005-01-04
 
 + 1 minor enhancement
