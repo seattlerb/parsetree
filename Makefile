@@ -4,7 +4,7 @@ RUBY_LIB?=$(shell $(RUBY) -rrbconfig -e 'include Config; print CONFIG["sitelibdi
 PREFIX?=/usr/local
 
 all test:
-	$(RUBY) $(RUBY_FLAGS) test_parse_tree.rb
+	$(RUBY) $(RUBY_FLAGS) test_all.rb
 
 install:
 	cp -f parse_tree.rb $(RUBY_LIB)
