@@ -6,4 +6,5 @@ abc.rb
 parse_tree.rb
 show.rb
 something.rb
+test_all.rb
 test_parse_tree.rb
