@@ -4,7 +4,7 @@ require "inline"
 
 class ParseTree
 
-  VERSION = '1.0.0'
+  VERSION = '1.1.0'
 
   inline do |builder|
     builder.add_type_converter("VALUE", '', '')

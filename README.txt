@@ -34,6 +34,8 @@ becomes:
 ** FEATURES/PROBLEMS:
   
 + Uses RubyInline, so it just drops in.
++ Includes SexpProcessor and CompositeSexpProcessor.
+	+ Allows you to write very clean filters.
 + Includes show.rb, which lets you quickly snoop code.
 + Includes abc.rb, which lets you get abc metrics on code.
 	+ abc metrics = numbers of assignments, branches, and calls.
@@ -44,6 +46,19 @@ becomes:
 ** SYNOPSYS:
 
   sexp_array = ParseTree.new.parse_tree(klass)
+
+or:
+
+  class MyProcessor < SexpProcessor
+    def initialize
+      super
+      self.strict = false
+    end
+    def process_lit(exp)
+      val = exp.shift
+      return val
+    end
+  end
 
 or:
 

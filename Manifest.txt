@@ -3,8 +3,12 @@ Makefile
 Manifest.txt
 README.txt
 abc.rb
+composite_sexp_processor.rb
 parse_tree.rb
+sexp_processor.rb
 show.rb
 something.rb
 test_all.rb
+test_composite_sexp_processor.rb
 test_parse_tree.rb
+test_sexp_processor.rb
