@@ -36,7 +36,7 @@ becomes:
 + Uses RubyInline, so it just drops in.
 + Includes show.rb, which lets you quickly snoop code.
 + Includes abc.rb, which lets you get abc metrics on code.
-	+ abc metrics = # of assignments, branches, and calls
+	+ abc metrics = numbers of assignments, branches, and calls.
 	+ whitespace independent metric for method complexity.
 + Only works on methods in classes/modules, not arbitrary code.
 + Does not work on the core classes, as they are not ruby (yet).
@@ -67,7 +67,7 @@ or:
 
 (The MIT License)
 
-Copyright (c) 2001-2002 Ryan Davis, Zen Spider Software
+Copyright (c) 2001-2004 Ryan Davis, Zen Spider Software
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
