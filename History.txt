@@ -1,3 +1,11 @@
+*** 1.2.1 / 2004-12-05
+
++ 2 minor enhancements
+	+ Extended ParseTree to work with all nodes.
+	+ If $DEBUG, then we now output the :newline nodes and extra debugging info.
++ 1 bug fixes
+	+ Fixed README for new output style.
+
 *** 1.2.0 / 2004-11-29
 
 + 9 minor enhancements
@@ -26,7 +34,6 @@
 	+ Fixed makefile issues for BSD's make - so dumb.
 	+ Added super as a call in abc.rb's metrics
 	+ Commented out a compiler flag to work with GCC 2.95.
-
 
 *** 1.0.0 / 2004-11-06
 

@@ -164,8 +164,11 @@ again:
   if (node) {
     node_name = ID2SYM(rb_intern(node_type_string[nd_type(node)]));
     if (RTEST(ruby_debug)) {
-      fputs(node_type_string[nd_type(node)], stderr);
-      fputs("\n", stderr);
+      fprintf(stderr, "%15s: %s%s%s\n",
+        node_type_string[nd_type(node)],
+        (RNODE(node)->u1.node != NULL ? "u1 " : "   "),
+        (RNODE(node)->u2.node != NULL ? "u2 " : "   "),
+        (RNODE(node)->u3.node != NULL ? "u3 " : "   "));
     }
   } else {
     node_name = ID2SYM(rb_intern("ICKY"));
@@ -368,6 +371,7 @@ again_no_block:
     {
       struct METHOD *data;
       Data_Get_Struct(node->nd_cval, struct METHOD, data);
+      // TODO: anything to do here?
       break;
     }
 
@@ -413,6 +417,17 @@ again_no_block:
   case NODE_GASGN:
     rb_ary_push(current, ID2SYM(node->nd_vid));
     add_to_parse_tree(current, node->nd_value);
+    break;
+
+  case NODE_ALIAS:            // u1 u2 (alias :blah :blah2)
+  case NODE_VALIAS:           // u1 u2 (alias $global $global2)
+    rb_ary_push(current, ID2SYM(node->u1.id));
+    rb_ary_push(current, ID2SYM(node->u2.id));
+    break;
+
+  case NODE_COLON3:           // u2    (::OUTER_CONST)
+  case NODE_UNDEF:            // u2    (undef instvar)
+    rb_ary_push(current, ID2SYM(node->u2.id));
     break;
 
   case NODE_HASH:
@@ -542,40 +557,56 @@ again_no_block:
       rb_ary_push(current, ID2SYM(node->nd_vid));
       break;
 
-    case NODE_STR:
+    case NODE_XSTR:             // u1    (%x{ls})
+    case NODE_STR:              // u1
     case NODE_LIT:
+    case NODE_MATCH:
       rb_ary_push(current, node->nd_lit);
       break;
 
     case NODE_NEWLINE:
       rb_ary_push(current, INT2FIX(nd_line(node)));
       rb_ary_push(current, rb_str_new2(node->nd_file));
-      rb_ary_pop(ary); // nuke it for now
+
+    if (! RTEST(ruby_debug))
+      rb_ary_pop(ary); // nuke it
 
       node = node->nd_next;
       goto again;
+      break;
 
-    // these are things we know we do not need to translate to C.
-    case NODE_BLOCK_ARG:
-    case NODE_SELF:
-    case NODE_NIL:
-    case NODE_TRUE:
-    case NODE_FALSE:
-    case NODE_ZSUPER:
-    case NODE_BMETHOD:
-    case NODE_REDO:
+    case NODE_NTH_REF:          // u2 u3 ($1) - u3 is local_cnt('~') ignorable?
+      rb_ary_push(current, INT2FIX(node->nd_nth));
+      break;
+
+    case NODE_BACK_REF:         // u2 u3 ($& etc)
+      {
+      char c = node->nd_nth;
+      rb_ary_push(current, rb_str_intern(rb_str_new(&c, 1)));
+      }
+      break;
+
+    case NODE_BLOCK_ARG:        // u1 u3 (def x(&b)
+      rb_ary_push(current, ID2SYM(node->u1.id));
+      break;
+
+    // these nodes are empty and do not require extra work:
     case NODE_RETRY:
-    case NODE_COLON3:
-    case NODE_NTH_REF:
-    case NODE_BACK_REF:
+    case NODE_FALSE:
+    case NODE_NIL:
+    case NODE_SELF:
+    case NODE_TRUE:
     case NODE_ZARRAY:
-    case NODE_XSTR:
-    case NODE_UNDEF:
-    case NODE_ALIAS:
-    case NODE_VALIAS:
-    break;
+    case NODE_ZSUPER:
+    case NODE_REDO:
+      break;
 
+    case NODE_BMETHOD:  // I am reasonably sure this is runtime only
     default:
+      rb_warn("Unhandled node #%d type '%s'", nd_type(node), node_type_string[nd_type(node)]);
+      if (RNODE(node)->u1.node != NULL) rb_warning("unhandled u1 value");
+      if (RNODE(node)->u2.node != NULL) rb_warning("unhandled u2 value");
+      if (RNODE(node)->u3.node != NULL) rb_warning("unhandled u3 value");
       rb_ary_push(current, INT2FIX(-99));
       rb_ary_push(current, INT2FIX(nd_type(node)));
       break;

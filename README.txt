@@ -21,12 +21,12 @@ As an example:
 becomes:
 
   [:defn,
-    "conditional1",
+    :conditional1,
     [:scope,
      [:block,
-      [:args, "arg1"],
+      [:args, :arg1],
       [:if,
-       [:call, [:lvar, "arg1"], "==", [:array, [:lit, 0]]],
+       [:call, [:lvar, :arg1], :==, [:array, [:lit, 0]]],
        [:return, [:lit, 1]],
        nil],
       [:return, [:lit, 0]]]]]
