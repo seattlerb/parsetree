@@ -212,15 +212,6 @@ class TestSexp < Test::Unit::TestCase # ZenTest FULL
     assert_nil(@sexp.shift)
   end
 
-  def test_unpack_equal
-    assert_equal false, @sexp.unpack
-    @sexp.unpack = true
-    assert_equal true, @sexp.unpack
-  end
-
-  def test_unpack; end # handled
-  def test_unpack_q; end # handled
-
 end
 
 class TestSexpProcessor < Test::Unit::TestCase

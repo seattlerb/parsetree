@@ -29,19 +29,9 @@ class Sexp < Array # ZenTest FULL
   attr_accessor :accessors
 
   ##
-  # Set to true to have the SexpProcessor replace the current Sexp
-  # result with the contents of this Sexp. Only needed when doing tree
-  # modifications where one sexp is being replaced with multiple.
-
-  attr_accessor :unpack
-
-  alias_method :unpack?, :unpack
-
-  ##
   # Create a new Sexp containing +args+.
 
   def initialize(*args)
-    @unpack = false
     @accessors = []
     super(args)
   end
@@ -330,11 +320,7 @@ class SexpProcessor
           else
             sub_result = sub_exp
           end
-          if Sexp === sub_result && sub_result.unpack? then
-            result.push(*sub_result)
-          else
-            result << sub_result
-          end
+          result << sub_result
         end
 
         # NOTE: this is costly, but we are in the generic processor
@@ -360,9 +346,26 @@ class SexpProcessor
   # Raises unless the Sexp type for +list+ matches +typ+
 
   def assert_type(list, typ)
-    raise TypeError, "Expected type #{typ.inspect} in #{list.inspect}" \
-      if list.first != typ
+    raise TypeError, "Expected type #{typ.inspect} in #{list.inspect}" if
+      list.first != typ
   end
 
+  ##
+  # A fairly generic processor for a dummy node. Dummy nodes are used
+  # when your processor is doing a complicated rewrite that replaces
+  # the current sexp with multiple sexps.
+  #
+  # Bogus Example:
+  #
+  # def process_something(exp)
+  #   return s(:dummy, process(exp), s(:extra, 42))
+
+  def process_dummy(exp)
+    result = @expected.new(:dummy)
+    until exp.empty? do
+      result << self.process(exp.shift)
+    end
+    result
+  end
 end
 
