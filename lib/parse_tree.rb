@@ -45,7 +45,6 @@ class ParseTree
   def parse_tree(*klasses)
     result = []
     klasses.each do |klass|
-      puts "parse_tree > #{klass.inspect}: #{klass.name.inspect}"
       raise "You should call parse_tree_for_method(#{klasses.first}, #{klass}) instead of parse_tree" if Symbol === klass or String === klass
       klassname = klass.name
       klassname = "UnnamedClass_#{klass.object_id}" if klassname.empty?
@@ -497,6 +496,7 @@ again_no_block:
 	(node->nd_cnt || node->nd_opt || node->nd_rest != -1)) {
       int i;
       NODE *optnode;
+      long arg_count;
 
       for (i = 0; i < node->nd_cnt; i++) {
         // regular arg names
@@ -511,7 +511,7 @@ again_no_block:
 	optnode = optnode->nd_next;
       }
 
-      long arg_count = node->nd_rest;
+      arg_count = node->nd_rest;
       if (arg_count > 0) {
         // *arg name
         rb_ary_push(current, ID2SYM(dump_local_tbl[node->nd_rest + 1]));
