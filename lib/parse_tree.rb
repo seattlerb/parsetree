@@ -27,22 +27,46 @@ end
 
 class ParseTree
 
-  VERSION = '1.1.1'
+  VERSION = '1.2.0'
 
   ##
   # Main driver for ParseTree. Returns an array of arrays containing
-  # the parse tree for +klass+ and optionally +meth+.
+  # the parse tree for +klasses+.
+  #
+  # Structure:
+  #
+  #   [[:class, classname, superclassname, [:defn :method1, ...], ...], ...]
+  #
+  # NOTE: v1.0 - v1.1 had the signature (klass, meth=nil). This wasn't
+  # used much at all and since parse_tree_for_method already existed,
+  # it was deemed more useful to expand this method to do multiple
+  # classes.
 
-  def parse_tree(klass, meth=nil)
-    code = []
-    if meth then
-      code = parse_tree_for_method(klass, meth.to_s)
-    else
+  def parse_tree(*klasses)
+    result = []
+    klasses.each do |klass|
+      raise "You should call parse_tree_for_method(#{klasses.first}, #{klass}) instead of parse_tree" if Symbol === klass or String === klass
+      klassname = klass.name.to_sym
+      superclass = klass.superclass
+      superclass = superclass.name.to_sym unless superclass.nil?
+      code = [:class, klassname, superclass]
       klass.instance_methods(false).sort.each do |m|
-	code << parse_tree_for_method(klass, m)
+        code << parse_tree_for_method(klass, m.to_sym)
       end
+      result << code
     end
-    return code
+    return result
+  end
+
+  ##
+  # Returns the parse tree for just one +method+ of a class +klass+.
+  #
+  # Format:
+  #
+  #   [:defn, :name, :body]
+
+  def parse_tree_for_method(klass, method)
+    parse_tree_for_meth(klass, method.to_sym)
   end
 
   inline do |builder|
@@ -543,7 +567,7 @@ again_no_block:
 ^
 
     builder.c %q{
-static VALUE parse_tree_for_method(VALUE klass, VALUE method) {
+static VALUE parse_tree_for_meth(VALUE klass, VALUE method) {
   NODE *node = NULL;
   ID id;
   VALUE result = rb_ary_new();

@@ -16,15 +16,13 @@ spec = Gem::Specification.new do |s|
 
   s.requirements << "RubyInline."
   s.files = IO.readlines("Manifest.txt").map {|f| f.chomp }
-  p s.files
 
   s.require_path = 'lib' 
   s.autorequire = 'parse_tree'
 
   s.bindir = "bin"
   s.executables = s.files.grep(Regexp.new(s.bindir)) { |f| File.basename(f) }
-  p s.bindir
-  p s.executables
+  puts "Executables = #{s.executables.join(", ")}"
 
   s.has_rdoc = true
   s.test_suite_file = "test/test_all.rb"
