@@ -36,6 +36,25 @@ class Sexp < Array # ZenTest FULL
     super(args)
   end
 
+  def self.from_array(a)
+    ary = Array === a ? a : [a]
+
+    result = self.new
+
+    ary.each do |x|
+      case x
+      when Sexp
+        result << x
+      when Array
+        result << self.from_array(x)
+      else
+        result << x
+      end
+    end
+
+    result
+  end
+
   ##
   # Returns true if the node_type is +array+ or +args+.
   #

@@ -13,6 +13,8 @@ rescue LoadError
   require 'parse_tree'
 end
 
+  require 'sexp_processor'
+
 old_classes = []
 ObjectSpace.each_object(Module) do |klass|
   old_classes << klass
@@ -31,20 +33,7 @@ score = {}
 
 new_classes -= old_classes
 
-def sexp_types(exp)
-  result = []
-  if Array === exp.first then
-    result = sexp_types(exp.first)
-  else
-    result << exp.shift
-    exp.grep(Array).each do |subexp|
-      result.concat(sexp_types(subexp))
-    end
-  end
-  result
-end
-
-klasses = ParseTree.new.parse_tree(*new_classes)
+klasses = Sexp.from_array(ParseTree.new.parse_tree(*new_classes))
 klasses.each do |klass|
   klass.shift # :class
   klassname = klass.shift
@@ -55,7 +44,7 @@ klasses.each do |klass|
     a=b=c=0
     defn.shift
     methodname = defn.shift
-    tokens = sexp_types(defn)
+    tokens = defn.structure.flatten
     tokens.each do |token|
       case token
       when :attrasgn, :attrset, :dasgn_curr, :iasgn, :lasgn, :masgn then
