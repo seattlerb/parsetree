@@ -29,9 +29,7 @@ audit:
 
 clean:
 	-find . -name \*~ | xargs rm
-	-rm -f diff diff.txt
-	-rm -r $$HOME/.ruby_inline
-	-rm -r doc
+	-rm -fr diff diff.txt *.gem doc $$HOME/.ruby_inline
 
 demo:
 	echo 1+1 | $(RUBY) $(RUBY_FLAGS) ./bin/parse_tree_show -f

@@ -438,8 +438,9 @@ class SexpProcessor
   #
   # Bogus Example:
   #
-  # def process_something(exp)
-  #   return s(:dummy, process(exp), s(:extra, 42))
+  #   def process_something(exp)
+  #     return s(:dummy, process(exp), s(:extra, 42))
+  #   end
 
   def process_dummy(exp)
     result = @expected.new(:dummy)

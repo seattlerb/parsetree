@@ -18,12 +18,13 @@ end
 #   end
 #
 #   ParseTree.new.parse_tree(Example)
-#   =>  [[:defn,
-#         "blah",
-#         [:scope,
-#          [:block,
-#           [:args],
-#            [:return, [:call, [:lit, 1], "+", [:array, [:lit, 1]]]]]]]]
+#   => [[:class, :Example, :Object,
+#          [:defn,
+#            "blah",
+#            [:scope,
+#              [:block,
+#                [:args],
+#                [:return, [:call, [:lit, 1], "+", [:array, [:lit, 1]]]]]]]]]
 
 class ParseTree
 
@@ -53,6 +54,7 @@ class ParseTree
   def parse_tree(*klasses)
     result = []
     klasses.each do |klass|
+      # TODO: remove this on v 1.1
       raise "You should call parse_tree_for_method(#{klasses.first}, #{klass}) instead of parse_tree" if Symbol === klass or String === klass
       klassname = klass.name || '' # HACK klass.name should never be nil
                                    # Tempfile's DelegateClass(File) seems to
@@ -88,6 +90,10 @@ class ParseTree
   def parse_tree_for_method(klass, method)
     parse_tree_for_meth(klass, method.to_sym, @include_newlines)
   end
+
+  ############################################################
+  # END of rdoc methods
+  ############################################################
 
   inline do |builder|
     builder.add_type_converter("VALUE", '', '')
