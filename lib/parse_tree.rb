@@ -635,6 +635,7 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines) {
   VALUE result = rb_ary_new();
 
   (void) self; // quell warnings
+  (void) argc; // quell warnings
 
   id = rb_to_id(method);
   if (st_lookup(RCLASS(klass)->m_tbl, id, (st_data_t *) &node)) {
