@@ -9,7 +9,11 @@ ObjectSpace.each_object(Module) do |klass|
 end
 
 ARGV.each do |name|
-  require name
+  if name == "-" then
+    eval $stdin.read
+  else
+    require name
+  end
 end
 
 new_classes = []
