@@ -38,9 +38,9 @@ new_classes.each do |klass|
         a += 1
       when :and, :case, :else, :if, :iter, :or, :rescue, :until, :when, :while  then
         b += 1
-      when :call, :fcall, :vcall, :yield then
+      when :call, :fcall, :super, :vcall, :yield then
         c += 1
-      when :args, :argscat, :array, :begin, :block, :bool, :cfunc, :colon2, :const, :cvar, :defined, :defn, :dregx, :dstr, :dvar, :dxstr, :ensure, :false, :fbody, :gvar, :hash, :ivar, :lit, :long, :lvar, :match2, :match3, :nil, :not, :nth_ref, :return, :scope, :self, :splat, :str, :super, :to_ary, :true, :unknown, :value, :void, :zarray, :zarray, :zclass, :zsuper then
+      when :args, :argscat, :array, :begin, :block, :bool, :cfunc, :colon2, :const, :cvar, :defined, :defn, :dregx, :dstr, :dvar, :dxstr, :ensure, :false, :fbody, :gvar, :hash, :ivar, :lit, :long, :lvar, :match2, :match3, :nil, :not, :nth_ref, :return, :scope, :self, :splat, :str, :to_ary, :true, :unknown, :value, :void, :zarray, :zarray, :zclass, :zsuper then
         # ignore
       else
         puts "unhandled token #{token.inspect}"
