@@ -314,9 +314,7 @@ again_no_block:
   case NODE_UNTIL:
     add_to_parse_tree(current,  node->nd_cond, newlines, locals);
     add_to_parse_tree(current,  node->nd_body, newlines, locals); 
-    if (! node->nd_3rd) {
-      rb_ary_push(current, ID2SYM(rb_intern("post")));
-    }
+    rb_ary_push(current, node->nd_3rd == 0 ? Qfalse : Qtrue);
     break;
 
   case NODE_BLOCK_PASS:

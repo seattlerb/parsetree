@@ -296,8 +296,8 @@ class TestParseTree < Test::Unit::TestCase
     [:scope,
       [:block,
         [:args],
-        [:while, [:false], [:fcall, :puts, [:array, [:str, "false"]]]],
-        [:while, [:false], [:fcall, :puts, [:array, [:str, "true"]]], :post]]]]
+        [:while, [:false], [:fcall, :puts, [:array, [:str, "false"]]], true],
+        [:while, [:false], [:fcall, :puts, [:array, [:str, "true"]]], false]]]]
 
   @@__all = [:class, :Something, :Object]
   

@@ -1,10 +1,11 @@
 RUBY?=ruby
+RUBY_DEBUG?=
 RUBY_FLAGS?=-w -Ilib -Ibin
 RUBY_LIB?=$(shell $(RUBY) -rrbconfig -e 'include Config; print CONFIG["sitelibdir"]')
 PREFIX?=/usr/local
 
 all test: FORCE
-	GEM_SKIP=ParseTree $(RUBY) $(RUBY_FLAGS) test/test_all.rb
+	GEM_SKIP=ParseTree $(RUBY) $(RUBY_DEBUG) $(RUBY_FLAGS) test/test_all.rb
 
 # we only install test_sexp_processor.rb to help make ruby_to_c's
 # subclass tests work.
@@ -32,7 +33,7 @@ clean:
 	-rm -fr diff diff.txt *.gem doc $$HOME/.ruby_inline
 
 demo:
-	echo 1+1 | $(RUBY) $(RUBY_FLAGS) ./bin/parse_tree_show -f
+	echo 1+1 | GEM_SKIP=ParseTree $(RUBY) $(RUBY_FLAGS) ./bin/parse_tree_show -f
 
 gem:
 	gem ParseTree.gemspec
