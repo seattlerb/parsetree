@@ -104,6 +104,12 @@ class ParseTree
     builder.add_compile_flags "-Wcast-align"
     builder.add_compile_flags "-Wwrite-strings"
     builder.add_compile_flags "-Wmissing-noreturn"
+    # NOTE: If you get weird compiler errors like:
+    #    dereferencing type-punned pointer will break strict-aliasing rules
+    # PLEASE do one of the following:
+    # 1) Get me a login on your box so I can repro this and get it fixed.
+    # 2) Fix it and send me the patch
+    # 3) (quick, but dirty and bad), comment out the following line:
     builder.add_compile_flags "-Werror"
     # NOTE: this flag doesn't work w/ gcc 2.95.x - the FreeBSD default
     # builder.add_compile_flags "-Wno-strict-aliasing"
@@ -112,7 +118,7 @@ class ParseTree
     # builder.add_compile_flags "-Wconversion"
     # builder.add_compile_flags "-Wstrict-prototypes"
     # builder.add_compile_flags "-Wmissing-prototypes"
-    # builder.add_compile_flags "-Wsign-compare", 
+    # builder.add_compile_flags "-Wsign-compare"
 
     builder.prefix %q{
         #define nd_3rd   u3.node
@@ -248,17 +254,15 @@ again_no_block:
       rb_ary_push(current, ID2SYM(node->nd_mid));
       break;
 
-    case NODE_BEGIN:
-      node = node->nd_body;
-      goto again;
-
     case NODE_MATCH2:
     case NODE_MATCH3:
       add_to_parse_tree(current, node->nd_recv, newlines, locals);
       add_to_parse_tree(current, node->nd_value, newlines, locals);
       break;
 
+    case NODE_BEGIN:
     case NODE_OPT_N:
+    case NODE_NOT:
       add_to_parse_tree(current, node->nd_body, newlines, locals);
       break;
 
@@ -359,10 +363,6 @@ again_no_block:
   case NODE_OR:
     add_to_parse_tree(current, node->nd_1st, newlines, locals);
     add_to_parse_tree(current, node->nd_2nd, newlines, locals);
-    break;
-
-  case NODE_NOT:
-    add_to_parse_tree(current, node->nd_body, newlines, locals);
     break;
 
   case NODE_DOT2:
@@ -713,6 +713,7 @@ again_no_block:
 
     builder.c %q{
 static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines) {
+  VALUE n;
   NODE *node = NULL;
   ID id;
   VALUE result = rb_ary_new();
@@ -721,7 +722,8 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines) {
   (void) argc; // quell warnings
 
   id = rb_to_id(method);
-  if (st_lookup(RCLASS(klass)->m_tbl, id, (st_data_t *) &node)) {
+  if (st_lookup(RCLASS(klass)->m_tbl, id, &n)) {
+    node = (NODE*)n;
     rb_ary_push(result, ID2SYM(rb_intern("defn")));
     rb_ary_push(result, ID2SYM(id));
     add_to_parse_tree(result, node->nd_body, newlines, NULL);

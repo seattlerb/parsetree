@@ -164,6 +164,14 @@ class Something
     self.type = other.type
   end
 
+  def xbegin
+    begin
+      2+2
+    ensure
+      1+1
+    end
+  end
+
   def self.bmethod_maker
     define_method(:bmethod_added) do |x|
       x + 1

@@ -234,6 +234,14 @@ class TestParseTree < Test::Unit::TestCase
       [:block,
         [:args, :arg1, :arg2],
         [:return, [:lvar, :arg1]]]]]
+  @@xbegin = [:defn, :xbegin,
+    [:scope,
+      [:block,
+        [:args],
+        [:begin,
+          [:ensure,
+            [:call, [:lit, 2], :+, [:array, [:lit, 2]]],
+            [:call, [:lit, 1], :+, [:array, [:lit, 1]]]]]]]]
   @@determine_args = [:defn, :determine_args,
     [:scope,
       [:block,
