@@ -1,4 +1,4 @@
-*** 1.2.0 / 2004-??-??
+*** 1.2.0 / 2004-11-29
 
 + 9 minor enhancements
 	+ ParseTree now returns symbols for all data except in :str and :lit.
