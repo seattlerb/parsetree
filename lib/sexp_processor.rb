@@ -110,6 +110,23 @@ class Sexp < Array # ZenTest FULL
     self[1..-1]
   end
 
+  ##
+  # Returnes the bare bones structure of the sexp.
+  # s(:a, :b, s(:c, :d), :e) => s(:a, s(:c))
+
+  def structure
+    result = self.class.new
+    if Array === self.first then
+      result = self.first.structure
+    else
+      result << self.shift
+      self.grep(Array).each do |subexp|
+        result << subexp.structure
+      end
+    end
+    result
+  end
+
   def ==(obj) # :nodoc:
     case obj
     when Sexp
@@ -125,7 +142,7 @@ class Sexp < Array # ZenTest FULL
 
   def inspect # :nodoc:
     sexp_str = self.map {|x|x.inspect}.join(', ')
-    return "Sexp.new(#{sexp_str})"
+    return "s(#{sexp_str})"
   end
 
   def pretty_print(q) # :nodoc:
@@ -145,7 +162,7 @@ class Sexp < Array # ZenTest FULL
   def shift
     raise "I'm empty" if self.empty?
     super
-  end if $DEBUG and $TESTING
+  end if $DEBUG or $TESTING
 
 end
 
@@ -157,18 +174,31 @@ def s(*args)
 end
 
 ##
+# Raised by SexpProcessor if it sees a node type listed in its
+# unsupported list.
+
+class UnsupportedNodeError < SyntaxError; end
+
+##
+# Raised by SexpProcessor if a processor did not process every node in
+# a sexp and @require_empty is true.
+
+class NotEmptyError < SyntaxError; end
+
+##
 # SexpProcessor provides a uniform interface to process Sexps.
 #
 # In order to create your own SexpProcessor subclass you'll need
 # to call super in the initialize method, then set any of the
 # Sexp flags you want to be different from the defaults.
 #
-# SexpProcessor uses a Sexp's type to determine which process
-# method to call in the subclass.  For Sexp <code>s(:lit,
-# 1)</code> SexpProcessor will call #process_lit.
+# SexpProcessor uses a Sexp's type to determine which process method
+# to call in the subclass.  For Sexp <code>s(:lit, 1)</code>
+# SexpProcessor will call #process_lit, if it is defined.
 #
-# You can also provide a default method to call for any Sexp
-# types without a process_ method.
+# You can also specify a default method to call for any Sexp types
+# without a process_<type> method or use the default processor provided to
+# skip over them.
 #
 # Here is a simple example:
 #
@@ -187,7 +217,7 @@ end
 class SexpProcessor
   
   ##
-  # A default method to call if a process_ method is not found
+  # A default method to call if a process_<type> method is not found
   # for the Sexp type.
 
   attr_accessor :default_method
@@ -199,18 +229,19 @@ class SexpProcessor
 
   ##
   # Automatically shifts off the Sexp type before handing the
-  # Sexp to process_
+  # Sexp to process_<type>
 
   attr_accessor :auto_shift_type
 
   ##
-  # A list of Sexp types.  Raises an exception if a Sexp type in
-  # this list is encountered.
+  # An array that specifies node types that are unsupported by this
+  # processor. SexpProcesor will raise UnsupportedNodeError if you try
+  # to process one of those node types.
 
-  attr_accessor :exclude
+  attr_accessor :unsupported
 
   ##
-  # Raise an exception if no process_ method is found for a Sexp.
+  # Raise an exception if no process_<type> method is found for a Sexp.
 
   attr_accessor :strict
 
@@ -249,7 +280,7 @@ class SexpProcessor
     @warn_on_default = true
     @auto_shift_type = false
     @strict = false
-    @exclude = []
+    @unsupported = []
     @debug = {}
     @expected = Sexp
     @require_empty = true
@@ -257,18 +288,23 @@ class SexpProcessor
 
     # we do this on an instance basis so we can subclass it for
     # different processors.
-    @methods = {}
+    @processors = {}
+    @rewriters  = {}
 
     public_methods.each do |name|
-      next unless name =~ /^process_(.*)/
-      @methods[$1.intern] = name.intern
+      case name
+      when /^process_(.*)/ then
+        @processors[$1.intern] = name.intern
+      when /^rewrite_(.*)/ then
+        @rewriters[$1.intern]  = name.intern
+      end
     end
   end
 
   ##
-  # Default Sexp processor.  Invokes process_ methods matching
-  # the Sexp type given.  Performs additional checks as specified
-  # by the initializer.
+  # Default Sexp processor.  Invokes process_<type> methods matching
+  # the Sexp type given.  Performs additional checks as specified by
+  # the initializer.
 
   def process(exp)
     return nil if exp.nil?
@@ -291,22 +327,42 @@ class SexpProcessor
       end
     end
     
-    raise SyntaxError, "'#{type}' is not a supported node type." if @exclude.include? type
+    raise UnsupportedNodeError, "'#{type}' is not a supported node type." if @unsupported.include? type
 
-    meth = @methods[type] || @default_method
+    # do a pass through the rewriter first, if any, reassign back to exp
+    meth = @rewriters[type]
     if meth then
+      new_exp = self.send(meth, exp)
+      # REFACTOR: duplicated from below
+      if @require_empty and not exp.empty? then
+        msg = "exp not empty after #{self.class}.#{meth} on #{exp.inspect}"
+        if $DEBUG then
+          msg += " from #{exp_orig.inspect}" 
+        end
+        raise NotEmptyError, msg
+      end
+      exp = new_exp
+    end
+
+    # now do a pass with the real processor (or generic
+    meth = @processors[type] || @default_method
+    if meth then
+
       if @warn_on_default and meth == @default_method then
-        $stderr.puts "WARNING: falling back to default method #{meth} for #{exp.first}"
+        $stderr.puts "WARNING: Using default method #{meth} for #{type}"
       end
-      if @auto_shift_type and meth != @default_method then
-        exp.shift
-      end
+
+      exp.shift if @auto_shift_type and meth != @default_method
+
       result = self.send(meth, exp)
       raise TypeError, "Result must be a #{@expected}, was #{result.class}:#{result.inspect}" unless @expected === result
-      if $DEBUG then
-        raise "exp not empty after #{self.class}.#{meth} on #{exp.inspect} from #{exp_orig.inspect}" if @require_empty and not exp.empty?
-      else
-        raise "exp not empty after #{self.class}.#{meth} on #{exp.inspect}" if @require_empty and not exp.empty?
+
+      if @require_empty and not exp.empty? then
+        msg = "exp not empty after #{self.class}.#{meth} on #{exp.inspect}"
+        if $DEBUG then
+          msg += " from #{exp_orig.inspect}" 
+        end
+        raise NotEmptyError, msg
       end
     else
       unless @strict then

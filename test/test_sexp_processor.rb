@@ -36,7 +36,7 @@ class TestProcessor < SexpProcessor # ZenTest SKIP
   end
 
   def process_nonempty(exp)
-    exp
+    s(*exp)
   end
 
   def process_broken(exp)
@@ -53,6 +53,14 @@ class TestProcessor < SexpProcessor # ZenTest SKIP
   def process_string(exp)
     return exp.shift
   end 
+
+  def rewrite_rewritable(exp)
+    return s(exp.shift, exp.pop, exp.shift)
+  end
+
+  def process_rewritable(exp)
+    return s(exp.shift, exp.shift == 2, exp.shift == 1)
+  end
 
 end
 
@@ -72,19 +80,15 @@ end
 
 class TestSexp < Test::Unit::TestCase # ZenTest FULL
 
-  def util_sexp_class
-    Object.const_get(self.class.name[4..-1])
-  end
-
   def setup
-    @sexp_class = util_sexp_class
+    @sexp_class = Object.const_get(self.class.name[4..-1])
     @processor = SexpProcessor.new
     @sexp = @sexp_class.new(1, 2, 3)
   end
 
   def test_new_nested
-    @sexp = Sexp.new(:lasgn, "var", Sexp.new(:str, "foo"))
-    assert_equal('Sexp.new(:lasgn, "var", Sexp.new(:str, "foo"))',
+    @sexp = s(:lasgn, "var", s(:str, "foo"))
+    assert_equal('s(:lasgn, "var", s(:str, "foo"))',
                  @sexp.inspect)
   end
 
@@ -99,12 +103,12 @@ class TestSexp < Test::Unit::TestCase # ZenTest FULL
   end
 
   def test_equals_sexp
-    sexp2 = Sexp.new(1, 2, 3)
+    sexp2 = s(1, 2, 3)
     assert_equal(@sexp, sexp2)
   end
 
   def test_equals_not_body
-    sexp2 = Sexp.new(1, 2, 5)
+    sexp2 = s(1, 2, 5)
     assert_not_equal(@sexp, sexp2)
   end
  
@@ -159,20 +163,11 @@ class TestSexp < Test::Unit::TestCase # ZenTest FULL
     assert_equal(expected, @sexp)
   end
 
-  def test_inspect
-    k = @sexp_class
-    assert_equal("#{k}.new()",
-                 k.new().inspect)
-    assert_equal("#{k}.new(:a)",
-                 k.new(:a).inspect)
-    assert_equal("#{k}.new(:a, :b)",
-                 k.new(:a, :b).inspect)
-    assert_equal("#{k}.new(:a, #{k}.new(:b))",
-                 k.new(:a, k.new(:b)).inspect)
-  end
+  def test_structure
+    @sexp    = s(:a, 1, 2, s(:b, 3, 4), 5, 6)
+    expected = s(:a, s(:b))
 
-  def test_to_s
-    test_inspect
+    assert_equal(expected, @sexp.structure)
   end
 
   def test_method_missing
@@ -185,6 +180,23 @@ class TestSexp < Test::Unit::TestCase # ZenTest FULL
     assert_nothing_raised do
       assert_equal 2, @sexp.its_a_method_now
     end
+  end
+
+  def test_inspect
+    k = @sexp_class
+    n = k.name[0].chr.downcase
+    assert_equal("#{n}()",
+                 k.new().inspect)
+    assert_equal("#{n}(:a)",
+                 k.new(:a).inspect)
+    assert_equal("#{n}(:a, :b)",
+                 k.new(:a, :b).inspect)
+    assert_equal("#{n}(:a, #{n}(:b))",
+                 k.new(:a, k.new(:b)).inspect)
+  end
+
+  def test_to_s
+    test_inspect
   end
 
   def util_pretty_print(expect, input)
@@ -209,9 +221,11 @@ class TestSexp < Test::Unit::TestCase # ZenTest FULL
     assert_equal(1, @sexp.shift)
     assert_equal(2, @sexp.shift)
     assert_equal(3, @sexp.shift)
-    assert_nil(@sexp.shift)
-  end
 
+    assert_raise(RuntimeError) do
+      @sexp.shift
+    end
+  end
 end
 
 class TestSexpProcessor < Test::Unit::TestCase
@@ -273,14 +287,13 @@ class TestSexpProcessor < Test::Unit::TestCase
     end
   end
 
-  def test_exclude
-    @processor.exclude = [ :blah ]
-    assert_raise(SyntaxError) do
-      @processor.process([:blah, 1, 2, 3])
+  def test_unsupported_equal
+    @processor.strict = true
+    @processor.unsupported = [ :unsupported ]
+    assert_raises(UnsupportedNodeError) do
+      @processor.process([:unsupported, 42])
     end
   end
-
-  def test_exclude=; end # Handled
 
   def test_strict
     @processor.strict = true
@@ -300,7 +313,7 @@ class TestSexpProcessor < Test::Unit::TestCase
   end
 
   def test_require_empty_true
-    assert_raise(TypeError) do
+    assert_raise(NotEmptyError) do
       @processor.process([:nonempty, 1, 2, 3])
     end
   end
@@ -309,6 +322,17 @@ class TestSexpProcessor < Test::Unit::TestCase
   def test_process_strip
     @processor.auto_shift_type = true
     assert_equal([1, 2, 3], @processor.process(s(:strip, 1, 2, 3)))
+  end
+
+  def test_process_rewrite
+    assert_equal(s(:rewritable, true, true),
+                 @processor.process(s(:rewritable, 1, 2)))
+  end
+
+  def test_process_rewrite_not_empty
+    assert_raise(NotEmptyError) do
+      @processor.process(s(:rewritable, 1, 2, 2))
+    end
   end
 
   def test_assert_type_hit
@@ -353,7 +377,7 @@ class TestSexpProcessor < Test::Unit::TestCase
 
     @processor.expected = Hash
     assert_equal Hash, @processor.expected
-    assert !(Hash === Sexp.new()), "Hash === Sexp.new should not be true"
+    assert !(Hash === s()), "Hash === s() should not be true"
 
     assert_raises(TypeError) do
       @processor.process(s(:string, "string"))     # should raise
@@ -370,4 +394,3 @@ class TestSexpProcessor < Test::Unit::TestCase
   def test_warn_on_default=; end
 
 end
-
