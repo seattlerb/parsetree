@@ -291,6 +291,14 @@ class TestParseTree < Test::Unit::TestCase
           :type=, 
           [:array, [:call, [:vcall, :other], :type]]]]]]
   
+  @@whiles = [:defn,
+    :whiles,
+    [:scope,
+      [:block,
+        [:args],
+        [:while, [:false], [:fcall, :puts, [:array, [:str, "false"]]]],
+        [:while, [:false], [:fcall, :puts, [:array, [:str, "true"]]], :post]]]]
+
   @@__all = [:class, :Something, :Object]
   
   def setup

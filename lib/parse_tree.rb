@@ -63,10 +63,9 @@ class ParseTree
       klassname = klassname.to_sym
 
       code = if Class === klass then
-               superclass = klass.superclass.name
-               superclass = "nil" if superclass.empty?
-               superclass = superclass.to_sym
-               [:class, klassname, superclass]
+               sc = klass.superclass
+               sc_name = ((sc.nil? or sc.name.empty?) ? "nil" : sc.name).intern
+               [:class, klassname, sc_name]
              else
                [:module, klassname]
              end
@@ -315,6 +314,9 @@ again_no_block:
   case NODE_UNTIL:
     add_to_parse_tree(current,  node->nd_cond, newlines, locals);
     add_to_parse_tree(current,  node->nd_body, newlines, locals); 
+    if (! node->nd_3rd) {
+      rb_ary_push(current, ID2SYM(rb_intern("post")));
+    }
     break;
 
   case NODE_BLOCK_PASS:

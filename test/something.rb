@@ -179,6 +179,15 @@ class Something
     end
   end
 
+  def whiles
+    while false do
+      puts "false"
+    end
+    begin
+      puts "true"
+    end while false
+  end
+
   def self.bmethod_maker
     define_method(:bmethod_added) do |x|
       x + 1
