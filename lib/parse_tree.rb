@@ -27,7 +27,11 @@ end
 
 class ParseTree
 
-  VERSION = '1.2.0'
+  VERSION = '1.3.0'
+
+  ##
+  # Initializes a ParseTree instance. Includes newline nodes if
+  # +include_newlines+ which defaults to +$DEBUG+.
 
   def initialize(include_newlines=$DEBUG)
     @include_newlines = include_newlines
@@ -90,6 +94,7 @@ class ParseTree
     builder.include '"intern.h"'
     builder.include '"node.h"'
     builder.include '"st.h"'
+    builder.include '"env.h"'
     builder.add_compile_flags "-Wall"
     builder.add_compile_flags "-W"
     builder.add_compile_flags "-Wpointer-arith"
@@ -108,6 +113,35 @@ class ParseTree
     # builder.add_compile_flags "-Wsign-compare", 
 
     builder.prefix %q{
+        #define nd_3rd   u3.node
+
+        struct METHOD {
+          VALUE klass, rklass;
+          VALUE recv;
+          ID id, oid;
+          NODE *body;
+        };
+
+        struct BLOCK {
+          NODE *var;
+          NODE *body;
+          VALUE self;
+          struct FRAME frame;
+          struct SCOPE *scope;
+          VALUE klass;
+          NODE *cref;
+          int iter;
+          int vmode;
+          int flags;
+          int uniq;
+          struct RVarmap *dyna_vars;
+          VALUE orig_thread;
+          VALUE wrapper;
+          VALUE block_obj;
+          struct BLOCK *outer;
+          struct BLOCK *prev;
+        };
+
         static char node_type_string[][60] = {
 	  //  00
 	  "method", "fbody", "cfunc", "scope", "block",
@@ -241,7 +275,7 @@ again_no_block:
       break;
 
   case NODE_CASE:
-    add_to_parse_tree(current, node->nd_head, newlines, locals);          /* expr */
+    add_to_parse_tree(current, node->nd_head, newlines, locals); /* expr */
     node = node->nd_body;
     while (node) {
       add_to_parse_tree(current, node, newlines, locals);
@@ -257,9 +291,9 @@ again_no_block:
     break;
 
   case NODE_WHEN:
-    add_to_parse_tree(current, node->nd_head, newlines, locals);          /* args */
+    add_to_parse_tree(current, node->nd_head, newlines, locals); /* args */
     if (node->nd_body) {
-      add_to_parse_tree(current, node->nd_body, newlines, locals);        /* body */
+      add_to_parse_tree(current, node->nd_body, newlines, locals); /* body */
     } else {
       rb_ary_push(current, Qnil);
     }
@@ -297,29 +331,14 @@ again_no_block:
     break;
 
   case NODE_RESCUE:
-    {
-      NODE *resq, *n;
-      int i;
+      add_to_parse_tree(current, node->nd_1st, newlines, locals);
+      add_to_parse_tree(current, node->nd_2nd, newlines, locals);
+    break;
 
-      add_to_parse_tree(current, node->nd_head, newlines, locals);
-      resq = node->nd_resq;
-      while (resq) {
-	if (nd_type(resq) == NODE_ARRAY) {
-	  n = resq;
-	  for (i = 0; i < resq->nd_alen; i++) {
-	    add_to_parse_tree(current, n->nd_head, newlines, locals);
-	    n = n->nd_next;
-	  }
-	} else {
-	  add_to_parse_tree(current, resq->nd_args, newlines, locals);
-	}
-	add_to_parse_tree(current, resq->nd_body, newlines, locals);
-	resq = resq->nd_head;
-      }
-      if (node->nd_else) {
-	add_to_parse_tree(current, node->nd_else, newlines, locals);
-      }
-    }
+  case NODE_RESBODY:            // stmt rescue stmt | a = b rescue c - no repro
+      add_to_parse_tree(current, node->nd_3rd, newlines, locals);
+      add_to_parse_tree(current, node->nd_2nd, newlines, locals);
+      add_to_parse_tree(current, node->nd_1st, newlines, locals);
     break;
 	
   case NODE_ENSURE:
@@ -372,13 +391,29 @@ again_no_block:
     add_to_parse_tree(current, node->nd_args, newlines, locals);
     break;
 
+  case NODE_BMETHOD:
+    {
+      struct BLOCK *data;
+      Data_Get_Struct(node->nd_cval, struct BLOCK, data);
+      add_to_parse_tree(current, data->var, newlines, locals);
+      add_to_parse_tree(current, data->body, newlines, locals);
+      break;
+    }
+    break;
+
   case NODE_DMETHOD:
     {
       struct METHOD *data;
       Data_Get_Struct(node->nd_cval, struct METHOD, data);
-      // TODO: anything to do here?
+      rb_ary_push(current, ID2SYM(data->id));
+      add_to_parse_tree(current, data->body, newlines, locals);
       break;
     }
+
+  case NODE_METHOD:
+    fprintf(stderr, "u1 = %p u2 = %p u3 = %p\n", node->nd_1st, node->nd_2nd, node->nd_3rd);
+    add_to_parse_tree(current, node->nd_3rd, newlines, locals);
+    break;
 
   case NODE_SCOPE:
     add_to_parse_tree(current, node->nd_next, newlines, node->nd_tbl);
@@ -551,81 +586,114 @@ again_no_block:
     }
     break;
 	
-    case NODE_LVAR:
-    case NODE_DVAR:
-    case NODE_IVAR:
-    case NODE_CVAR:
-    case NODE_GVAR:
-    case NODE_CONST:
-    case NODE_ATTRSET:
-      rb_ary_push(current, ID2SYM(node->nd_vid));
-      break;
+  case NODE_LVAR:
+  case NODE_DVAR:
+  case NODE_IVAR:
+  case NODE_CVAR:
+  case NODE_GVAR:
+  case NODE_CONST:
+  case NODE_ATTRSET:
+    rb_ary_push(current, ID2SYM(node->nd_vid));
+    break;
 
-    case NODE_XSTR:             // u1    (%x{ls})
-    case NODE_STR:              // u1
-    case NODE_LIT:
-    case NODE_MATCH:
-      rb_ary_push(current, node->nd_lit);
-      break;
+  case NODE_XSTR:             // u1    (%x{ls})
+  case NODE_STR:              // u1
+  case NODE_LIT:
+  case NODE_MATCH:
+    rb_ary_push(current, node->nd_lit);
+    break;
 
-    case NODE_NEWLINE:
-      rb_ary_push(current, INT2FIX(nd_line(node)));
-      rb_ary_push(current, rb_str_new2(node->nd_file));
+  case NODE_NEWLINE:
+    rb_ary_push(current, INT2FIX(nd_line(node)));
+    rb_ary_push(current, rb_str_new2(node->nd_file));
 
-      if (! RTEST(newlines))
-        rb_ary_pop(ary); // nuke it
+    if (! RTEST(newlines)) rb_ary_pop(ary); // nuke it
 
-      node = node->nd_next;
-      goto again;
-      break;
+    node = node->nd_next;
+    goto again;
+    break;
 
-    case NODE_NTH_REF:          // u2 u3 ($1) - u3 is local_cnt('~') ignorable?
-      rb_ary_push(current, INT2FIX(node->nd_nth));
-      break;
+  case NODE_NTH_REF:          // u2 u3 ($1) - u3 is local_cnt('~') ignorable?
+    rb_ary_push(current, INT2FIX(node->nd_nth));
+    break;
 
-    case NODE_BACK_REF:         // u2 u3 ($& etc)
-      {
-      char c = node->nd_nth;
-      rb_ary_push(current, rb_str_intern(rb_str_new(&c, 1)));
-      }
-      break;
-
-    case NODE_BLOCK_ARG:        // u1 u3 (def x(&b)
-      rb_ary_push(current, ID2SYM(node->u1.id));
-      break;
-
-    // these nodes are empty and do not require extra work:
-    case NODE_RETRY:
-    case NODE_FALSE:
-    case NODE_NIL:
-    case NODE_SELF:
-    case NODE_TRUE:
-    case NODE_ZARRAY:
-    case NODE_ZSUPER:
-    case NODE_REDO:
-      break;
-
-    case NODE_BMETHOD:  // I am reasonably sure this is runtime only
-    default:
-      rb_warn("Unhandled node #%d type '%s'", nd_type(node), node_type_string[nd_type(node)]);
-      if (RNODE(node)->u1.node != NULL) rb_warning("unhandled u1 value");
-      if (RNODE(node)->u2.node != NULL) rb_warning("unhandled u2 value");
-      if (RNODE(node)->u3.node != NULL) rb_warning("unhandled u3 value");
-      rb_ary_push(current, INT2FIX(-99));
-      rb_ary_push(current, INT2FIX(nd_type(node)));
-      break;
+  case NODE_BACK_REF:         // u2 u3 ($& etc)
+    {
+    char c = node->nd_nth;
+    rb_ary_push(current, rb_str_intern(rb_str_new(&c, 1)));
     }
+    break;
 
-//  finish:
-    if (contnode) {
-	node = contnode;
-	contnode = NULL;
-        current = ary;
-        ary = old_ary;
-        old_ary = Qnil;
-	goto again_no_block;
-    }
+  case NODE_BLOCK_ARG:        // u1 u3 (def x(&b)
+    rb_ary_push(current, ID2SYM(node->u1.id));
+    break;
+
+  // these nodes are empty and do not require extra work:
+  case NODE_RETRY:
+  case NODE_FALSE:
+  case NODE_NIL:
+  case NODE_SELF:
+  case NODE_TRUE:
+  case NODE_ZARRAY:
+  case NODE_ZSUPER:
+  case NODE_REDO:
+    break;
+
+  case NODE_SPLAT:
+  case NODE_TO_ARY:
+  case NODE_SVALUE:             // a = b, c
+    add_to_parse_tree(current, node->nd_head, newlines, locals);
+    break;
+
+  case NODE_ATTRASGN:           // literal.meth = y u1 u2 u3
+    // node id node
+    add_to_parse_tree(current, node->nd_1st, newlines, locals);
+    rb_ary_push(current, ID2SYM(node->u2.id));
+    add_to_parse_tree(current, node->nd_3rd, newlines, locals);
+    break;
+
+  case NODE_DSYM:               // :"#{foo}" u1 u2 u3
+    add_to_parse_tree(current, node->nd_3rd, newlines, locals);
+    break;
+
+  case NODE_EVSTR:
+    add_to_parse_tree(current, node->nd_2nd, newlines, locals);
+    break;
+
+  case NODE_POSTEXE:            // END { ... }
+    // Nothing to do here... we are in an iter block
+    break;
+
+  // Nodes we found but have yet to decypher
+  // I think these are all runtime only... not positive but...
+  case NODE_MEMO:               // enum.c zip
+  case NODE_CFUNC:
+  case NODE_CREF:
+  case NODE_IFUNC:
+  // #defines:
+  // case NODE_LMASK:
+  // case NODE_LSHIFT:
+  default:
+    rb_warn("Unhandled node #%d type '%s'", nd_type(node), node_type_string[nd_type(node)]);
+    if (RNODE(node)->u1.node != NULL) rb_warning("unhandled u1 value");
+    if (RNODE(node)->u2.node != NULL) rb_warning("unhandled u2 value");
+    if (RNODE(node)->u3.node != NULL) rb_warning("unhandled u3 value");
+    if (RTEST(ruby_debug)) fprintf(stderr, "u1 = %p u2 = %p u3 = %p\n", node->nd_1st, node->nd_2nd, node->nd_3rd);
+    rb_ary_push(current, INT2FIX(-99));
+    rb_ary_push(current, INT2FIX(nd_type(node)));
+    break;
   }
+
+ //  finish:
+  if (contnode) {
+      node = contnode;
+      contnode = NULL;
+      current = ary;
+      ary = old_ary;
+      old_ary = Qnil;
+      goto again_no_block;
+  }
+}
 ^ # end of add_to_parse_tree block
 
     builder.c %q{

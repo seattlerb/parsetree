@@ -2,7 +2,7 @@
 
 require 'test/unit'
 require 'parse_tree'
-require 'something'
+require 'test/something'
 
 class TestParseTree < Test::Unit::TestCase
 
@@ -244,10 +244,28 @@ class TestParseTree < Test::Unit::TestCase
                 :unknown_args,
                 [:array, [:lit, 4], [:str, "known"]]]]]]]]
 
+  @@bmethod_added = [:defn,
+    :bmethod_added,
+    [:bmethod,
+      [:dasgn_curr, :x],
+      [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]
+  
+  @@dmethod_added = [:defn,
+ :dmethod_added,
+ [:dmethod,
+  :bmethod_maker,
+  [:scope,
+   [:block,
+    [:args],
+    [:iter,
+     [:fcall, :define_method, [:array, [:lit, :bmethod_added]]],
+     [:dasgn_curr, :x],
+     [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]]]]
+
   @@__all = [:class, :Something, :Object]
 
   def setup
-    @thing = ParseTree.new
+    @thing = ParseTree.new(false)
   end
 
   Something.instance_methods(false).sort.each do |meth|

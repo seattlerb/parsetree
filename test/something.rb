@@ -159,4 +159,16 @@ class Something
     5 == unknown_args(4, "known")
   end
 
+  def self.bmethod_maker
+    define_method(:bmethod_added) do |x|
+      x + 1
+    end
+  end
+  
+  def self.dmethod_maker
+    define_method :dmethod_added, self.method(:bmethod_maker)
+  end
+  
+  bmethod_maker
+  dmethod_maker
 end

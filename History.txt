@@ -1,8 +1,9 @@
-*** 1.2.1 / 2004-12-05
+*** 1.3.0 / 2004-12-06
 
-+ 2 minor enhancements
-	+ Extended ParseTree to work with all nodes.
-	+ If $DEBUG, then we now output the :newline nodes and extra debugging info.
++ 3 minor enhancements
+	+ Finished supporting pretty much all nodes (that we can figger out).
+	+ If $DEBUG, or true passed to new, then we now output the :newline nodes.
+	+ We output much better extra debugging info if $DEBUG.
 + 1 bug fixes
 	+ Fixed README for new output style.
 
