@@ -8,12 +8,16 @@ ObjectSpace.each_object(Module) do |klass|
   old_classes << klass
 end
 
-ARGV.each do |name|
-  if name == "-" then
-    eval $stdin.read
-  else
-    require name
+unless ARGV.empty? then
+  ARGV.each do |name|
+    if name == "-" then
+      eval $stdin.read
+    else
+      require name
+    end
   end
+else
+  eval $stdin.read
 end
 
 new_classes = []
