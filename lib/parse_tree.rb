@@ -337,7 +337,12 @@ again_no_block:
       add_to_parse_tree(current, node->nd_2nd, newlines, locals);
     break;
 
-  case NODE_RESBODY:            // stmt rescue stmt | a = b rescue c - no repro
+  // rescue body:
+  // begin stmt rescue exception => var; stmt; [rescue e2 => v2; s2;]* end 
+  // stmt rescue stmt
+  // a = b rescue c
+
+  case NODE_RESBODY:
       add_to_parse_tree(current, node->nd_3rd, newlines, locals);
       add_to_parse_tree(current, node->nd_2nd, newlines, locals);
       add_to_parse_tree(current, node->nd_1st, newlines, locals);
