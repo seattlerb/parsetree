@@ -187,7 +187,7 @@ again_no_block:
 
     case NODE_COLON2:
       add_to_parse_tree(current, node->nd_head);
-      rb_ary_push(current, rb_str_new2(rb_id2name(node->nd_mid)));
+      rb_ary_push(current, ID2SYM(node->nd_mid));
       break;
 
     case NODE_BEGIN:
@@ -339,7 +339,7 @@ again_no_block:
   case NODE_VCALL:
     if (nd_type(node) != NODE_FCALL)
       add_to_parse_tree(current, node->nd_recv);
-    rb_ary_push(current, rb_str_new2(rb_id2name(node->nd_mid)));
+    rb_ary_push(current, ID2SYM(node->nd_mid));
     if (node->nd_args || nd_type(node) != NODE_FCALL)
       add_to_parse_tree(current, node->nd_args);
     break;
@@ -395,7 +395,7 @@ again_no_block:
   case NODE_CVASGN:
   case NODE_CVDECL:
   case NODE_GASGN:
-    rb_ary_push(current, rb_str_new2(rb_id2name(node->nd_vid)));
+    rb_ary_push(current, ID2SYM(node->nd_vid));
     add_to_parse_tree(current, node->nd_value);
     break;
 
@@ -456,14 +456,14 @@ again_no_block:
     if (node->nd_defn) {
       if (nd_type(node) == NODE_DEFS)
 	add_to_parse_tree(current, node->nd_recv);
-      rb_ary_push(current, rb_str_new2(rb_id2name(node->nd_mid)));
+      rb_ary_push(current, ID2SYM(node->nd_mid));
       add_to_parse_tree(current, node->nd_defn);
     }
     break;
 
   case NODE_CLASS:
   case NODE_MODULE:
-    rb_ary_push(current, rb_str_new2(rb_id2name((ID)node->nd_cpath->nd_mid)));
+    rb_ary_push(current, ID2SYM((ID)node->nd_cpath->nd_mid));
     if (node->nd_super && nd_type(node) == NODE_CLASS) {
       add_to_parse_tree(current, node->nd_super);
     }
@@ -483,19 +483,19 @@ again_no_block:
 
       for (i = 0; i < node->nd_cnt; i++) {
         // regular arg names
-        rb_ary_push(current, rb_str_new2(rb_id2name(dump_local_tbl[i + 3])));
+        rb_ary_push(current, ID2SYM(dump_local_tbl[i + 3]));
       }
 
       optnode = node->nd_opt;
       while (optnode) {
         // optional arg names
-        rb_ary_push(current, rb_str_new2(rb_id2name(dump_local_tbl[i + 3])));
+        rb_ary_push(current, ID2SYM(dump_local_tbl[i + 3]));
 	i++;
 	optnode = optnode->nd_next;
       }
       if (node->nd_rest != -1) {
         // *arg name
-        rb_ary_push(current, rb_str_new2(rb_id2name(dump_local_tbl[node->nd_rest + 1])));
+        rb_ary_push(current, ID2SYM(dump_local_tbl[node->nd_rest + 1]));
       }
       optnode = node->nd_opt;
       // 
@@ -512,7 +512,7 @@ again_no_block:
     case NODE_GVAR:
     case NODE_CONST:
     case NODE_ATTRSET:
-      rb_ary_push(current, rb_str_new2(rb_id2name(node->nd_vid)));
+      rb_ary_push(current, ID2SYM(node->nd_vid));
       break;
 
     case NODE_STR:
@@ -564,7 +564,7 @@ again_no_block:
 	goto again_no_block;
     }
   }
-^
+^ # end of add_to_parse_tree block
 
     builder.c %q{
 static VALUE parse_tree_for_meth(VALUE klass, VALUE method) {
@@ -577,7 +577,7 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method) {
   id = rb_to_id(method);
   if (st_lookup(RCLASS(klass)->m_tbl, id, (st_data_t *) &node)) {
     rb_ary_push(result, ID2SYM(rb_intern("defn")));
-    rb_ary_push(result, method);
+    rb_ary_push(result, ID2SYM(id));
     add_to_parse_tree(result, node->nd_body);
   } else {
     rb_ary_push(result, Qnil);

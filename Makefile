@@ -33,6 +33,9 @@ clean:
 	-rm -r $$HOME/.ruby_inline
 	-rm -r doc
 
+demo:
+	echo 1+1 | $(RUBY) $(RUBY_FLAGS) ./bin/parse_tree_show -f
+
 gem:
 	gem ParseTree.gemspec
 

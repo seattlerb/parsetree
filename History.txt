@@ -1,7 +1,10 @@
-*** 1.1.1 / 2004-11-19
+*** 1.2.0 / 2004-??-??
 
-+ 2 bug fixes
++ N minor enhancements
+	+ Switched ParseTree to return symbols for all data except in :str and :lit.
+	+ This WILL break existing code, if there is any outside of ruby2c.
 	+ Added -f to show.rb for uber fast demos.
++ N bug fixes
 	+ Added rdoc to everything.
 
 *** 1.1.0 / 2004-11-12
