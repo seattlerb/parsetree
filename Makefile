@@ -23,11 +23,12 @@ uninstall:
 	rm -f $(RUBY_LIB)/parse_tree.rb $(RUBY_LIB)/sexp_processor.rb $(RUBY_LIB)/composite_sexp_processor.rb $(RUBY_LIB)/test_sexp_processor.rb
 	rm -f $(PREFIX)/bin/parse_tree_show $(PREFIX)/bin/parse_tree_abc
 
-audit: FORCE
+audit:
 	ZenTest composite_sexp_processor.rb sexp_processor.rb test_all.rb test_composite_sexp_processor.rb test_sexp_processor.rb
 
 clean:
-	-rm *~ diff.txt
+	-find . -name \*~ | xargs rm
+	-rm -f diff diff.txt
 	-rm -r $$HOME/.ruby_inline
 	-rm -r doc
 

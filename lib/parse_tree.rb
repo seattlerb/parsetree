@@ -66,7 +66,7 @@ class ParseTree
   #   [:defn, :name, :body]
 
   def parse_tree_for_method(klass, method)
-    parse_tree_for_meth(klass, method.to_sym)
+    parse_tree_for_meth(klass, method.to_s)
   end
 
   inline do |builder|
