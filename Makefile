@@ -22,3 +22,5 @@ uninstall:
 
 clean:
 	rm -f *~ diff.txt
+	rm -rf ~/.ruby_inline
+
