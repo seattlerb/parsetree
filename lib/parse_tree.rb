@@ -27,7 +27,7 @@ end
 
 class ParseTree
 
-  VERSION = '1.3.0'
+  VERSION = '1.3.1'
 
   ##
   # Initializes a ParseTree instance. Includes newline nodes if
@@ -647,7 +647,11 @@ again_no_block:
 
   case NODE_ATTRASGN:           // literal.meth = y u1 u2 u3
     // node id node
-    add_to_parse_tree(current, node->nd_1st, newlines, locals);
+    if (node->nd_1st == RNODE(1)) {
+      add_to_parse_tree(current, NEW_SELF(), newlines, locals);
+    } else {
+      add_to_parse_tree(current, node->nd_1st, newlines, locals);
+    }
     rb_ary_push(current, ID2SYM(node->u2.id));
     add_to_parse_tree(current, node->nd_3rd, newlines, locals);
     break;
@@ -664,10 +668,14 @@ again_no_block:
     // Nothing to do here... we are in an iter block
     break;
 
+  case NODE_CFUNC:
+    rb_ary_push(current, INT2FIX(node->nd_cfnc));
+    rb_ary_push(current, INT2FIX(node->nd_argc));
+    break;
+
   // Nodes we found but have yet to decypher
   // I think these are all runtime only... not positive but...
   case NODE_MEMO:               // enum.c zip
-  case NODE_CFUNC:
   case NODE_CREF:
   case NODE_IFUNC:
   // #defines:

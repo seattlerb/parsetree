@@ -159,6 +159,11 @@ class Something
     5 == unknown_args(4, "known")
   end
 
+  def attrasgn
+    42.method = y
+    self.type = other.type
+  end
+
   def self.bmethod_maker
     define_method(:bmethod_added) do |x|
       x + 1

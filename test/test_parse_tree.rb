@@ -262,8 +262,19 @@ class TestParseTree < Test::Unit::TestCase
      [:dasgn_curr, :x],
      [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]]]]
 
+  @@attrasgn = [:defn,
+    :attrasgn,
+    [:scope,
+      [:block,
+        [:args],
+        [:attrasgn, [:lit, 42], :method=, [:array, [:vcall, :y]]],
+        [:attrasgn, 
+          [:self],
+          :type=, 
+          [:array, [:call, [:vcall, :other], :type]]]]]]
+  
   @@__all = [:class, :Something, :Object]
-
+  
   def setup
     @thing = ParseTree.new(false)
   end

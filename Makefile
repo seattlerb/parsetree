@@ -4,7 +4,7 @@ RUBY_LIB?=$(shell $(RUBY) -rrbconfig -e 'include Config; print CONFIG["sitelibdi
 PREFIX?=/usr/local
 
 all test: FORCE
-	$(RUBY) $(RUBY_FLAGS) test/test_all.rb
+	GEM_SKIP=ParseTree $(RUBY) $(RUBY_FLAGS) test/test_all.rb
 
 # we only install test_sexp_processor.rb to help make ruby_to_c's
 # subclass tests work.
