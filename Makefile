@@ -21,6 +21,5 @@ uninstall:
 	rm -f $(PREFIX)/bin/parse_tree_show $(PREFIX)/bin/parse_tree_abc
 
 clean:
-	rm -f *~ diff.txt
-	rm -rf ~/.ruby_inline
-
+	-rm *~ diff.txt
+	-rm -r $$HOME/.ruby_inline
