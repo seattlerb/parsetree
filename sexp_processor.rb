@@ -2,19 +2,43 @@
 $TESTING = false unless defined? $TESTING
 
 class Object
+
+  ##
+  # deep_clone is the usual Marshalling hack to make a deep copy.
+  # It is rather slow, so use it sparingly. Helps with debugging
+  # SexpProcessors since you usually shift off sexps.
+
   def deep_clone
     Marshal.load(Marshal.dump(self))
   end
 end
 
+##
+# Sexps are the basic storage mechanism of SexpProcessor.  Sexps have
+# a +type+ (to be renamed +node_type+) which is the first element of
+# the Sexp. The type is used by SexpProcessor to determine whom to
+# dispatch the Sexp to for processing.
+
 class Sexp < Array # ZenTest FULL
 
   @@array_types = [ :array, :args, ]
 
+  ##
+  # Named positional parameters.
+  # Use with +SexpProcessor.require_empty=false+.
   attr_accessor :accessors
+
+  ##
+  # Set to true to have the SexpProcessor replace the current Sexp
+  # result with the contents of this Sexp. Only needed when doing tree
+  # modifications where one sexp is being replaced with multiple.
+
   attr_accessor :unpack
 
   alias_method :unpack?, :unpack
+
+  ##
+  # Create a new Sexp containing +args+.
 
   def initialize(*args)
     @unpack = false
@@ -22,10 +46,18 @@ class Sexp < Array # ZenTest FULL
     super(args)
   end
 
+  ##
+  # Returns true if the node_type is +array+ or +args+.
+  #
+  # REFACTOR: to TypedSexp - we only care when we have units.
+
   def array_type?
     type = self.first
     @@array_types.include? type
   end
+
+  ##
+  # Enumeratates the sexp yielding to +b+ when the node_type == +t+.
 
   def each_of_type(t, &b)
     each do | elem |
@@ -36,7 +68,10 @@ class Sexp < Array # ZenTest FULL
     end
   end
 
-  # TODO: need to write test
+  ##
+  # Replaces all elements whose node_type is +from+ with +to+. Used
+  # only for the most trivial of rewrites.
+
   def find_and_replace_all(from, to)
     each_with_index do | elem, index |
       if Sexp === elem then
@@ -47,6 +82,30 @@ class Sexp < Array # ZenTest FULL
     end
   end
 
+  ##
+  # Fancy-Schmancy method used to implement named positional accessors
+  # via +accessors+.
+  #
+  # Example:
+  #
+  #   class MyProcessor < SexpProcessor
+  #     def initialize
+  #       super
+  #       self.require_empty = false
+  #       self.sexp_accessors = {
+  #         :call => [:lhs, :name, :rhs]
+  #       }
+  #       ...
+  #     end
+  #   
+  #     def process_call(exp)
+  #       lhs = exp.lhs
+  #       name = exp.name
+  #       rhs = exp.rhs
+  #       ...
+  #     end
+  #   end
+
   def method_missing(meth, *a, &b)
     super unless @accessors.include? meth
 
@@ -54,11 +113,14 @@ class Sexp < Array # ZenTest FULL
     return self.at(index)
   end
 
+  ##
+  # Returns the Sexp without the node_type.
+
   def sexp_body
     self[1..-1]
   end
 
-  def ==(obj)
+  def ==(obj) # :nodoc:
     case obj
     when Sexp
       super
@@ -67,24 +129,28 @@ class Sexp < Array # ZenTest FULL
     end
   end
 
-  def to_a
+  def to_a # :nodoc:
     self.map { |o| Sexp === o ? o.to_a : o }
   end
 
-  def inspect
+  def inspect # :nodoc:
     sexp_str = self.map {|x|x.inspect}.join(', ')
     return "Sexp.new(#{sexp_str})"
   end
 
-  def pretty_print(q)
+  def pretty_print(q) # :nodoc:
     q.group(1, 's(', ')') do
       q.seplist(self) {|v| q.pp v }
     end
   end
 
-  def to_s
+  def to_s # :nodoc:
     inspect
   end
+
+  ##
+  # If run with debug, Sexp will raise if you shift on an empty
+  # Sexp. Helps with debugging.
 
   def shift
     raise "I'm empty" if self.empty?
@@ -93,7 +159,10 @@ class Sexp < Array # ZenTest FULL
 
 end
 
-def s(*args) # stupid shortcut to make indentation much cleaner
+##
+# This is just a stupid shortcut to make indentation much cleaner.
+
+def s(*args)
   Sexp.new(*args)
 end
 
@@ -114,7 +183,6 @@ end
 # Here is a simple example:
 #
 #   class MyProcessor < SexpProcessor
-#   
 #     def initialize
 #       super
 #       self.strict = false
@@ -124,7 +192,6 @@ end
 #       val = exp.shift
 #       return val
 #     end
-#   
 #   end
 
 class SexpProcessor

@@ -9,6 +9,9 @@ all test:
 # we only install test_sexp_processor.rb to help make ruby_to_c's
 # subclass tests work.
 
+docs:
+	rdoc -d -I png --main SexpProcessor -x test_\* -x something.rb
+
 install:
 	cp -f parse_tree.rb test_sexp_processor.rb sexp_processor.rb composite_sexp_processor.rb $(RUBY_LIB)
 	cp -f show.rb $(PREFIX)/bin/parse_tree_show
@@ -23,3 +26,4 @@ uninstall:
 clean:
 	-rm *~ diff.txt
 	-rm -r $$HOME/.ruby_inline
+	-rm -r doc

@@ -2,9 +2,43 @@
 
 require "inline"
 
+##
+# ParseTree is a RubyInline-style extension that accesses and
+# traverses the internal parse tree created by ruby.
+#
+#   class Example
+#     def blah
+#       return 1 + 1
+#     end
+#   end
+#
+#   ParseTree.new.parse_tree(Example)
+#   =>  [[:defn,
+#         "blah",
+#         [:scope,
+#          [:block,
+#           [:args],
+#            [:return, [:call, [:lit, 1], "+", [:array, [:lit, 1]]]]]]]]
+
 class ParseTree
 
-  VERSION = '1.1.0'
+  VERSION = '1.1.1'
+
+  ##
+  # Main driver for ParseTree. Returns an array of arrays containing
+  # the parse tree for +klass+ and optionally +meth+.
+
+  def parse_tree(klass, meth=nil)
+    code = []
+    if meth then
+      code = parse_tree_for_method(klass, meth.to_s)
+    else
+      klass.instance_methods(false).sort.each do |m|
+	code << parse_tree_for_method(klass, m)
+      end
+    end
+    return code
+  end
 
   inline do |builder|
     builder.add_type_converter("VALUE", '', '')
@@ -523,18 +557,5 @@ static VALUE parse_tree_for_method(VALUE klass, VALUE method) {
   return result;
 }
 }
-  end
-
-  def parse_tree(klass, meth=nil)
-    code = []
-    if meth then
-      code = parse_tree_for_method(klass, meth.to_s)
-    else
-      klass.instance_methods(false).sort.each do |m|
-	code << parse_tree_for_method(klass, m)
-      end
-    end
-    return code
-  end
-
-end
+  end # inline call
+end # ParseTree class
