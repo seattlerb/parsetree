@@ -54,7 +54,9 @@ class ParseTree
     result = []
     klasses.each do |klass|
       raise "You should call parse_tree_for_method(#{klasses.first}, #{klass}) instead of parse_tree" if Symbol === klass or String === klass
-      klassname = klass.name
+      klassname = klass.name || '' # HACK klass.name should never be nil
+                                   # Tempfile's DelegateClass(File) seems to
+                                   # cause this
       klassname = "UnnamedClass_#{klass.object_id}" if klassname.empty?
       klassname = klassname.to_sym
 
