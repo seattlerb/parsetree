@@ -1,10 +1,10 @@
 RUBY?=ruby
-RUBY_FLAGS?=-w -I.
+RUBY_FLAGS?=-w -Ilib
 RUBY_LIB?=$(shell $(RUBY) -rrbconfig -e 'include Config; print CONFIG["sitelibdir"]')
 PREFIX?=/usr/local
 
-all test:
-	$(RUBY) $(RUBY_FLAGS) test_all.rb
+all test: FORCE
+	$(RUBY) $(RUBY_FLAGS) test/test_all.rb
 
 # we only install test_sexp_processor.rb to help make ruby_to_c's
 # subclass tests work.
@@ -30,5 +30,8 @@ clean:
 	-rm *~ diff.txt
 	-rm -r $$HOME/.ruby_inline
 	-rm -r doc
+
+gem:
+	gem ParseTree.gemspec
 
 FORCE:
