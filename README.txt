@@ -2,7 +2,7 @@ ParseTree
     http://www.zenspider.com/ZSS/Products/ParseTree/
     support@zenspider.com
 
-DESCRIPTION:
+** DESCRIPTION:
   
 ParseTree is a C extension (using RubyInline) that extracts the parse
 tree for an entire class or a specific method and returns it as a
@@ -31,7 +31,7 @@ becomes:
        nil],
       [:return, [:lit, 0]]]]]
 
-FEATURES/PROBLEMS:
+** FEATURES/PROBLEMS:
   
 + Uses RubyInline, so it just drops in.
 + Includes show.rb, which lets you quickly snoop code.
@@ -41,7 +41,7 @@ FEATURES/PROBLEMS:
 + Only works on methods in classes/modules, not arbitrary code.
 + Does not work on the core classes, as they are not ruby (yet).
 
-SYNOPSYS:
+** SYNOPSYS:
 
   sexp_array = ParseTree.new.parse_tree(klass)
 
@@ -53,17 +53,17 @@ or:
 
   % ./parse_tree_abc myfile.rb
 
-REQUIREMENTS:
+** REQUIREMENTS:
 
 + RubyInline 3 or better.
 
-INSTALL:
+** INSTALL:
 
 + sudo make install
 	+ renames show.rb to parse_tree_show
 	+ renames abc.rb to parse_tree_abc
 
-LICENSE:
+** LICENSE:
 
 (The MIT License)
 
