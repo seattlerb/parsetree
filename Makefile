@@ -1,5 +1,5 @@
 RUBY?=ruby
-RUBY_FLAGS?=-w
+RUBY_FLAGS?=-w -I.
 RUBY_LIB?=$(shell $(RUBY) -rrbconfig -e 'include Config; print CONFIG["sitelibdir"]')
 PREFIX?=/usr/local
 

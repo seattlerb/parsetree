@@ -88,6 +88,12 @@ class Something
     end
   end
 
+  def iteration6
+    3.downto(1) do
+      puts "hello"
+    end
+  end
+
   def case_stmt
     var = 2
     result = ""

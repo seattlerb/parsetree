@@ -151,6 +151,15 @@ class TestParseTree < Test::Unit::TestCase
     [:call, [:lit, 3], "downto", [:array, [:lit, 1]]],
     [:dasgn_curr, "n"],
     [:fcall, "puts", [:array, [:call, [:dvar, "n"], "to_s"]]]]]]]
+  @@iteration6 = [:defn,
+ "iteration6",
+ [:scope,
+      [:block,
+   [:args],
+   [:iter,
+    [:call, [:lit, 3], "downto", [:array, [:lit, 1]]],
+    nil,
+    [:fcall, "puts", [:array, [:str, "hello"]]]]]]]
   @@multi_args = [:defn, "multi_args",
     [:scope,
       [:block,

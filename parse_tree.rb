@@ -193,8 +193,11 @@ again_no_block:
   case NODE_ITER:
   case NODE_FOR:
     add_to_parse_tree(current, node->nd_iter);
-    if (node->nd_var != (NODE *)1)
+    if (node->nd_var != (NODE *)-1 && node->nd_var != NULL) {
       add_to_parse_tree(current, node->nd_var);
+    } else {
+      rb_ary_push(current, Qnil);
+    }
     add_to_parse_tree(current, node->nd_body);
     break;
 
