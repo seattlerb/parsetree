@@ -199,6 +199,12 @@ end
 class UnsupportedNodeError < SyntaxError; end
 
 ##
+# Raised by SexpProcessor if it is in strict mode and sees a node for
+# which there is no processor available.
+
+class UnknownNodeError < SyntaxError; end
+
+##
 # Raised by SexpProcessor if a processor did not process every node in
 # a sexp and @require_empty is true.
 
@@ -346,7 +352,7 @@ class SexpProcessor
       end
     end
     
-    raise UnsupportedNodeError, "'#{type}' is not a supported node type." if @unsupported.include? type
+    raise UnsupportedNodeError, "'#{type}' is not a supported node type" if @unsupported.include? type
 
     # do a pass through the rewriter first, if any, reassign back to exp
     meth = @rewriters[type]
@@ -407,7 +413,7 @@ class SexpProcessor
           # nothing to do, on purpose
         end
       else
-        raise SyntaxError, "Bug! Unknown type #{type.inspect} to #{self.class}"
+        raise UnknownNodeError, "Bug! Unknown type #{type.inspect} to #{self.class}"
       end
     end
     result

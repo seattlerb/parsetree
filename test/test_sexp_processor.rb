@@ -297,7 +297,7 @@ class TestSexpProcessor < Test::Unit::TestCase
 
   def test_strict
     @processor.strict = true
-    assert_raise(SyntaxError) do
+    assert_raise(UnknownNodeError) do
       @processor.process([:blah, 1, 2, 3])
     end
   end
