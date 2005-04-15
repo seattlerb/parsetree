@@ -40,4 +40,10 @@ class CompositeSexpProcessor < SexpProcessor
     end
     exp
   end
+
+  def on(exception, &block)
+    @processors.each do |processor|
+      processor.on(exception, &block)
+    end
+  end
 end

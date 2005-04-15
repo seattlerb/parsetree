@@ -310,6 +310,7 @@ class SexpProcessor
     @expected = Sexp
     @require_empty = true
     @sexp_accessors = {}
+    @exceptions = {}
 
     # we do this on an instance basis so we can subclass it for
     # different processors.
@@ -334,7 +335,7 @@ class SexpProcessor
   def process(exp)
     return nil if exp.nil?
 
-    exp_orig = exp.deep_clone if $DEBUG
+    exp_orig = exp.deep_clone if $DEBUG or @exceptions.has_key?(exp.first)
     result = self.expected.new
 
     type = exp.first
@@ -355,9 +356,12 @@ class SexpProcessor
     raise UnsupportedNodeError, "'#{type}' is not a supported node type" if @unsupported.include? type
 
     # do a pass through the rewriter first, if any, reassign back to exp
+    # TODO: maybe the whole rewriting thing needs to be nuked
     meth = @rewriters[type]
     if meth then
-      new_exp = self.send(meth, exp)
+      new_exp = error_handler(type, exp_orig) do
+        self.send(meth, exp)
+      end
       # REFACTOR: duplicated from below
       if @require_empty and not exp.empty? then
         msg = "exp not empty after #{self.class}.#{meth} on #{exp.inspect}"
@@ -379,14 +383,15 @@ class SexpProcessor
 
       exp.shift if @auto_shift_type and meth != @default_method
 
-      result = self.send(meth, exp)
+      result = error_handler(type, exp_orig) do
+        self.send(meth, exp)
+      end
+
       raise TypeError, "Result must be a #{@expected}, was #{result.class}:#{result.inspect}" unless @expected === result
 
       if @require_empty and not exp.empty? then
         msg = "exp not empty after #{self.class}.#{meth} on #{exp.inspect}"
-        if $DEBUG then
-          msg += " from #{exp_orig.inspect}" 
-        end
+        msg += " from #{exp_orig.inspect}" if $DEBUG
         raise NotEmptyError, msg
       end
     else
@@ -395,7 +400,9 @@ class SexpProcessor
           sub_exp = exp.shift
           sub_result = nil
           if Array === sub_exp then
-            sub_result = process(sub_exp)
+            sub_result = error_handler(type, exp_orig) do
+              process(sub_exp)
+            end
             raise "Result is a bad type" unless Array === sub_exp
             raise "Result does not have a type in front: #{sub_exp.inspect}" unless Symbol === sub_exp.first unless sub_exp.empty?
           else
@@ -413,7 +420,9 @@ class SexpProcessor
           # nothing to do, on purpose
         end
       else
-        raise UnknownNodeError, "Bug! Unknown type #{type.inspect} to #{self.class}"
+        msg = "Bug! Unknown node-type #{type.inspect} to #{self.class}"
+        msg += " in #{exp_orig.inspect} from #{caller.inspect}" if $DEBUG
+        raise UnknownNodeError, msg
       end
     end
     result
@@ -429,6 +438,26 @@ class SexpProcessor
   def assert_type(list, typ)
     raise TypeError, "Expected type #{typ.inspect} in #{list.inspect}" if
       list.first != typ
+  end
+
+  def error_handler(type, exp=nil) # :nodoc:
+    if @exceptions.has_key? type then
+      begin
+        return yield
+      rescue Exception => err
+        return @exceptions[type].call(self, exp, err)
+      end
+    else
+      return yield
+    end
+  end
+  private :error_handler
+
+  ##
+  # Registers an error handler for +node+
+
+  def on(node, &block)
+    @exceptions[node] = block
   end
 
   ##
