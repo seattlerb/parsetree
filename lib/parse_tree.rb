@@ -28,7 +28,7 @@ end
 
 class ParseTree
 
-  VERSION = '1.3.4'
+  VERSION = '1.3.5'
 
   ##
   # Initializes a ParseTree instance. Includes newline nodes if

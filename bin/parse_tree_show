@@ -23,6 +23,7 @@ def discover_new_classes_from
   end
 
   new_classes - old_classes
+  new_classes = [ eval($c) ] if defined? $c
 end
 
 $f = false unless defined? $f

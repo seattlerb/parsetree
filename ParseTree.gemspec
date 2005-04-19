@@ -14,8 +14,9 @@ spec = Gem::Specification.new do |s|
   s.description = paragraphs[2]
   puts "Description = #{s.description}"
 
-  s.requirements << "RubyInline."
-  s.files = IO.readlines("Manifest.txt").map {|f| f.chomp }
+  s.add_dependency('RubyInline', '>= 3.2.0')
+  files = IO.readlines("Manifest.txt")
+  s.files = files.map {|f| f.chomp }.reject {|n| n =~ /\.gemspec/ }
 
   s.require_paths = ['lib', 'test']
   s.autorequire = 'parse_tree'
