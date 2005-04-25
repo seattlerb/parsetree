@@ -335,15 +335,17 @@ class SexpProcessor
   def process(exp)
     return nil if exp.nil?
 
-    exp_orig = exp.deep_clone if $DEBUG or @exceptions.has_key?(exp.first)
     result = self.expected.new
 
     type = exp.first
 
-    if @debug.include? type then
+    if @debug.has_key? type then
       str = exp.inspect
       puts "// DEBUG: #{str}" if str =~ @debug[type]
     end
+
+    exp_orig = exp.deep_clone if $DEBUG or
+      @debug.has_key? type or @exceptions.has_key?(type)
 
     if Sexp === exp then
       if @sexp_accessors.include? type then
@@ -441,14 +443,15 @@ class SexpProcessor
   end
 
   def error_handler(type, exp=nil) # :nodoc:
-    if @exceptions.has_key? type then
-      begin
-        return yield
-      rescue Exception => err
-        return @exceptions[type].call(self, exp, err)
-      end
-    else
+    begin
       return yield
+    rescue Exception => err
+      if @exceptions.has_key? type then
+        return @exceptions[type].call(self, exp, err)
+      else
+        puts "#{err.class} Exception thrown while processing #{type} for sexp #{exp.inspect}" if $DEBUG
+        raise
+      end
     end
   end
   private :error_handler
