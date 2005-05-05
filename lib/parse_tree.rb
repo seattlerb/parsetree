@@ -70,7 +70,12 @@ class ParseTree
                [:module, klassname]
              end
 
-      klass.instance_methods(false).sort.each do |m|
+      method_names = []
+      method_names += klass.instance_methods false
+      method_names += klass.private_instance_methods false
+      # protected methods are included in instance_methods, go figure!
+
+      method_names.sort.each do |m|
         $stderr.puts "parse_tree_for_method(#{klass}, #{m}):" if $DEBUG
         code << parse_tree_for_method(klass, m.to_sym)
       end

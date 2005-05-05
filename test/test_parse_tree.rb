@@ -4,7 +4,22 @@ require 'test/unit'
 require 'parse_tree'
 require 'test/something'
 
+class SomethingWithInitialize
+  def initialize; end # this method is private
+  protected
+  def protected_meth; end
+end
+
 class TestParseTree < Test::Unit::TestCase
+
+  def test_class_initialize
+    expected = [[:class, :SomethingWithInitialize, :Object,
+      [:defn, :initialize, [:scope, [:block, [:args], [:nil]]]],
+      [:defn, :protected_meth, [:scope, [:block, [:args], [:nil]]]],
+    ]]
+    tree = @thing.parse_tree SomethingWithInitialize
+    assert_equal expected, tree
+  end
 
   # TODO: need a test of interpolated strings
 
