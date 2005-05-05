@@ -56,7 +56,7 @@ class ParseTree
     klasses.each do |klass|
       # TODO: remove this on v 1.1
       raise "You should call parse_tree_for_method(#{klasses.first}, #{klass}) instead of parse_tree" if Symbol === klass or String === klass
-      klassname = klass.name || '' # HACK klass.name should never be nil
+      klassname = klass.name rescue '' # HACK klass.name should never be nil
                                    # Tempfile's DelegateClass(File) seems to
                                    # cause this
       klassname = "UnnamedClass_#{klass.object_id}" if klassname.empty?
