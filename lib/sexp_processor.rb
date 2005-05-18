@@ -449,7 +449,7 @@ class SexpProcessor
       if @exceptions.has_key? type then
         return @exceptions[type].call(self, exp, err)
       else
-        puts "#{err.class} Exception thrown while processing #{type} for sexp #{exp.inspect}" if $DEBUG
+        puts "#{err.class} Exception thrown while processing #{type} for sexp #{exp.inspect} #{caller.inspect}" if $DEBUG
         raise
       end
     end

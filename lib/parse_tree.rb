@@ -35,6 +35,9 @@ class ParseTree
   # +include_newlines+ which defaults to +$DEBUG+.
 
   def initialize(include_newlines=$DEBUG)
+    if include_newlines then
+      warn "WARNING: include_newlines=true from #{caller[0..9].join(', ')}"
+    end
     @include_newlines = include_newlines
   end
 
