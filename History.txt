@@ -1,3 +1,13 @@
+*** 1.3.6 / 2005-05-19
+
++ 2 minor enhancements:
+	+ Improved debugging capability when $DEBUG.
+	+ Allowed for selective debugging output by node type.
++ 3 bug fixes:
+	+ Minor fixes to Makefile and parse_tree_show.
+	+ Improved error messages in parse_tree when newlines are included.
+	+ Improved method coverage for parse_tree.
+
 *** 1.3.5 / 2005-04-19
 
 + 2 minor enhancement

@@ -1,7 +1,9 @@
 # -*- ruby -*-
 
 require 'rubygems'
+$: << "../../RubyInline/dev"
 $: << "./lib"
+require 'inline'
 require 'parse_tree'
 
 spec = Gem::Specification.new do |s|
