@@ -6,13 +6,8 @@ ObjectSpace.each_object(Module) { |klass| old_classes << klass } if defined? $a
 
 require 'pp'
 
-begin
-  require 'rubygems'
-  require_gem 'ParseTree'
-rescue LoadError
-  require 'parse_tree'
-end
-
+require 'rubygems'
+require 'parse_tree'
 require 'sexp_processor'
 
 ObjectSpace.each_object(Module) { |klass| old_classes << klass } unless defined? $a

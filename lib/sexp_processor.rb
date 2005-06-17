@@ -193,22 +193,32 @@ def s(*args)
 end
 
 ##
+# SexpProcessor base exception class.
+
+class SexpProcessorError < StandardError; end
+
+##
 # Raised by SexpProcessor if it sees a node type listed in its
 # unsupported list.
 
-class UnsupportedNodeError < SyntaxError; end
+class UnsupportedNodeError < SexpProcessorError; end
 
 ##
 # Raised by SexpProcessor if it is in strict mode and sees a node for
 # which there is no processor available.
 
-class UnknownNodeError < SyntaxError; end
+class UnknownNodeError < SexpProcessorError; end
 
 ##
 # Raised by SexpProcessor if a processor did not process every node in
 # a sexp and @require_empty is true.
 
-class NotEmptyError < SyntaxError; end
+class NotEmptyError < SexpProcessorError; end
+
+##
+# Raised if assert_type encounters an unexpected sexp type.
+
+class SexpTypeError < SexpProcessorError; end
 
 ##
 # SexpProcessor provides a uniform interface to process Sexps.
@@ -389,7 +399,7 @@ class SexpProcessor
         self.send(meth, exp)
       end
 
-      raise TypeError, "Result must be a #{@expected}, was #{result.class}:#{result.inspect}" unless @expected === result
+      raise SexpTypeError, "Result must be a #{@expected}, was #{result.class}:#{result.inspect}" unless @expected === result
 
       if @require_empty and not exp.empty? then
         msg = "exp not empty after #{self.class}.#{meth} on #{exp.inspect}"
@@ -431,21 +441,21 @@ class SexpProcessor
   end
 
   def generate # :nodoc:
-    raise "not implemented yet"
+    raise NotImplementedError, "not implemented yet"
   end
 
   ##
   # Raises unless the Sexp type for +list+ matches +typ+
 
   def assert_type(list, typ)
-    raise TypeError, "Expected type #{typ.inspect} in #{list.inspect}" if
+    raise SexpTypeError, "Expected type #{typ.inspect} in #{list.inspect}" if
       list.first != typ
   end
 
   def error_handler(type, exp=nil) # :nodoc:
     begin
       return yield
-    rescue Exception => err
+    rescue SexpProcessorError => err
       if @exceptions.has_key? type then
         return @exceptions[type].call(self, exp, err)
       else

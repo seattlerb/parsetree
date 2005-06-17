@@ -8,14 +8,9 @@
 
 PARSE_TREE_ABC=true
 
-begin
-  require 'rubygems'
-  require_gem 'ParseTree'
-rescue LoadError
-  require 'parse_tree'
-end
-
-  require 'sexp_processor'
+require 'rubygems' rescue nil
+require 'parse_tree'
+require 'sexp_processor'
 
 old_classes = []
 ObjectSpace.each_object(Module) do |klass|

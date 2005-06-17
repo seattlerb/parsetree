@@ -282,7 +282,7 @@ class TestSexpProcessor < Test::Unit::TestCase
     @processor = TestProcessor.new
     @processor.warn_on_default = false
 
-    assert_raises(TypeError) do
+    assert_raises(SexpTypeError) do
       @processor.process([:broken, 1, 2, 3])
     end
   end
@@ -342,7 +342,7 @@ class TestSexpProcessor < Test::Unit::TestCase
   end
 
   def test_assert_type_miss
-    assert_raise(TypeError) do
+    assert_raise(SexpTypeError) do
       @processor.assert_type([:thingy, 1, 2, 3], :blah)
     end
   end
@@ -369,7 +369,7 @@ class TestSexpProcessor < Test::Unit::TestCase
 
   def test_expected
     assert_equal Sexp, @processor.expected
-    assert_raises(TypeError) do
+    assert_raises(SexpTypeError) do
       @processor.process([:expected])           # should raise
     end
 
@@ -379,7 +379,7 @@ class TestSexpProcessor < Test::Unit::TestCase
     assert_equal Hash, @processor.expected
     assert !(Hash === s()), "Hash === s() should not be true"
 
-    assert_raises(TypeError) do
+    assert_raises(SexpTypeError) do
       @processor.process(s(:string, "string"))     # should raise
     end
 
