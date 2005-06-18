@@ -41,9 +41,9 @@ class CompositeSexpProcessor < SexpProcessor
     exp
   end
 
-  def on(exception, &block)
+  def on_error_in(node_type, &block)
     @processors.each do |processor|
-      processor.on(exception, &block)
+      processor.on_error_in(node_type, &block)
     end
   end
 end

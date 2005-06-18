@@ -270,7 +270,7 @@ class SexpProcessor
 
   ##
   # An array that specifies node types that are unsupported by this
-  # processor. SexpProcesor will raise UnsupportedNodeError if you try
+  # processor. SexpProcessor will raise UnsupportedNodeError if you try
   # to process one of those node types.
 
   attr_accessor :unsupported
@@ -455,11 +455,11 @@ class SexpProcessor
   def error_handler(type, exp=nil) # :nodoc:
     begin
       return yield
-    rescue SexpProcessorError => err
+    rescue StandardError => err
       if @exceptions.has_key? type then
         return @exceptions[type].call(self, exp, err)
       else
-        puts "#{err.class} Exception thrown while processing #{type} for sexp #{exp.inspect} #{caller.inspect}" if $DEBUG
+        $stderr.puts "#{err.class} Exception thrown while processing #{type} for sexp #{exp.inspect} #{caller.inspect}" if $DEBUG
         raise
       end
     end
@@ -469,8 +469,8 @@ class SexpProcessor
   ##
   # Registers an error handler for +node+
 
-  def on(node, &block)
-    @exceptions[node] = block
+  def on_error_in(node_type, &block)
+    @exceptions[node_type] = block
   end
 
   ##
