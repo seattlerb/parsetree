@@ -1,6 +1,6 @@
 #!/usr/local/bin/ruby -w
 
-require 'rubygems' rescue nil
+begin require 'rubygems' rescue LoadError end
 require 'inline'
 
 ##
@@ -24,7 +24,7 @@ require 'inline'
 
 class ParseTree
 
-  VERSION = '1.3.6'
+  VERSION = '1.3.7'
 
   ##
   # Initializes a ParseTree instance. Includes newline nodes if

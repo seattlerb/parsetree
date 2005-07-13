@@ -1,3 +1,10 @@
+*** 1.3.7 / 2005-07-13
+
++ 3 bug fixes:
+	+ Fixed rubygem requires for non-gem systems.
+	+ Renamed on to on_error_in to make more clear.
+	+ Moved exceptions to their own tree to make catching cleaner.
+
 *** 1.3.6 / 2005-05-19
 
 + 2 minor enhancements:
