@@ -3,9 +3,10 @@ RUBY_DEBUG?=
 RUBY_FLAGS?=-w -Ilib:bin:../../RubyInline/dev
 RUBY_LIB?=$(shell $(RUBY) -rrbconfig -e 'include Config; print CONFIG["sitelibdir"]')
 PREFIX?=/usr/local
+FILTER?=
 
 all test: FORCE
-	$(RUBY) $(RUBY_DEBUG) $(RUBY_FLAGS) test/test_all.rb
+	$(RUBY) $(RUBY_DEBUG) $(RUBY_FLAGS) test/test_all.rb $(FILTER)
 
 # we only install test_sexp_processor.rb to help make ruby_to_c's
 # subclass tests work.
