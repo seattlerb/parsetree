@@ -124,6 +124,12 @@ class Something
 
   # Other edge cases:
 
+  def opt_args(arg1, arg2 = 42, *args)
+    arg3 = arg1 * arg2 * 7
+    puts(arg3.to_s)
+    return "foo"
+  end
+
   def multi_args(arg1, arg2)
     arg3 = arg1 * arg2 * 7
     puts(arg3.to_s)

@@ -586,7 +586,8 @@ again_no_block:
       arg_count = node->nd_rest;
       if (arg_count > 0) {
         // *arg name
-        rb_ary_push(current, ID2SYM(locals[node->nd_rest + 1]));
+        VALUE sym = rb_str_intern(rb_str_plus(rb_str_new2("*"), rb_str_new2(rb_id2name(locals[node->nd_rest + 1]))));
+        rb_ary_push(current, sym);
       } else if (arg_count == -1) {
         // nothing to do in this case, handled above
       } else if (arg_count == -2) {
