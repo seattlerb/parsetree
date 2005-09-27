@@ -33,7 +33,7 @@ class DependencyAnalyzer < SexpProcessor
     end
 
     deps = analyzer.dependencies
-    deps.keys.sort.each do |dep_to|
+    deps.keys.sort_by {|k| k.to_s}.each do |dep_to|
       dep_from = deps[dep_to]
       puts "#{dep_to}: #{dep_from.uniq.sort.join(", ")}"
     end
@@ -57,5 +57,6 @@ end
 if __FILE__ == $0 then
   ARGV.each { |name| require name }
   ObjectSpace.each_object(Module) { |klass| new_classes << klass }
+  new_classes.delete DependencyAnalyzer unless defined? $a
   DependencyAnalyzer.process(*(new_classes - old_classes))
 end

@@ -1,3 +1,9 @@
+*** 1.3.8 / 2005-09-27
+
++ 1 bug fix:
+	+ Our private version of struct METHOD went out of sync w/ latest ruby.
+	+ Only use this if you are on 1.8.3+.
+
 *** 1.3.7 / 2005-07-13
 
 + 3 bug fixes:

@@ -2,8 +2,8 @@
 
 $TESTING = true
 
-require 'test/unit' unless defined? $ZENTEST and $ZENTEST
-
+require 'test/unit' if $0 == __FILE__ unless defined? $ZENTEST and $ZENTEST
+require 'test/unit/testcase'
 require 'sexp_processor'
 require 'stringio'
 require 'pp'

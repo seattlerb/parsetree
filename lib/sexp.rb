@@ -4,6 +4,8 @@
 # the Sexp. The type is used by SexpProcessor to determine whom to
 # dispatch the Sexp to for processing.
 
+$TESTING ||= false # unless defined $TESTING
+
 class Sexp < Array # ZenTest FULL
 
   @@array_types = [ :array, :args, ]

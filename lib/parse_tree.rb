@@ -24,7 +24,7 @@ require 'inline'
 
 class ParseTree
 
-  VERSION = '1.3.7'
+  VERSION = '1.3.8'
 
   ##
   # Initializes a ParseTree instance. Includes newline nodes if
@@ -136,6 +136,7 @@ class ParseTree
           VALUE klass, rklass;
           VALUE recv;
           ID id, oid;
+          int safe_level;
           NODE *body;
         };
 

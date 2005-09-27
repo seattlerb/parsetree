@@ -5,6 +5,23 @@ RUBY_LIB?=$(shell $(RUBY) -rrbconfig -e 'include Config; print CONFIG["sitelibdi
 PREFIX?=/usr/local
 FILTER?=
 
+LIB_FILES= \
+	composite_sexp_processor.rb \
+	parse_tree.rb \
+	sexp.rb \
+	sexp_processor.rb \
+	$(END)
+
+TEST_FILES= \
+	test_sexp_processor.rb \
+	$(END)
+
+BIN_FILES= \
+	parse_tree_abc \
+	parse_tree_show \
+	parse_tree_deps \
+	$(END)
+
 all test: FORCE
 	$(RUBY) $(RUBY_DEBUG) $(RUBY_FLAGS) test/test_all.rb $(FILTER)
 
@@ -15,15 +32,17 @@ docs:
 	rdoc -d -I png --main SexpProcessor -x test_\* -x something.rb
 
 install:
-	install -m 0444 lib/parse_tree.rb lib/sexp_processor.rb lib/composite_sexp_processor.rb test/test_sexp_processor.rb $(RUBY_LIB)
-	install -m 0555 bin/parse_tree_show bin/parse_tree_abc  $(PREFIX)/bin
+	cd lib  && install -m 0444 $(LIB_FILES)  $(RUBY_LIB)
+	cd test && install -m 0444 $(TEST_FILES) $(RUBY_LIB)
+	cd bin  && install -m 0555 $(BIN_FILES)  $(PREFIX)/bin
 
 uninstall:
-	cd $(RUBY_LIB) && rm -f parse_tree.rb sexp_processor.rb composite_sexp_processor.rb test_sexp_processor.rb
-	cd $(PREFIX)/bin && rm -f parse_tree_show parse_tree_abc
+	cd $(RUBY_LIB)   && rm -f $(LIB_FILES) $(TEST_FILES)
+	cd $(PREFIX)/bin && rm -f $(BIN_FILES)
 
 audit:
-	ZenTest composite_sexp_processor.rb sexp_processor.rb test_all.rb test_composite_sexp_processor.rb test_sexp_processor.rb
+	ZenTest -I=lib:test $(addprefix lib/,$(LIB_FILES)) test/test_all.rb
+# test_composite_sexp_processor.rb test_sexp_processor.rb
 
 clean:
 	-find . -name \*~ | xargs rm

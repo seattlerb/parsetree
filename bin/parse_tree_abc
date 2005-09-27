@@ -1,4 +1,4 @@
-#!/usr/local/bin/ruby
+#!/usr/local/bin/ruby -ws
 
 # ABC metric
 #
@@ -6,9 +6,16 @@
 #
 # A simple way to measure the complexity of a function or method.
 
+if defined? $I and String === $I then
+  $I.split(/:/).each do |dir|
+    $: << dir
+  end
+end
+
 PARSE_TREE_ABC=true
 
 begin require 'rubygems' rescue LoadError end
+require 'sexp'
 require 'parse_tree'
 require 'sexp_processor'
 
@@ -78,5 +85,5 @@ score.sort_by { |k,v| v }.reverse.each do |key,val|
   tval += val
   printf "%3d) %-50s = %2d + %2d + %2d = %6.2f\n", count, name, a, b, c, val
   count += 1
-end
+end rescue nil
 printf "%3d) %-50s = %2d + %2d + %2d = %6.2f\n", count, "Total", ta, tb, tc, tval
