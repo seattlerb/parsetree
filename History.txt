@@ -1,3 +1,15 @@
+*** 1.4.0 / 2005-10-15
+
++ 5 minor enhancements
+	+ Improved Makefile's install rule, uninstall, and added FILTER to all.
+	+ Fixed minor issues w/ Makefile.
+	+ Added -I=loadpath to parse_tree_abc.
+	+ Added *args support for methods.
+	+ Split out sexp to its own file.
++ 2 bug fixes
+	+ Fixed weird bug in parse_tree_deps where sort was failing on deps.
+	+ ! Fixed fatal bug in parse_tree.rb caused by safe_level fix in ruby 1.8.3.
+
 *** 1.3.8 / 2005-09-27
 
 + 1 bug fix:
