@@ -24,7 +24,7 @@ require 'inline'
 
 class ParseTree
 
-  VERSION = '1.3.8'
+  VERSION = '1.4.0'
 
   ##
   # Initializes a ParseTree instance. Includes newline nodes if
@@ -129,14 +129,14 @@ class ParseTree
     # builder.add_compile_flags "-Wmissing-prototypes"
     # builder.add_compile_flags "-Wsign-compare"
 
-    builder.prefix %q{
+    builder.prefix %{
         #define nd_3rd   u3.node
 
         struct METHOD {
           VALUE klass, rklass;
           VALUE recv;
           ID id, oid;
-          int safe_level;
+          #{ RUBY_VERSION <= "1.8.2" ? "" : "int safe_level;" }
           NODE *body;
         };
 
