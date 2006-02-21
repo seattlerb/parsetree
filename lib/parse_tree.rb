@@ -129,6 +129,10 @@ class ParseTree
     # builder.add_compile_flags "-Wmissing-prototypes"
     # builder.add_compile_flags "-Wsign-compare"
 
+    def self.if_version(test, version, str)
+      RUBY_VERSION.send(test, version) ? str : ""
+    end
+
     builder.prefix %{
         #define nd_3rd   u3.node
 
@@ -136,7 +140,7 @@ class ParseTree
           VALUE klass, rklass;
           VALUE recv;
           ID id, oid;
-          #{ RUBY_VERSION <= "1.8.2" ? "" : "int safe_level;" }
+#{if_version :>, "1.8.2", "int safe_level;"}
           NODE *body;
         };
 
@@ -159,7 +163,9 @@ class ParseTree
           struct BLOCK *outer;
           struct BLOCK *prev;
         };
+    } unless RUBY_VERSION >= "1.9"
 
+    builder.prefix %{
         static char node_type_string[][60] = {
 	  //  00
 	  "method", "fbody", "cfunc", "scope", "block",
@@ -192,9 +198,9 @@ class ParseTree
 	  "self", "nil", "true", "false", "defined",
 	  //  95
 	  "newline", "postexe",
-#ifdef C_ALLOCA
+#{if_version :<, "1.8.4", "#ifdef C_ALLOCA"}
 	  "alloca",
-#endif
+#{if_version :<, "1.8.4", "#endif"}
 	  "dmethod", "bmethod",
 	  // 100 / 99
 	  "memo", "ifunc", "dsym", "attrasgn",
