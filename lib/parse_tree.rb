@@ -570,12 +570,11 @@ again_no_block:
     add_to_parse_tree(current, node->nd_body, newlines, locals);
     break;
 
-  case NODE_ARGS:
-    if (locals && 
-	(node->nd_cnt || node->nd_opt || node->nd_rest != -1)) {
+  case NODE_ARGS: {
+    long arg_count = (long)node->nd_rest;
+    if (locals && (node->nd_cnt || node->nd_opt || arg_count != -1)) {
       int i;
       NODE *optnode;
-      long arg_count;
 
       for (i = 0; i < node->nd_cnt; i++) {
         // regular arg names
@@ -590,18 +589,19 @@ again_no_block:
 	optnode = optnode->nd_next;
       }
 
-      arg_count = node->nd_rest;
       if (arg_count > 0) {
         // *arg name
-        VALUE sym = rb_str_intern(rb_str_plus(rb_str_new2("*"), rb_str_new2(rb_id2name(locals[node->nd_rest + 1]))));
+        VALUE sym = rb_str_intern(rb_str_plus(rb_str_new2("*"), rb_str_new2(rb_id2name(locals[i + 3]))));
         rb_ary_push(current, sym);
+      } else if (arg_count == 0) {
+        // nothing to do in this case, empty list
       } else if (arg_count == -1) {
         // nothing to do in this case, handled above
       } else if (arg_count == -2) {
         // nothing to do in this case, no name == no use
       } else {
-        puts("not a clue what this arg value is");
-        exit(1);
+        rb_raise(rb_eArgError,
+                 "not a clue what this arg value is: %d", arg_count);
       }
 
       optnode = node->nd_opt;
@@ -610,7 +610,7 @@ again_no_block:
 	add_to_parse_tree(current, node->nd_opt, newlines, locals);
       }
     }
-    break;
+  }  break;
 	
   case NODE_LVAR:
   case NODE_DVAR:
