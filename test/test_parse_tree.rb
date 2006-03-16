@@ -1,5 +1,12 @@
 #!/usr/local/bin/ruby -w
 
+dir = File.expand_path "~/.ruby_inline"
+if test ?d, dir then
+  require 'fileutils'
+  puts "nuking #{dir}"
+  FileUtils.rm_r dir
+end
+
 require 'test/unit'
 require 'parse_tree'
 require 'test/something'

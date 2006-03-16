@@ -1,6 +1,7 @@
 #!/usr/local/bin/ruby -w
 
-begin require 'rubygems' rescue LoadError end
+begin require 'rubygems'; rescue LoadError; end
+
 require 'inline'
 
 ##
