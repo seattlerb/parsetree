@@ -17,6 +17,10 @@ task :test do
   ruby "#{RUBY_FLAGS} test/test_all.rb #{FILTER}"
 end
 
+task :multi do
+  sh "multiruby #{RUBY_FLAGS} test/test_all.rb #{FILTER}"
+end
+
 # we only install test_sexp_processor.rb to help make ruby_to_c's
 # subclass tests work.
 

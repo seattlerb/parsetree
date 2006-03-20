@@ -202,8 +202,8 @@ class Something
   
   def self.dmethod_maker
     define_method :dmethod_added, self.method(:bmethod_maker)
-  end
+  end if RUBY_VERSION < "1.9"
   
   bmethod_maker
-  dmethod_maker
+  dmethod_maker if RUBY_VERSION < "1.9"
 end

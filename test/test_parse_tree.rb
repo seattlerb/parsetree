@@ -315,7 +315,7 @@ class TestParseTree < Test::Unit::TestCase
     [:iter,
      [:fcall, :define_method, [:array, [:lit, :bmethod_added]]],
      [:dasgn_curr, :x],
-     [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]]]]
+     [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]]]] if RUBY_VERSION < "1.9"
 
   @@attrasgn = [:defn,
     :attrasgn,

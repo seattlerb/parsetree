@@ -95,15 +95,87 @@ class ParseTree
     parse_tree_for_meth(klass, method.to_sym, @include_newlines)
   end
 
+  if RUBY_VERSION < "1.8.4" then
+    inline do |builder|
+      builder.add_type_converter("bool", '', '')
+      builder.c_singleton "
+        bool has_alloca() {
+          (void)self;
+          #ifdef C_ALLOCA
+            return Qtrue;
+          #else
+            return Qfalse;
+          #endif
+          }"
+    end
+  else
+    def self.has_alloca
+      true
+    end
+  end
+
+
+  NODE_NAMES = [
+                #  00
+                :method, :fbody, :cfunc, :scope, :block,
+                :if, :case, :when, :opt_n, :while,
+                #  10
+                :until, :iter, :for, :break, :next,
+                :redo, :retry, :begin, :rescue, :resbody,
+                #  20
+                :ensure, :and, :or, :not, :masgn,
+                :lasgn, :dasgn, :dasgn_curr, :gasgn, :iasgn,
+                #  30
+                :cdecl, :cvasgn, :cvdecl, :op_asgn1, :op_asgn2,
+                :op_asgn_and, :op_asgn_or, :call, :fcall, :vcall,
+                #  40
+                :super, :zsuper, :array, :zarray, :hash,
+                :return, :yield, :lvar, :dvar, :gvar,
+                #  50
+                :ivar, :const, :cvar, :nth_ref, :back_ref,
+                :match, :match2, :match3, :lit, :str,
+                #  60
+                :dstr, :xstr, :dxstr, :evstr, :dregx,
+                :dregx_once, :args, :argscat, :argspush, :splat,
+                #  70
+                :to_ary, :svalue, :block_arg, :block_pass, :defn,
+                :defs, :alias, :valias, :undef, :class,
+                #  80
+                :module, :sclass, :colon2, :colon3, :cref,
+                :dot2, :dot3, :flip2, :flip3, :attrset,
+                #  90
+                :self, :nil, :true, :false, :defined,
+                #  95
+                :newline, :postexe, :alloca, :dmethod, :bmethod,
+                # 100
+                :memo, :ifunc, :dsym, :attrasgn,
+                # 104
+                :last
+               ]
+
+  if RUBY_VERSION < "1.8.4" then
+    NODE_NAMES.delete :alloca unless has_alloca
+  end
+
+  if RUBY_VERSION > "1.9" then
+    NODE_NAMES.insert NODE_NAMES.index(:hash), :values
+    NODE_NAMES.insert NODE_NAMES.index(:defined), :errinfo
+    NODE_NAMES.insert NODE_NAMES.index(:last), :prelude, :lambda
+    NODE_NAMES.delete :dmethod
+    NODE_NAMES[128] = NODE_NAMES.delete :newline
+  end
+
   ############################################################
   # END of rdoc methods
   ############################################################
 
   inline do |builder|
+    builder.add_type_converter("bool", '', '')
     builder.add_type_converter("VALUE", '', '')
     builder.add_type_converter("ID *", '', '')
     builder.add_type_converter("NODE *", '(NODE *)', '(VALUE)')
     builder.include '"intern.h"'
+    builder.include '"version.h"'
     builder.include '"node.h"'
     builder.include '"st.h"'
     builder.include '"env.h"'
@@ -136,7 +208,9 @@ class ParseTree
 
     builder.prefix %{
         #define nd_3rd   u3.node
+    }
 
+    builder.prefix %{
         struct METHOD {
           VALUE klass, rklass;
           VALUE recv;
@@ -166,51 +240,7 @@ class ParseTree
         };
     } unless RUBY_VERSION >= "1.9"
 
-    builder.prefix %{
-        static char node_type_string[][60] = {
-	  //  00
-	  "method", "fbody", "cfunc", "scope", "block",
-	  "if", "case", "when", "opt_n", "while",
-	  //  10
-	  "until", "iter", "for", "break", "next",
-	  "redo", "retry", "begin", "rescue", "resbody",
-	  //  20
-	  "ensure", "and", "or", "not", "masgn",
-	  "lasgn", "dasgn", "dasgn_curr", "gasgn", "iasgn",
-	  //  30
-	  "cdecl", "cvasgn", "cvdecl", "op_asgn1", "op_asgn2",
-	  "op_asgn_and", "op_asgn_or", "call", "fcall", "vcall",
-	  //  40
-	  "super", "zsuper", "array", "zarray", "hash",
-	  "return", "yield", "lvar", "dvar", "gvar",
-	  //  50
-	  "ivar", "const", "cvar", "nth_ref", "back_ref",
-	  "match", "match2", "match3", "lit", "str",
-	  //  60
-	  "dstr", "xstr", "dxstr", "evstr", "dregx",
-	  "dregx_once", "args", "argscat", "argspush", "splat",
-	  //  70
-	  "to_ary", "svalue", "block_arg", "block_pass", "defn",
-	  "defs", "alias", "valias", "undef", "class",
-	  //  80
-	  "module", "sclass", "colon2", "colon3", "cref",
-	  "dot2", "dot3", "flip2", "flip3", "attrset",
-	  //  90
-	  "self", "nil", "true", "false", "defined",
-	  //  95
-	  "newline", "postexe",
-#{if_version :<, "1.8.4", "#ifdef C_ALLOCA"}
-	  "alloca",
-#{if_version :<, "1.8.4", "#endif"}
-	  "dmethod", "bmethod",
-	  // 100 / 99
-	  "memo", "ifunc", "dsym", "attrasgn",
-	  // 104 / 103
-	  "last" 
-        };
-  }
-
-    builder.c_raw %q^
+  builder.c_raw %Q@
 static void add_to_parse_tree(VALUE ary,
                               NODE * n,
                               VALUE newlines,
@@ -220,16 +250,21 @@ static void add_to_parse_tree(VALUE ary,
   VALUE old_ary = Qnil;
   VALUE current;
   VALUE node_name;
+  static VALUE node_names = Qnil;
+
+  if (NIL_P(node_names)) {
+    node_names = rb_const_get_at(rb_const_get_at(rb_cObject,rb_intern("ParseTree")),rb_intern("NODE_NAMES"));
+  }
 
   if (!node) return;
 
 again:
 
   if (node) {
-    node_name = ID2SYM(rb_intern(node_type_string[nd_type(node)]));
+    node_name = rb_ary_entry(node_names, nd_type(node));
     if (RTEST(ruby_debug)) {
-      fprintf(stderr, "%15s: %s%s%s\n",
-        node_type_string[nd_type(node)],
+      fprintf(stderr, "%15s: %s%s%s\\n",
+        rb_id2name(SYM2ID(node_name)),
         (RNODE(node)->u1.node != NULL ? "u1 " : "   "),
         (RNODE(node)->u2.node != NULL ? "u2 " : "   "),
         (RNODE(node)->u3.node != NULL ? "u3 " : "   "));
@@ -251,7 +286,6 @@ again_no_block:
         add_to_parse_tree(current, node, newlines, locals);
         break;
       }
-
       contnode = node->nd_next;
 
       // NOTE: this will break the moment there is a block w/in a block
@@ -427,6 +461,7 @@ again_no_block:
     }
     break;
 
+#{if_version :>, "1.9", '#if 0'}
   case NODE_DMETHOD:
     {
       struct METHOD *data;
@@ -435,9 +470,10 @@ again_no_block:
       add_to_parse_tree(current, data->body, newlines, locals);
       break;
     }
+#{if_version :>, "1.9", '#endif'}
 
   case NODE_METHOD:
-    fprintf(stderr, "u1 = %p u2 = %p u3 = %p\n", node->nd_1st, node->nd_2nd, node->nd_3rd);
+    fprintf(stderr, "u1 = %p u2 = %p u3 = %p\\n", node->nd_1st, node->nd_2nd, node->nd_3rd);
     add_to_parse_tree(current, node->nd_3rd, newlines, locals);
     break;
 
@@ -602,7 +638,7 @@ again_no_block:
         // nothing to do in this case, no name == no use
       } else {
         rb_raise(rb_eArgError,
-                 "not a clue what this arg value is: %d", arg_count);
+                 "not a clue what this arg value is: %ld", arg_count);
       }
 
       optnode = node->nd_opt;
@@ -683,7 +719,7 @@ again_no_block:
     add_to_parse_tree(current, node->nd_3rd, newlines, locals);
     break;
 
-  case NODE_DSYM:               // :"#{foo}" u1 u2 u3
+  case NODE_DSYM:               // :"\#\{foo}" u1 u2 u3
     add_to_parse_tree(current, node->nd_3rd, newlines, locals);
     break;
 
@@ -709,11 +745,11 @@ again_no_block:
   // case NODE_LMASK:
   // case NODE_LSHIFT:
   default:
-    rb_warn("Unhandled node #%d type '%s'", nd_type(node), node_type_string[nd_type(node)]);
+    rb_warn("Unhandled node #%d type '%s'", nd_type(node), rb_id2name(SYM2ID(rb_ary_entry(node_names, nd_type(node)))));
     if (RNODE(node)->u1.node != NULL) rb_warning("unhandled u1 value");
     if (RNODE(node)->u2.node != NULL) rb_warning("unhandled u2 value");
     if (RNODE(node)->u3.node != NULL) rb_warning("unhandled u3 value");
-    if (RTEST(ruby_debug)) fprintf(stderr, "u1 = %p u2 = %p u3 = %p\n", node->nd_1st, node->nd_2nd, node->nd_3rd);
+    if (RTEST(ruby_debug)) fprintf(stderr, "u1 = %p u2 = %p u3 = %p\\n", node->nd_1st, node->nd_2nd, node->nd_3rd);
     rb_ary_push(current, INT2FIX(-99));
     rb_ary_push(current, INT2FIX(nd_type(node)));
     break;
@@ -729,9 +765,9 @@ again_no_block:
       goto again_no_block;
   }
 }
-^ # end of add_to_parse_tree block
+@ # end of add_to_parse_tree block
 
-    builder.c %q{
+    builder.c %Q{
 static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines) {
   VALUE n;
   NODE *node = NULL;
@@ -740,6 +776,11 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines) {
 
   (void) self; // quell warnings
   (void) argc; // quell warnings
+
+  VALUE version = rb_const_get_at(rb_cObject,rb_intern("RUBY_VERSION"));
+  if (strcmp(StringValuePtr(version), #{RUBY_VERSION.inspect})) {
+    rb_fatal("bad version, %s != #{RUBY_VERSION}\\n", StringValuePtr(version));
+  }
 
   id = rb_to_id(method);
   if (st_lookup(RCLASS(klass)->m_tbl, id, &n)) {
