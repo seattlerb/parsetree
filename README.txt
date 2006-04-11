@@ -37,10 +37,12 @@ becomes:
 + Uses RubyInline, so it just drops in.
 + Includes SexpProcessor and CompositeSexpProcessor.
 	+ Allows you to write very clean filters.
-+ Includes show.rb, which lets you quickly snoop code.
-+ Includes abc.rb, which lets you get abc metrics on code.
++ Includes parse_tree_show, which lets you quickly snoop code.
+	+ echo "1+1" | parse_tree_show -f for quick snippet output.
++ Includes parse_tree_abc, which lets you get abc metrics on code.
 	+ abc metrics = numbers of assignments, branches, and calls.
 	+ whitespace independent metric for method complexity.
++ Includes parse_tree_deps, which shows you basic class level dependencies.
 + Only works on methods in classes/modules, not arbitrary code.
 + Does not work on the core classes, as they are not ruby (yet).
 
@@ -67,6 +69,10 @@ or:
 
 or:
 
+  % echo "1+1" | ./parse_tree_show -f
+
+or:
+
   % ./parse_tree_abc myfile.rb
 
 ** REQUIREMENTS:
@@ -75,9 +81,8 @@ or:
 
 ** INSTALL:
 
-+ sudo make install
-	+ renames show.rb to parse_tree_show
-	+ renames abc.rb to parse_tree_abc
++ sudo rake install
++ or: sudo gem install ParseTree
 
 ** LICENSE:
 

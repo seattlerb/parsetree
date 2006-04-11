@@ -25,7 +25,7 @@ require 'inline'
 
 class ParseTree
 
-  VERSION = '1.4.0'
+  VERSION = '1.4.1'
 
   ##
   # Initializes a ParseTree instance. Includes newline nodes if

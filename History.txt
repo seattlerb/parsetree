@@ -1,3 +1,15 @@
+*** 1.4.1 / 2006-04-10
+
++ 4 minor enhancements:
+	+ parse_tree_show -f output is much cleaner now.
+	+ ParseTree does a much more elegant job of handling different versions.
+	+ ParseTree now has all node names in ParseTree::NODE_NAMES.
+	+ ParseTree now raises exceptions instead of freakin'.
++ 3 bug fixes:
+	+ Used multiruby to test against 1.8.2-4, 1.8 cvs, and 1.9 cvs.
+	+ Fixed incompatibilites introduced in ruby 1.8.4.
+	+ Fixed some incompatibilites introduced in ruby 1.9.x.
+
 *** 1.4.0 / 2005-10-15
 
 + 5 minor enhancements
