@@ -1,5 +1,5 @@
 History.txt
-Makefile
+Rakefile
 Manifest.txt
 ParseTree.gemspec
 README.txt
