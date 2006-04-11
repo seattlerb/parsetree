@@ -38,6 +38,9 @@ new_classes = discover_new_classes_from do
 end
 
 result = ParseTree.new.parse_tree(*new_classes)
+
+result = result[0][3][2][1][2..-1] if $f
+
 unless defined? $q then
   pp result
 else

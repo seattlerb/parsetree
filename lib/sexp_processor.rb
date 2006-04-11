@@ -133,7 +133,6 @@ class SexpProcessor
   # SexpProcessor
 
   def initialize
-    @collection = []
     @default_method = nil
     @warn_on_default = true
     @auto_shift_type = false

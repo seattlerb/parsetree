@@ -1,3 +1,5 @@
+# -*- ruby -*-
+
 require 'rbconfig'
 require 'rake/rdoctask'
 
@@ -61,8 +63,12 @@ task :audit do
 end
 
 task :clean do
-  Dir['**/*~'].each{|e| rm_f e}
-  rm_rf %w(diff diff.txt demo.rb).concat(Dir['*.gem']).concat([File.join(ENV['HOME'], '.ruby_inline')])
+  inline_dir = File.expand_path("~/.ruby_inline")
+  rm_rf inline_dir if test ?d, inline_dir
+  %w(diff diff.txt demo.rb *.gem **/*~).each do |pattern|
+    files = Dir[pattern]
+    rm_rf files unless files.empty?
+  end
 end
 
 task :demo do
