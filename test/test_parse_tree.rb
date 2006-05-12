@@ -125,15 +125,19 @@ class TestParseTree < Test::Unit::TestCase
             [:return, [:lit, 3]],
             [:return, [:lit, 4]]]]]]]
   @@iteration_body = [:scope,
-    [:block,
-      [:args],
-      [:lasgn, :array,
-        [:array, [:lit, 1], [:lit, 2], [:lit, 3]]],
-      [:iter,
-        [:call,
-          [:lvar, :array], :each],
-        [:dasgn_curr, :x],
-        [:fcall, :puts, [:array, [:call, [:dvar, :x], :to_s]]]]]]
+                   [:block,
+                    [:args],
+                    [:lasgn, :array,
+                     [:array, [:lit, 1], [:lit, 2], [:lit, 3]]],
+                    [:iter,
+                     [:call,
+                      [:lvar, :array], :each],
+                     [:dasgn_curr, :x],
+                     [:block,
+                      [:dasgn_curr, :y],
+                      [:dasgn_curr, :y, [:call, [:dvar, :x], :to_s]],
+                      [:fcall, :puts, [:array, [:dvar, :y]]]]]]]
+
   @@iteration1 = [:defn, :iteration1, @@iteration_body]
   @@iteration2 = [:defn, :iteration2, @@iteration_body]
   @@iteration3 = [:defn, :iteration3,

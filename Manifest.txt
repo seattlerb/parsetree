@@ -4,6 +4,7 @@ Manifest.txt
 ParseTree.gemspec
 README.txt
 bin/parse_tree_abc
+bin/parse_tree_audit
 bin/parse_tree_deps
 bin/parse_tree_show
 demo/printer.rb

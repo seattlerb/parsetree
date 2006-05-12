@@ -11,7 +11,7 @@ FILTER = ENV['FILTER']
 
 LIB_FILES = %w(composite_sexp_processor.rb parse_tree.rb sexp.rb sexp_processor.rb)
 TEST_FILES = %w(test_sexp_processor.rb)
-BIN_FILES = %w(parse_tree_abc parse_tree_show parse_tree_deps)
+BIN_FILES = %w(parse_tree_abc parse_tree_audit parse_tree_show parse_tree_deps)
 
 task :default => :test
 
@@ -21,6 +21,15 @@ end
 
 task :multi do
   sh "multiruby #{RUBY_FLAGS} test/test_all.rb #{FILTER}"
+end
+
+task :test19 do
+  sh "~/.multiruby/install/19/bin/ruby -d #{RUBY_FLAGS} test/test_all.rb #{FILTER}"
+end
+
+task :debug do
+  puts "RUN: r -d #{RUBY_FLAGS} test/test_all.rb #{FILTER}"
+  sh "gdb ~/.multiruby/install/19/bin/ruby"
 end
 
 # we only install test_sexp_processor.rb to help make ruby_to_c's

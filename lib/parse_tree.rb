@@ -25,7 +25,7 @@ require 'inline'
 
 class ParseTree
 
-  VERSION = '1.4.1'
+  VERSION = '1.4.2'
 
   ##
   # Initializes a ParseTree instance. Includes newline nodes if
@@ -76,7 +76,6 @@ class ParseTree
       # protected methods are included in instance_methods, go figure!
 
       method_names.sort.each do |m|
-        $stderr.puts "parse_tree_for_method(#{klass}, #{m}):" if $DEBUG
         code << parse_tree_for_method(klass, m.to_sym)
       end
       result << code
@@ -92,6 +91,7 @@ class ParseTree
   #   [:defn, :name, :body]
 
   def parse_tree_for_method(klass, method)
+    $stderr.puts "** parse_tree_for_method(#{klass}, #{method}):" if $DEBUG
     parse_tree_for_meth(klass, method.to_sym, @include_newlines)
   end
 
@@ -149,7 +149,6 @@ class ParseTree
                 :newline, :postexe, :alloca, :dmethod, :bmethod,
                 # 100
                 :memo, :ifunc, :dsym, :attrasgn,
-                # 104
                 :last
                ]
 
@@ -238,7 +237,7 @@ class ParseTree
           struct BLOCK *outer;
           struct BLOCK *prev;
         };
-    } unless RUBY_VERSION >= "1.9"
+    } unless RUBY_VERSION >= "1.9" # we got matz to add this to env.h
 
   builder.c_raw %Q@
 static void add_to_parse_tree(VALUE ary,
@@ -611,9 +610,11 @@ again_no_block:
     long arg_count = (long)node->nd_rest;
     if (locals && (node->nd_cnt || node->nd_opt || arg_count != -1)) {
       int i;
+      int max_args;
       NODE *optnode;
 
-      for (i = 0; i < node->nd_cnt; i++) {
+      max_args = node->nd_cnt;
+      for (i = 0; i < max_args; i++) {
         // regular arg names
         rb_ary_push(current, ID2SYM(locals[i + 3]));
       }
@@ -735,6 +736,15 @@ again_no_block:
     rb_ary_push(current, INT2FIX(node->nd_cfnc));
     rb_ary_push(current, INT2FIX(node->nd_argc));
     break;
+
+#{if_version :<, "1.9", "#if 0"}
+  case NODE_ERRINFO:
+  case NODE_VALUES:
+  case NODE_PRELUDE:
+  case NODE_LAMBDA:
+    puts("no worky in 1.9 yet");
+    break;
+#{if_version :<, "1.9", "#endif"}
 
   // Nodes we found but have yet to decypher
   // I think these are all runtime only... not positive but...

@@ -56,13 +56,17 @@ class Something
   def iteration1
     array = [1, 2, 3]
     array.each do |x|
-      puts(x.to_s)
+      y = x.to_s
+      puts(y)
     end
   end
 
   def iteration2
     array = [1, 2, 3]
-    array.each { |x| puts(x.to_s) }
+    array.each { |x|
+      y = x.to_s
+      puts(y)
+    }
   end
 
   def iteration3
