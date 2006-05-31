@@ -197,6 +197,26 @@ class Something
     end
   end
 
+  def op_asgn
+    a = 0
+    a ||= 1
+    a &&= 2
+    #a += 3 # doesn't use op_asgn
+
+    b = []
+    b[0] ||= 10
+    b[0] &&= 11
+    b[0] +=  12
+
+    s = Struct.new :var
+    c = s.new nil
+    c.var ||= 20
+    c.var &&= 21
+    c.var +=  22
+
+    return a
+  end
+
   def whiles
     while false do
       puts "false"
