@@ -291,6 +291,14 @@ class TestParseTree < Test::Unit::TestCase
                   [:block, [:lasgn, :e2, [:gvar, :$!]], [:lit, 3]]]],
               [:lit, 4]],
             [:lit, 5]]]]]]
+  @@bbegin_no_exception = [:defn, :bbegin_no_exception,
+    [:scope,
+      [:block,
+        [:args],
+        [:begin,
+          [:rescue,
+            [:lit, 5],
+            [:resbody, nil, [:lit, 6]]]]]]]
   @@determine_args = [:defn, :determine_args,
     [:scope,
       [:block,

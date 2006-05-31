@@ -189,6 +189,14 @@ class Something
     end
   end
 
+  def bbegin_no_exception
+    begin
+      5
+    rescue
+      6
+    end
+  end
+
   def whiles
     while false do
       puts "false"
