@@ -399,7 +399,11 @@ again_no_block:
   // a = b rescue c
 
   case NODE_RESBODY:
-      add_to_parse_tree(current, node->nd_3rd, newlines, locals);
+      if (node->nd_3rd) {
+        add_to_parse_tree(current, node->nd_3rd, newlines, locals);
+      } else {
+        rb_ary_push(current, Qnil);
+      }
       add_to_parse_tree(current, node->nd_2nd, newlines, locals);
       add_to_parse_tree(current, node->nd_1st, newlines, locals);
     break;
