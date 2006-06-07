@@ -300,25 +300,29 @@ class TestParseTree < Test::Unit::TestCase
             [:lit, 5],
             [:resbody, nil, [:lit, 6]]]]]]]
   @@op_asgn = [:defn, :op_asgn,
-    [:scope,
-      [:block,
-        [:args],
-        [:lasgn, :a, [:lit, 0]],
-        [:op_asgn_or, [:lvar, :a], [:lasgn, :a, [:lit, 1]]],
-        [:op_asgn_and, [:lvar, :a], [:lasgn, :a, [:lit, 2]]],
+               [:scope,
+                [:block,
+                 [:args],
+                 [:lasgn, :a, [:lit, 0]],
+                 [:op_asgn_or, [:lvar, :a], [:lasgn, :a, [:lit, 1]]],
+                 [:op_asgn_and, [:lvar, :a], [:lasgn, :a, [:lit, 2]]],
 
-        [:lasgn, :b, [:zarray]],
-        [:op_asgn1, true, [:lvar, :b], [:lit, 10]],
-        [:op_asgn1, false, [:lvar, :b], [:lit, 11]],
-        [:op_asgn1, :+, [:lvar, :b], [:lit, 12]],
+                 [:lasgn, :b, [:zarray]],
 
-        [:lasgn, :s, [:call, [:const, :Struct], :new, [:array, [:lit, :var]]]],
-        [:lasgn, :c, [:call, [:lvar, :s], :new, [:array, [:nil]]]],
-        [:op_asgn2, true, [:lvar, :c], [:lit, 20]],
-        [:op_asgn2, false, [:lvar, :c], [:lit, 21]],
-        [:op_asgn2, :+, [:lvar, :c], [:lit, 22]],
+                 [:op_asgn1, [:lvar, :b], [:array, [:lit, 1]], :"||", [:lit, 10]],
+       [:op_asgn1, [:lvar, :b], [:array, [:lit, 2]], :"&&", [:lit, 11]],
+       [:op_asgn1, [:lvar, :b], [:array, [:lit, 3]], :+, [:lit, 12]],
 
-        [:return, [:lvar, :a]]]]]
+       [:lasgn, :s, [:call, [:const, :Struct], :new, [:array, [:lit, :var]]]],
+       [:lasgn, :c, [:call, [:lvar, :s], :new, [:array, [:nil]]]],
+
+       [:op_asgn2, [:lvar, :c], :var=, :"||", [:lit, 20]],
+       [:op_asgn2, [:lvar, :c], :var=, :"&&", [:lit, 21]],
+       [:op_asgn2, [:lvar, :c], :var=, :+, [:lit, 22]],
+
+       [:op_asgn2, [:call, [:call, [:lvar, :c], :d], :e], :f=, :"||", [:lit, 42]],
+
+       [:return, [:lvar, :a]]]]]
   @@determine_args = [:defn, :determine_args,
     [:scope,
       [:block,

@@ -204,15 +204,17 @@ class Something
     #a += 3 # doesn't use op_asgn
 
     b = []
-    b[0] ||= 10
-    b[0] &&= 11
-    b[0] +=  12
+    b[1] ||= 10
+    b[2] &&= 11
+    b[3] +=  12
 
     s = Struct.new :var
     c = s.new nil
     c.var ||= 20
     c.var &&= 21
     c.var +=  22
+
+    c.d.e.f ||= 42
 
     return a
   end

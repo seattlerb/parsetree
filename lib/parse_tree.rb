@@ -485,36 +485,38 @@ again_no_block:
     break;
 
   case NODE_OP_ASGN1:
+    add_to_parse_tree(current, node->nd_recv, newlines, locals);
+    add_to_parse_tree(current, node->nd_args->nd_next, newlines, locals);
     switch (node->nd_mid) {
     case 0:
-      rb_ary_push(current, Qtrue);
+      rb_ary_push(current, ID2SYM(rb_intern("||")));
       break;
     case 1:
-      rb_ary_push(current, Qfalse);
+      rb_ary_push(current, ID2SYM(rb_intern("&&")));
       break;
     default:
       rb_ary_push(current, ID2SYM(node->nd_mid));
       break;
     }
-    add_to_parse_tree(current, node->nd_recv, newlines, locals);
-    add_to_parse_tree(current, node->nd_args->nd_next, newlines, locals);
     add_to_parse_tree(current, node->nd_args->nd_head, newlines, locals);
     break;
 
   case NODE_OP_ASGN2:
+    add_to_parse_tree(current, node->nd_recv, newlines, locals);
+    rb_ary_push(current, ID2SYM(node->nd_next->nd_aid));
+
     switch (node->nd_next->nd_mid) {
     case 0:
-      rb_ary_push(current, Qtrue);
+      rb_ary_push(current, ID2SYM(rb_intern("||")));
       break;
     case 1:
-      rb_ary_push(current, Qfalse);
+      rb_ary_push(current, ID2SYM(rb_intern("&&")));
       break;
     default:
       rb_ary_push(current, ID2SYM(node->nd_next->nd_mid));
       break;
     }
 
-    add_to_parse_tree(current, node->nd_recv, newlines, locals);
     add_to_parse_tree(current, node->nd_value, newlines, locals);
     break;
 
