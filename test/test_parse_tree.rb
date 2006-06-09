@@ -371,6 +371,18 @@ class TestParseTree < Test::Unit::TestCase
         [:args],
         [:while, [:false], [:fcall, :puts, [:array, [:str, "false"]]], true],
         [:while, [:false], [:fcall, :puts, [:array, [:str, "true"]]], false]]]]
+  @@xstr = [:defn,
+    :xstr,
+    [:scope,
+      [:block,
+        [:args],
+        [:xstr, 'touch 5']]]] 
+  @@dxstr = [:defn,
+    :dxstr,
+    [:scope,
+      [:block,
+        [:args],
+        [:dxstr, 'touch ', [:lit, 5]]]]] 
 
   @@__all = [:class, :Something, :Object]
   
