@@ -137,6 +137,15 @@ class TestSexpProcessor < Test::Unit::TestCase
     end
   end
 
+  def test_process_unsupported_wrong
+    @processor = TestProcessor.new
+    @processor.unsupported << :strip
+
+    assert_raises(UnsupportedNodeError) do
+      @processor.process([:whatever])
+    end
+  end
+
   def test_unsupported_equal
     @processor.strict = true
     @processor.unsupported = [ :unsupported ]

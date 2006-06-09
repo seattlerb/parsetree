@@ -138,6 +138,7 @@ class SexpProcessor
     @auto_shift_type = false
     @strict = false
     @unsupported = []
+    @unsupported_checked = false
     @debug = {}
     @expected = Sexp
     @require_empty = true
@@ -166,6 +167,15 @@ class SexpProcessor
 
   def process(exp)
     return nil if exp.nil?
+
+    unless @unsupported_checked then
+      m = public_methods.grep(/^process_/) { |o| o.sub(/^process_/, '').intern }
+      supported = m - (m - @unsupported)
+
+      raise UnsupportedNodeError, "#{supported.inspect} shouldn't be in @unsupported" unless supported.empty?
+
+      @unsupported_checked = true
+    end
 
     result = self.expected.new
 
