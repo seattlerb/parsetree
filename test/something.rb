@@ -1,6 +1,10 @@
 
 class Something
 
+  def self.classmethod
+    1 + 1
+  end
+
   # basically: do we work at all?
   def empty
   end

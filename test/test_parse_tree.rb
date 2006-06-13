@@ -30,6 +30,35 @@ class TestParseTree < Test::Unit::TestCase
 
   # TODO: need a test of interpolated strings
 
+  @@self_classmethod = [:defn, :self_classmethod,
+                        [:scope,
+                         [:block,
+                          [:args],
+                          [:call, [:lit, 1], :+, [:array, [:lit, 1]]]]]]
+
+  @@self_bmethod_maker = [:defn,
+                          :self_bmethod_maker,
+                          [:scope,
+                           [:block,
+                            [:args],
+                            [:iter,
+                             [:fcall, :define_method,
+                              [:array, [:lit, :bmethod_added]]],
+                             [:dasgn_curr, :x],
+                             [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]]]
+
+  @@self_dmethod_maker = [:defn,
+                          :self_dmethod_maker,
+                          [:scope,
+                           [:block,
+                            [:args],
+                            [:fcall,
+                             :define_method,
+                             [:array,
+                              [:lit, :dmethod_added],
+                              [:call, [:self], :method,
+                               [:array, [:lit, :bmethod_maker]]]]]]]]
+
   @@missing = [nil]
   @@empty = [:defn, :empty,
     [:scope,
@@ -390,12 +419,26 @@ class TestParseTree < Test::Unit::TestCase
     @thing = ParseTree.new(false)
   end
 
-  Something.instance_methods(false).sort.each do |meth|
+  methods = Something.instance_methods(false)
+
+  methods.sort.each do |meth|
     if class_variables.include?("@@#{meth}") then
       @@__all << eval("@@#{meth}")
       eval "def test_#{meth}; assert_equal @@#{meth}, @thing.parse_tree_for_method(Something, :#{meth}); end"
     else
       eval "def test_#{meth}; flunk \"You haven't added @@#{meth} yet\"; end"
+    end
+  end
+
+  methods = Something.singleton_methods
+
+# TODO: cleanup
+  methods.sort.each do |meth|
+    if class_variables.include?("@@self_#{meth}") then
+      @@__all << eval("@@self_#{meth}")
+      eval "def test_self_#{meth}; assert_equal @@self_#{meth}, @thing.parse_tree_for_method(Something, :#{meth}, true); end"
+    else
+      eval "def test_self_#{meth}; flunk \"You haven't added @@self_#{meth} yet\"; end"
     end
   end
 
@@ -410,6 +453,5 @@ class TestParseTree < Test::Unit::TestCase
 		 @thing.parse_tree(Something),
 		 "Must return a lot of shit")
   end
-
 end
 

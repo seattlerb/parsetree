@@ -78,6 +78,11 @@ class ParseTree
       method_names.sort.each do |m|
         code << parse_tree_for_method(klass, m.to_sym)
       end
+
+      klass.singleton_methods.sort.each do |m|
+        code << parse_tree_for_method(klass, m.to_sym, true)
+      end
+
       result << code
     end
     return result
@@ -90,9 +95,11 @@ class ParseTree
   #
   #   [:defn, :name, :body]
 
-  def parse_tree_for_method(klass, method)
+  def parse_tree_for_method(klass, method, is_cls_meth=false)
     $stderr.puts "** parse_tree_for_method(#{klass}, #{method}):" if $DEBUG
-    parse_tree_for_meth(klass, method.to_sym, @include_newlines)
+    r = parse_tree_for_meth(klass, method.to_sym, @include_newlines, is_cls_meth)
+    r[1] = ("self_#{r[1]}").intern if is_cls_meth
+    r
   end
 
   if RUBY_VERSION < "1.8.4" then
@@ -807,7 +814,7 @@ again_no_block:
 @ # end of add_to_parse_tree block
 
     builder.c %Q{
-static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines) {
+static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines, VALUE is_cls_meth) {
   VALUE n;
   NODE *node = NULL;
   ID id;
@@ -822,6 +829,9 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines) {
   }
 
   id = rb_to_id(method);
+  if (RTEST(is_cls_meth)) { // singleton method
+    klass = CLASS_OF(klass);
+  }
   if (st_lookup(RCLASS(klass)->m_tbl, id, &n)) {
     node = (NODE*)n;
     rb_ary_push(result, ID2SYM(rb_intern("defn")));
