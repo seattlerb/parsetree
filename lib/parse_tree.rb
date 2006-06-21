@@ -182,6 +182,7 @@ class ParseTree
     builder.add_type_converter("NODE *", '(NODE *)', '(VALUE)')
     builder.include '"intern.h"'
     builder.include '"version.h"'
+    builder.include '"rubysig.h"'
     builder.include '"node.h"'
     builder.include '"st.h"'
     builder.include '"env.h"'
@@ -245,6 +246,9 @@ class ParseTree
           struct BLOCK *prev;
         };
     } unless RUBY_VERSION >= "1.9" # we got matz to add this to env.h
+
+  ##
+  # add_to_parse_tree(ary, node, include_newlines, local_variables)
 
   builder.c_raw %Q@
 static void add_to_parse_tree(VALUE ary,
@@ -844,5 +848,61 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines, VALU
   return result;
 }
 }
+
+    builder.prefix " extern NODE *ruby_eval_tree_begin; " \
+      if RUBY_VERSION < '1.9.0'
+
+    def parse_tree_for_string(source, filename = nil, line = nil,
+                              newlines = false)
+      filename ||= '(string)'
+      line ||= 1
+      return parse_tree_for_str(source, filename, line, newlines)
+    end
+
+    builder.c %Q{
+static VALUE parse_tree_for_str(VALUE source, VALUE filename, VALUE line,
+                                   VALUE newlines) {
+  VALUE tmp;
+  VALUE result = rb_ary_new();
+  NODE *node = NULL;
+  int critical;
+
+  (void) self; // quell warnings
+  (void) argc; // quell warnings
+
+  tmp = rb_check_string_type(filename);
+  if (NIL_P(tmp)) {
+    filename = rb_str_new2("(string)");
+  }
+
+  if (NIL_P(line)) {
+    line = LONG2FIX(1);
+  }
+
+  newlines = RTEST(newlines);
+
+  ruby_nerrs = 0;
+  StringValue(source);
+  critical = rb_thread_critical;
+  rb_thread_critical = Qtrue;
+  ruby_in_eval++;
+  node = rb_compile_string(StringValuePtr(filename), source, NUM2INT(line));
+  ruby_in_eval--;
+  rb_thread_critical = critical;
+
+  if (ruby_nerrs > 0) {
+    ruby_nerrs = 0;
+#if RUBY_VERSION_CODE < 190
+    ruby_eval_tree_begin = 0;
+#endif
+    rb_exc_raise(ruby_errinfo);
+  }
+
+  add_to_parse_tree(result, node, newlines, NULL);
+
+  return result;
+}
+}
+
   end # inline call
 end # ParseTree class

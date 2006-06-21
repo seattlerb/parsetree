@@ -28,6 +28,28 @@ class TestParseTree < Test::Unit::TestCase
     assert_equal expected, tree
   end
 
+  def test_parse_tree_for_string
+    actual   = @thing.parse_tree_for_string '1 + nil', '(string)', 1, false
+    expected = [[:call, [:lit, 1], :+, [:array, [:nil]]]]
+
+    assert_equal expected, actual
+  end
+
+  def test_parse_tree_for_string_with_newlines
+    actual   = @thing.parse_tree_for_string "1 +\n nil", 'test.rb', 5, true
+    expected = [[:newline, 6, "test.rb"],
+                [:call, [:lit, 1], :+, [:array, [:nil]]]]
+
+    assert_equal expected, actual
+  end
+
+  def test_parse_tree_for_str
+    actual   = @thing.parse_tree_for_str '1 + nil', '(string)', 1, false
+    expected = [[:call, [:lit, 1], :+, [:array, [:nil]]]]
+
+    assert_equal expected, actual
+  end
+
   # TODO: need a test of interpolated strings
 
   @@self_classmethod = [:defn, :self_classmethod,
