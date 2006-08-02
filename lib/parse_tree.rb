@@ -825,7 +825,6 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines, VALU
   VALUE result = rb_ary_new();
 
   (void) self; // quell warnings
-  (void) argc; // quell warnings
 
   VALUE version = rb_const_get_at(rb_cObject,rb_intern("RUBY_VERSION"));
   if (strcmp(StringValuePtr(version), #{RUBY_VERSION.inspect})) {
@@ -868,7 +867,6 @@ static VALUE parse_tree_for_str(VALUE source, VALUE filename, VALUE line,
   int critical;
 
   (void) self; // quell warnings
-  (void) argc; // quell warnings
 
   tmp = rb_check_string_type(filename);
   if (NIL_P(tmp)) {
