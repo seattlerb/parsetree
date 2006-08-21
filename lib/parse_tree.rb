@@ -98,7 +98,7 @@ class ParseTree
   def parse_tree_for_method(klass, method, is_cls_meth=false)
     $stderr.puts "** parse_tree_for_method(#{klass}, #{method}):" if $DEBUG
     r = parse_tree_for_meth(klass, method.to_sym, @include_newlines, is_cls_meth)
-    r[1] = ("self_#{r[1]}").intern if is_cls_meth
+    r[1] = :"self.#{r[1]}" if is_cls_meth
     r
   end
 

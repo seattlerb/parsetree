@@ -52,14 +52,14 @@ class TestParseTree < Test::Unit::TestCase
 
   # TODO: need a test of interpolated strings
 
-  @@self_classmethod = [:defn, :self_classmethod,
+  @@self_classmethod = [:defn, :"self.classmethod",
                         [:scope,
                          [:block,
                           [:args],
                           [:call, [:lit, 1], :+, [:array, [:lit, 1]]]]]]
 
   @@self_bmethod_maker = [:defn,
-                          :self_bmethod_maker,
+                          :"self.bmethod_maker",
                           [:scope,
                            [:block,
                             [:args],
@@ -70,7 +70,7 @@ class TestParseTree < Test::Unit::TestCase
                              [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]]]
 
   @@self_dmethod_maker = [:defn,
-                          :self_dmethod_maker,
+                          :"self.dmethod_maker",
                           [:scope,
                            [:block,
                             [:args],

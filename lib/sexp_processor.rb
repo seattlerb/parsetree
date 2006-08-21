@@ -317,7 +317,7 @@ class SexpProcessor
   #   end
 
   def process_dummy(exp)
-    result = @expected.new(:dummy)
+    result = @expected.new(:dummy) rescue @expected.new
     until exp.empty? do
       result << self.process(exp.shift)
     end
