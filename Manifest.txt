@@ -1,7 +1,6 @@
 History.txt
 Rakefile
 Manifest.txt
-ParseTree.gemspec
 README.txt
 bin/parse_tree_abc
 bin/parse_tree_audit

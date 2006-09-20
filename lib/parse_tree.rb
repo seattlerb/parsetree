@@ -177,7 +177,6 @@ class ParseTree
 
   inline do |builder|
     builder.add_type_converter("bool", '', '')
-    builder.add_type_converter("VALUE", '', '')
     builder.add_type_converter("ID *", '', '')
     builder.add_type_converter("NODE *", '(NODE *)', '(VALUE)')
     builder.include '"intern.h"'
