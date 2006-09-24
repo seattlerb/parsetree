@@ -11,6 +11,7 @@ lib/composite_sexp_processor.rb
 lib/parse_tree.rb
 lib/sexp.rb
 lib/sexp_processor.rb
+test/pt_testcase.rb
 test/something.rb
 test/test_all.rb
 test/test_composite_sexp_processor.rb
