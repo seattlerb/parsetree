@@ -25,7 +25,7 @@ require 'inline'
 
 class ParseTree
 
-  VERSION = '1.4.2'
+  VERSION = '1.5.0'
 
   ##
   # Initializes a ParseTree instance. Includes newline nodes if
@@ -100,6 +100,20 @@ class ParseTree
     r = parse_tree_for_meth(klass, method.to_sym, @include_newlines, is_cls_meth)
     r[1] = :"self.#{r[1]}" if is_cls_meth
     r
+  end
+
+  ##
+  # Returns the parse tree for a string +source+.
+  #
+  # Format:
+  #
+  #   [[sexps] ... ]
+
+  def parse_tree_for_string(source, filename = nil, line = nil,
+                            newlines = false)
+    filename ||= '(string)'
+    line ||= 1
+    return parse_tree_for_str(source, filename, line, newlines)
   end
 
   if RUBY_VERSION < "1.8.4" then
@@ -849,13 +863,6 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines, VALU
 
     builder.prefix " extern NODE *ruby_eval_tree_begin; " \
       if RUBY_VERSION < '1.9.0'
-
-    def parse_tree_for_string(source, filename = nil, line = nil,
-                              newlines = false)
-      filename ||= '(string)'
-      line ||= 1
-      return parse_tree_for_str(source, filename, line, newlines)
-    end
 
     builder.c %Q{
 static VALUE parse_tree_for_str(VALUE source, VALUE filename, VALUE line,

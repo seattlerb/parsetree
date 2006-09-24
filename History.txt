@@ -1,3 +1,19 @@
+*** 1.5.0 / 2006-09-24
+
++ 5 minor enhancements:
+	Added parse_tree_audit.
+	Added reporting of unsupported nodes that have processors.
+	YAY! class method support! generated as :"self.blah"
+	Add parse_tree_for_string.
+	Converted Rakefile+gemspec to Hoe-based Rakefile.
++ 6 bug fixes:
+	Did some preliminary work on 1.9 compatibility.
+	Fixed tests for some changes/clarifications.
+	Fixed resbody: should have nil exceptions list when no exception rescued.
+	Fixed op_asgn1 and op_asgn2.
+	Fixed incompatibility with new inline changes.
+	Fixed VALUE decl in parse_tree.rb
+
 *** 1.4.1 / 2006-04-10
 
 + 4 minor enhancements:
