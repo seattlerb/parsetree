@@ -510,7 +510,7 @@ again_no_block:
 
   case NODE_OP_ASGN1:
     add_to_parse_tree(current, node->nd_recv, newlines, locals);
-    add_to_parse_tree(current, node->nd_args->nd_next, newlines, locals);
+    add_to_parse_tree(current, node->nd_args->nd_2nd, newlines, locals);
     switch (node->nd_mid) {
     case 0:
       rb_ary_push(current, ID2SYM(rb_intern("||")));

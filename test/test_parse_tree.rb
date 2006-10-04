@@ -361,19 +361,19 @@ class TestParseTree < Test::Unit::TestCase
                  [:lasgn, :b, [:zarray]],
 
                  [:op_asgn1, [:lvar, :b], [:array, [:lit, 1]], :"||", [:lit, 10]],
-       [:op_asgn1, [:lvar, :b], [:array, [:lit, 2]], :"&&", [:lit, 11]],
-       [:op_asgn1, [:lvar, :b], [:array, [:lit, 3]], :+, [:lit, 12]],
-
-       [:lasgn, :s, [:call, [:const, :Struct], :new, [:array, [:lit, :var]]]],
-       [:lasgn, :c, [:call, [:lvar, :s], :new, [:array, [:nil]]]],
-
-       [:op_asgn2, [:lvar, :c], :var=, :"||", [:lit, 20]],
-       [:op_asgn2, [:lvar, :c], :var=, :"&&", [:lit, 21]],
-       [:op_asgn2, [:lvar, :c], :var=, :+, [:lit, 22]],
-
-       [:op_asgn2, [:call, [:call, [:lvar, :c], :d], :e], :f=, :"||", [:lit, 42]],
-
-       [:return, [:lvar, :a]]]]]
+                 [:op_asgn1, [:lvar, :b], [:array, [:lit, 2]], :"&&", [:lit, 11]],
+                 [:op_asgn1, [:lvar, :b], [:array, [:lit, 3]], :+, [:lit, 12]],
+               
+                 [:lasgn, :s, [:call, [:const, :Struct], :new, [:array, [:lit, :var]]]],
+                 [:lasgn, :c, [:call, [:lvar, :s], :new, [:array, [:nil]]]],
+               
+                 [:op_asgn2, [:lvar, :c], :var=, :"||", [:lit, 20]],
+                 [:op_asgn2, [:lvar, :c], :var=, :"&&", [:lit, 21]],
+                 [:op_asgn2, [:lvar, :c], :var=, :+, [:lit, 22]],
+               
+                 [:op_asgn2, [:call, [:call, [:lvar, :c], :d], :e], :f=, :"||", [:lit, 42]],
+               
+                 [:return, [:lvar, :a]]]]]
   @@determine_args = [:defn, :determine_args,
     [:scope,
       [:block,
