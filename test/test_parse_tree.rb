@@ -9,6 +9,7 @@ end
 
 require 'test/unit'
 require 'parse_tree'
+require 'pt_testcase'
 require 'test/something'
 
 class SomethingWithInitialize
@@ -17,7 +18,20 @@ class SomethingWithInitialize
   def protected_meth; end
 end
 
-class TestParseTree < Test::Unit::TestCase
+class ParseTree
+  def process(str)
+    parse_tree_for_string(str).first
+  end
+end
+
+class TestParseTree < ParseTreeTestCase
+  def setup
+    super
+    @processor = ParseTree.new(false)
+  end
+end
+
+class TestParseTreeOld < Test::Unit::TestCase
 
   def test_class_initialize
     expected = [[:class, :SomethingWithInitialize, :Object,
