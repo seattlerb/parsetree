@@ -1,7 +1,7 @@
 History.txt
-Rakefile
 Manifest.txt
 README.txt
+Rakefile
 bin/parse_tree_abc
 bin/parse_tree_audit
 bin/parse_tree_deps
@@ -11,6 +11,7 @@ lib/composite_sexp_processor.rb
 lib/parse_tree.rb
 lib/sexp.rb
 lib/sexp_processor.rb
+lib/unique.rb
 test/pt_testcase.rb
 test/something.rb
 test/test_all.rb
