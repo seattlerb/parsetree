@@ -29,39 +29,35 @@ class ParseTreeTestCase < Test::Unit::TestCase
 #       "ParseTree"   => [:defn, :accessor=, [:attrset, :@accessor]],
 #     },
     
-    "defn_bbegin" => {
-      "Ruby"        => "def bbegin
-  begin
-    (1 + 1)
-  rescue SyntaxError
-    e1 = $!
-    2
-  rescue Exception
-    e2 = $!
-    3
-  else
-    4
-  ensure
-    5
-  end
-end",
-     "ParseTree"   => [:defn, :bbegin,
-       [:scope,
-         [:block,
-           [:args],
-           [:begin,
-             [:ensure,
-               [:rescue,
-                 [:call, [:lit, 1], :+, [:array, [:lit, 1]]],
-                 [:resbody,
-                   [:array, [:const, :SyntaxError]],
-                   [:block, [:lasgn, :e1, [:gvar, :$!]], [:lit, 2]],
-                   [:resbody,
-                     [:array, [:const, :Exception]],
-                     [:block, [:lasgn, :e2, [:gvar, :$!]], [:lit, 3]]]],
-                 [:lit, 4]],
-               [:lit, 5]]]]]],
-    },
+#     "alias"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "alloca"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "argscat"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "argspush"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "back_ref"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "bmethod"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
 
     "bools" => {
       "Ruby"      => "def bools(arg1)
@@ -81,10 +77,15 @@ end",
               [:return, [:true]]]]]],
     },
 
+#     "break"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
 # TODO: move all call tests here
     "call_arglist"  => {
       "Ruby"        => "puts(42)",
-      "ParseTree"   => [:fcall,      :puts,  [:array,    [:lit, 42]]],
+      "ParseTree"   => [:fcall, :puts,  [:array,    [:lit, 42]]],
     },
 
     "call_attrasgn" => {
@@ -147,6 +148,21 @@ end
       nil]]
    },
 
+#     "cdecl"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "cfunc"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "colon3"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
     "conditional1" => {
       "Ruby"        => "if (42 == 0) then\n  return 1\nend",
       "ParseTree"   => [:if, [:call, [:lit, 42], :==, [:array, [:lit, 0]]], [:return, [:lit, 1]], nil],
@@ -173,6 +189,70 @@ end
           [:call, [:lit, 42], :<, [:array, [:lit, 0]]],
           [:return, [:lit, 3]],
           [:return, [:lit, 4]]]],
+    },
+
+#     "cref"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "cvar"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "cvasgn"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "cvdecl"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "dasgn"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "defined"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+    "defn_bbegin" => {
+      "Ruby"        => "def bbegin
+  begin
+    (1 + 1)
+  rescue SyntaxError
+    e1 = $!
+    2
+  rescue Exception
+    e2 = $!
+    3
+  else
+    4
+  ensure
+    5
+  end
+end",
+     "ParseTree"   => [:defn, :bbegin,
+       [:scope,
+         [:block,
+           [:args],
+           [:begin,
+             [:ensure,
+               [:rescue,
+                 [:call, [:lit, 1], :+, [:array, [:lit, 1]]],
+                 [:resbody,
+                   [:array, [:const, :SyntaxError]],
+                   [:block, [:lasgn, :e1, [:gvar, :$!]], [:lit, 2]],
+                   [:resbody,
+                     [:array, [:const, :Exception]],
+                     [:block, [:lasgn, :e2, [:gvar, :$!]], [:lit, 3]]]],
+                 [:lit, 4]],
+               [:lit, 5]]]]]],
     },
 
 #     "defn_bmethod_added" => {
@@ -260,6 +340,21 @@ end
 #       "Ruby2Ruby" => "def dmethod_added(x)\n  (x + 1)\nend"
 #     },
 
+#     "dregx"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "dregx_once"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "dsym"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
     "dxstr" => {
       "Ruby"        => "t = 5\n`touch #\{t}`\n",
       "ParseTree"   => [:block,
@@ -267,10 +362,45 @@ end
         [:dxstr, 'touch ', [:lvar, :t]]],
     },
  
+#     "evstr"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "fbody"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "flip2"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "flip3"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "gasgn"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
     "global" => {
       "Ruby"        => "$stderr",
       "ParseTree"   =>  [:gvar, :$stderr],
     },
+
+#     "hash"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "ifunc"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
 
     "interpolated" => {
       "Ruby"        => "argl = 1\n\"var is #\{argl}. So there.\"\n",
@@ -357,7 +487,12 @@ end
       "ParseTree"   => [:lasgn, :var, [:array,
                                          [:str, "foo"],
                                          [:str, "bar"]]],
-},
+    },
+
+#     "last"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
 
     "lit_bool_false" => {
       "Ruby"        => "false",
@@ -389,6 +524,11 @@ end
       "ParseTree"   => [:str, "x"],
     },
 
+#     "match"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
     "match2" => {
       "Ruby"        => "/x/ =~ \"blah\"",
       "ParseTree"   => [:match2, [:lit, /x/], [:str, "blah"]],
@@ -398,6 +538,31 @@ end
       "Ruby"        => "\"blah\" =~ /x/",
       "ParseTree"   => [:match3, [:lit, /x/], [:str, "blah"]],
     },
+
+#     "memo"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "method"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "newline"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "next"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "nth_ref"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
 
     "op_asgn1" => {
       "Ruby"        => "b = []\nb[1] ||= 10\nb[2] &&= 11\nb[3] += 12\n",
@@ -429,6 +594,36 @@ end
                  [:op_asgn_or, [:lvar, :a], [:lasgn, :a, [:lit, 1]]],
                  [:op_asgn_and, [:lvar, :a], [:lasgn, :a, [:lit, 2]]]],
     },
+
+#     "opt_n"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "postexe"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "redo"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "sclass"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "undef"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
+
+#     "valias"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
 
     "vcall" => {
       "Ruby"        => "method",
