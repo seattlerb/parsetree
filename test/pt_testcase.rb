@@ -389,6 +389,16 @@ end
       "ParseTree"   => [:str, "x"],
     },
 
+    "match2" => {
+      "Ruby"        => "/x/ =~ \"blah\"",
+      "ParseTree"   => [:match2, [:lit, /x/], [:str, "blah"]],
+    },
+
+    "match3" => {
+      "Ruby"        => "\"blah\" =~ /x/",
+      "ParseTree"   => [:match3, [:lit, /x/], [:str, "blah"]],
+    },
+
     "op_asgn1" => {
       "Ruby"        => "b = []\nb[1] ||= 10\nb[2] &&= 11\nb[3] += 12\n",
       "ParseTree"   => [:block,
