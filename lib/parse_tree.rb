@@ -607,6 +607,7 @@ again_no_block:
     break;
 
   case NODE_DSTR:
+  case NODE_DSYM:
   case NODE_DXSTR:
   case NODE_DREGX:
   case NODE_DREGX_ONCE:
@@ -770,10 +771,6 @@ again_no_block:
       add_to_parse_tree(current, node->nd_1st, newlines, locals);
     }
     rb_ary_push(current, ID2SYM(node->u2.id));
-    add_to_parse_tree(current, node->nd_3rd, newlines, locals);
-    break;
-
-  case NODE_DSYM:               // :"\#\{foo}" u1 u2 u3
     add_to_parse_tree(current, node->nd_3rd, newlines, locals);
     break;
 

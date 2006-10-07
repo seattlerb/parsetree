@@ -19,40 +19,50 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
   @@testcases = {
     
+# TODO: needs eval
 #     "accessor" => {
 #       "Ruby"        => "attr_reader :accessor",
 #       "ParseTree"   => [:defn, :accessor, [:ivar, :@accessor]],
 #     },
 
+# TODO: needs eval
 #     "accessor_equals" => {
 #       "Ruby"        => "attr_writer :accessor",
 #       "ParseTree"   => [:defn, :accessor=, [:attrset, :@accessor]],
 #     },
     
+# TODO: needs eval
 #     "alias"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
+# TODO: no clue how to make
 #     "alloca"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
+# TODO: no clue how to make - supposedly through op_asgn but not showing
 #     "argscat"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
+# TODO: no clue how to make
 #     "argspush"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
-#     "back_ref"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "back_ref"  => {
+      "Ruby"        => "[$&, $`, $', $+]",
+      "ParseTree"   => [:array,
+                        [:back_ref, :&],
+                        [:back_ref, :"`"],
+                        [:back_ref, :"'"],
+                        [:back_ref, :+]],
+    },
 
 #     "bmethod"  => {
 #       "Ruby"        => "XXX",
@@ -77,10 +87,18 @@ end",
               [:return, [:true]]]]]],
     },
 
-#     "break"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "break"  => {
+      "Ruby"        => "loop do\n  if true then\n    break\n  end\nend",
+      "ParseTree"   => [:iter,
+                        [:fcall, :loop], nil, [:if, [:true], [:break], nil]],
+    },
+
+    "break_arg"  => {
+      "Ruby"        => "loop do\n  if true then\n    break 42\n  end\nend",
+      "ParseTree"   => [:iter,
+                        [:fcall, :loop], nil,
+                        [:if, [:true], [:break, [:lit, 42]], nil]],
+    },
 
 # TODO: move all call tests here
     "call_arglist"  => {
@@ -319,10 +337,14 @@ end",
       "ParseTree"   => [:defn, :empty, [:scope, [:block, [:args], [:lasgn, :a, [:zarray]], [:return, [:lvar, :a]]]]],
     },
 
-#     "defs" => {
-#       "Ruby"      => "def self.x; 1; end",
-#       "ParseTree" => "",
-#     },
+    "defs" => {
+      "Ruby"      => "def self.x(y)\n  (y + 1)\nend",
+      "ParseTree" => [:defs, [:self], :x,
+                      [:scope,
+                       [:block,
+                        [:args, :y],
+                        [:call, [:lvar, :y], :+, [:array, [:lit, 1]]]]]],
+    },
 
 #     "dmethod_added" => {
 #       "Ruby"        => "def dmethod_added\n  define_method(:bmethod_added) do |x|\n    (x + 1)\n  end\nend",
@@ -350,10 +372,17 @@ end",
 #       "ParseTree"   => [],
 #     },
 
-#     "dsym"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "dstr" => {
+      "Ruby"        => "argl = 1\n\"var is #\{argl}. So there.\"\n",
+      "ParseTree"   => [:block,
+        [:lasgn, :argl, [:lit, 1]],
+        [:dstr, "var is ", [:lvar, :argl], [:str, ". So there."]]],
+    },
+
+    "dsym"  => {
+      "Ruby"        => ":\"x#\{(1 + 1)}y\"",
+      "ParseTree"   => [:dsym, "x", [:call, [:lit, 1], :+, [:array, [:lit, 1]]], [:str, "y"]],
+    },
 
     "dxstr" => {
       "Ruby"        => "t = 5\n`touch #\{t}`\n",
@@ -401,13 +430,6 @@ end",
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
-
-    "interpolated" => {
-      "Ruby"        => "argl = 1\n\"var is #\{argl}. So there.\"\n",
-      "ParseTree"   => [:block,
-        [:lasgn, :argl, [:lit, 1]],
-        [:dstr, "var is ", [:lvar, :argl], [:str, ". So there."]]],
-    },
 
     "iteration1" => {
       "Ruby"        => "loop do end",
