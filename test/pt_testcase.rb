@@ -401,31 +401,32 @@ end",
 #       "ParseTree"   => [],
 #     },
 
-#     "flip2"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "flip2"  => {
+      "Ruby"        => "if \"a\"..\"z\" then\n  42\nend",
+      "ParseTree"   => [:if, [:flip2, [:str, "a"], [:str, "z"]], [:lit, 42], nil],
+    },
 
-#     "flip3"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "flip3"  => {
+      "Ruby"        => "if \"a\"...\"z\" then\n  42\nend",
+      "ParseTree"   => [:if, [:flip3, [:str, "a"], [:str, "z"]], [:lit, 42], nil],
+    },
 
-#     "gasgn"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "gasgn"  => {
+      "Ruby"        => "$x = 42",
+      "ParseTree"   => [:gasgn, :$x, [:lit, 42]],
+    },
 
     "global" => {
       "Ruby"        => "$stderr",
       "ParseTree"   =>  [:gvar, :$stderr],
     },
 
-#     "hash"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "hash"  => {
+      "Ruby"        => "{ 1 => 2, 3 => 4 }",
+      "ParseTree"   => [:hash, [:lit, 1], [:lit, 2], [:lit, 3], [:lit, 4]],
+    },
 
+# TODO: no clue how to make
 #     "ifunc"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
@@ -511,11 +512,6 @@ end",
                                          [:str, "bar"]]],
     },
 
-#     "last"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
-
     "lit_bool_false" => {
       "Ruby"        => "false",
       "ParseTree"   => [:false],
@@ -546,6 +542,7 @@ end",
       "ParseTree"   => [:str, "x"],
     },
 
+# TODO: no clue
 #     "match"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
@@ -561,30 +558,33 @@ end",
       "ParseTree"   => [:match3, [:lit, /x/], [:str, "blah"]],
     },
 
+# TODO: no clue
 #     "memo"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
+# TODO: no clue
 #     "method"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
+# TODO: no clue
 #     "newline"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
-#     "next"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "next"  => {
+      "Ruby"        => "loop do\n  if false then\n    next\n  end\nend",
+      "ParseTree"   => [:iter, [:fcall, :loop], nil, [:if, [:false], [:next], nil]],
+    },
 
-#     "nth_ref"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "nth_ref"  => {
+      "Ruby"        => "$1",
+      "ParseTree"   => [:nth_ref, 1],
+    },
 
     "op_asgn1" => {
       "Ruby"        => "b = []\nb[1] ||= 10\nb[2] &&= 11\nb[3] += 12\n",
@@ -617,35 +617,37 @@ end",
                  [:op_asgn_and, [:lvar, :a], [:lasgn, :a, [:lit, 2]]]],
     },
 
+# TODO: no clue
 #     "opt_n"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
-#     "postexe"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "postexe"  => {
+      "Ruby"        => "END {\n  1\n}",
+      "ParseTree"   => [:iter, [:postexe], nil, [:lit, 1]],
+    },
 
-#     "redo"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "redo"  => {
+      "Ruby"        => "loop do\n  if false then\n    redo\n  end\nend",
+      "ParseTree"   => [:iter, [:fcall, :loop], nil, [:if, [:false], [:redo], nil]],
+    },
 
-#     "sclass"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "sclass"  => {
+      "Ruby"        => "class << self\n  42\nend",
+      "ParseTree"   => [:sclass, [:self], [:scope, [:lit, 42]]],
+    },
 
+# FIX: causes bus error
 #     "undef"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
+#       "Ruby"        => "undef :x",
+#       "ParseTree"   => [:undef, :x],
 #     },
 
-#     "valias"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "valias"  => {
+      "Ruby"        => "alias $y $x",
+      "ParseTree"   => [:valias, :$y, :$x],
+    },
 
     "vcall" => {
       "Ruby"        => "method",
