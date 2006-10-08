@@ -166,20 +166,21 @@ end
       nil]]
    },
 
-#     "cdecl"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "cdecl"  => {
+      "Ruby"        => "X = 42",
+      "ParseTree"   => [:cdecl, :X, [:lit, 42]],
+    },
 
+# TODO: no clue
 #     "cfunc"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
-#     "colon3"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "colon3"  => {
+      "Ruby"        => "::X",
+      "ParseTree"   => [:colon3, :X],
+    },
 
     "conditional1" => {
       "Ruby"        => "if (42 == 0) then\n  return 1\nend",
@@ -209,35 +210,44 @@ end
           [:return, [:lit, 4]]]],
     },
 
+# TODO: no clue
 #     "cref"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
-#     "cvar"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "cvar"  => {
+      "Ruby"        => "@@x",
+      "ParseTree"   => [:cvar, :@@x],
+    },
 
+# TODO: no clue
 #     "cvasgn"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
+# TODO: no clue
 #     "cvdecl"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
-#     "dasgn"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "dasgn"  => {
+      "Ruby"        => "a.each do |x|\n  b.each do |y|\n    x = (x + 1)\n  end\nend",
+      "ParseTree"   => [:iter,
+  [:call, [:vcall, :a], :each],
+  [:dasgn_curr, :x],
+  [:iter,
+   [:call, [:vcall, :b], :each],
+   [:dasgn_curr, :y],
+   [:dasgn, :x, [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]],
+    },
 
-#     "defined"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "defined"  => {
+      "Ruby"        => "defined? $x",
+      "ParseTree"   => [:defined, [:gvar, :$x]],
+    },
 
     "defn_bbegin" => {
       "Ruby"        => "def bbegin
@@ -273,6 +283,7 @@ end",
                [:lit, 5]]]]]],
     },
 
+# FIX
 #     "defn_bmethod_added" => {
 #       "Ruby"        => "def bmethod_added(x)\n  (x + 1)\nend",
 #       "ParseTree"   => [:defn, :bmethod_added,
@@ -286,6 +297,7 @@ end",
       "ParseTree"   => [:defn, :empty, [:scope, [:block, [:args], [:nil]]]],
     },
 
+# FIX
 #     "defn_fbody" => {
 #       "Ruby"        => "def x; puts 42; end; alias_method :aliased, :x",
 #       "ParseTree" => [:defn, :aliased,
@@ -362,15 +374,15 @@ end",
 #       "Ruby2Ruby" => "def dmethod_added(x)\n  (x + 1)\nend"
 #     },
 
-#     "dregx"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "dregx"  => {
+      "Ruby"        => "/x#\{(1 + 1)}y/",
+      "ParseTree"   => [:dregx, "x", [:call, [:lit, 1], :+, [:array, [:lit, 1]]], [:str, "y"]],
+    },
 
-#     "dregx_once"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
+    "dregx_once"  => {
+      "Ruby"        => "/x#\{(1 + 1)}y/o",
+      "ParseTree"   => [:dregx_once, "x", [:call, [:lit, 1], :+, [:array, [:lit, 1]]], [:str, "y"]],
+    },
 
     "dstr" => {
       "Ruby"        => "argl = 1\n\"var is #\{argl}. So there.\"\n",
@@ -391,11 +403,13 @@ end",
         [:dxstr, 'touch ', [:lvar, :t]]],
     },
  
+# TODO: no clue
 #     "evstr"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],
 #     },
 
+# TODO: no clue
 #     "fbody"  => {
 #       "Ruby"        => "XXX",
 #       "ParseTree"   => [],

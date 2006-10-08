@@ -613,9 +613,6 @@ again_no_block:
   case NODE_DREGX_ONCE:
     {
       NODE *list = node->nd_next;
-      if (nd_type(node) == NODE_DREGX || nd_type(node) == NODE_DREGX_ONCE) {
-	break;
-      }
       rb_ary_push(current, rb_str_new3(node->nd_lit));
       while (list) {
 	if (list->nd_head) {
