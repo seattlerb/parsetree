@@ -19,8 +19,14 @@ class SomethingWithInitialize
 end
 
 class ParseTree
-  def process(str) # makes it play weth with ParseTreeTestCase (FIX?)
-    parse_tree_for_string(str).first
+  def process(input) # makes it play with with ParseTreeTestCase (FIX?)
+    # um. kinda stupid, but cleaner
+    case input
+    when Array then
+      ParseTree.translate(*input)
+    else
+      ParseTree.translate(input)
+    end
   end
 end
 
@@ -60,39 +66,12 @@ class TestParseTree < ParseTreeTestCase
 
     assert_equal expected, actual
   end
-end
-
-class TestParseTreeOld < Test::Unit::TestCase
-  # TODO: need a test of interpolated strings
 
   @@self_classmethod = [:defn, :"self.classmethod",
                         [:scope,
                          [:block,
                           [:args],
                           [:call, [:lit, 1], :+, [:array, [:lit, 1]]]]]]
-
-  @@self_bmethod_maker = [:defn,
-                          :"self.bmethod_maker",
-                          [:scope,
-                           [:block,
-                            [:args],
-                            [:iter,
-                             [:fcall, :define_method,
-                              [:array, [:lit, :bmethod_added]]],
-                             [:dasgn_curr, :x],
-                             [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]]]
-
-  @@self_dmethod_maker = [:defn,
-                          :"self.dmethod_maker",
-                          [:scope,
-                           [:block,
-                            [:args],
-                            [:fcall,
-                             :define_method,
-                             [:array,
-                              [:lit, :dmethod_added],
-                              [:call, [:self], :method,
-                               [:array, [:lit, :bmethod_maker]]]]]]]]
 
   @@missing = [nil]
 
@@ -168,24 +147,7 @@ class TestParseTreeOld < Test::Unit::TestCase
                 :unknown_args,
                 [:array, [:lit, 4], [:str, "known"]]]]]]]]
 
-  @@bmethod_added = [:defn,
-    :bmethod_added,
-    [:bmethod,
-      [:dasgn_curr, :x],
-      [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]
   
-  @@dmethod_added = [:defn,
- :dmethod_added,
- [:dmethod,
-  :bmethod_maker,
-  [:scope,
-   [:block,
-    [:args],
-    [:iter,
-     [:fcall, :define_method, [:array, [:lit, :bmethod_added]]],
-     [:dasgn_curr, :x],
-     [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]]]] if RUBY_VERSION < "1.9"
-
   @@attrasgn = [:defn,
     :attrasgn,
     [:scope,
@@ -199,13 +161,7 @@ class TestParseTreeOld < Test::Unit::TestCase
   
   @@__all = [:class, :Something, :Object]
   
-  def setup
-    @processor = ParseTree.new(false)
-  end
-
-  methods = Something.instance_methods(false)
-
-  methods.sort.each do |meth|
+  Something.instance_methods(false).sort.each do |meth|
     if class_variables.include?("@@#{meth}") then
       @@__all << eval("@@#{meth}")
       eval "def test_#{meth}; assert_equal @@#{meth}, @processor.parse_tree_for_method(Something, :#{meth}); end"
@@ -214,10 +170,7 @@ class TestParseTreeOld < Test::Unit::TestCase
     end
   end
 
-  methods = Something.singleton_methods
-
-# TODO: cleanup
-  methods.sort.each do |meth|
+  Something.singleton_methods.sort.each do |meth|
     if class_variables.include?("@@self_#{meth}") then
       @@__all << eval("@@self_#{meth}")
       eval "def test_self_#{meth}; assert_equal @@self_#{meth}, @processor.parse_tree_for_method(Something, :#{meth}, true); end"

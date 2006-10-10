@@ -28,6 +28,23 @@ class ParseTree
   VERSION = '1.5.0'
 
   ##
+  # Front end translation method. 
+
+  def self.translate(klass_or_str, method=nil)
+    pt = self.new(false)
+    case klass_or_str
+    when String
+      pt.parse_tree_for_string(klass_or_str).first
+    else
+      unless method.nil? then
+        pt.parse_tree_for_method(klass_or_str, method)
+      else
+        pt.parse_tree(klass_or_str).first
+      end
+    end
+  end
+
+  ##
   # Initializes a ParseTree instance. Includes newline nodes if
   # +include_newlines+ which defaults to +$DEBUG+.
 
@@ -572,14 +589,20 @@ again_no_block:
     add_to_parse_tree(current, node->nd_value, newlines, locals);
     break;
 
-  case NODE_ALIAS:            // u1 u2 (alias :blah :blah2)
   case NODE_VALIAS:           // u1 u2 (alias $global $global2)
     rb_ary_push(current, ID2SYM(node->u1.id));
     rb_ary_push(current, ID2SYM(node->u2.id));
     break;
+  case NODE_ALIAS:            // u1 u2 (alias :blah :blah2)
+    add_to_parse_tree(current, node->nd_1st, newlines, locals);
+    add_to_parse_tree(current, node->nd_2nd, newlines, locals);
+    break;
+
+  case NODE_UNDEF:            // u2    (undef name, ...)
+    add_to_parse_tree(current, node->nd_value, newlines, locals);
+    break;
 
   case NODE_COLON3:           // u2    (::OUTER_CONST)
-  case NODE_UNDEF:            // u2    (undef instvar)
     rb_ary_push(current, ID2SYM(node->u2.id));
     break;
 
@@ -646,8 +669,12 @@ again_no_block:
   case NODE_CLASS:
   case NODE_MODULE:
     rb_ary_push(current, ID2SYM((ID)node->nd_cpath->nd_mid));
-    if (node->nd_super && nd_type(node) == NODE_CLASS) {
-      add_to_parse_tree(current, node->nd_super, newlines, locals);
+    if (nd_type(node) == NODE_CLASS) {
+      if (node->nd_super) {
+        add_to_parse_tree(current, node->nd_super, newlines, locals);
+      } else {
+        rb_ary_push(current, ID2SYM(rb_intern("Object")));
+      }
     }
     add_to_parse_tree(current, node->nd_body, newlines, locals);
     break;
@@ -714,8 +741,16 @@ again_no_block:
   case NODE_XSTR:             // u1    (%x{ls})
   case NODE_STR:              // u1
   case NODE_LIT:
-  case NODE_MATCH:
     rb_ary_push(current, node->nd_lit);
+    break;
+
+  case NODE_MATCH:            // u1 -> [:lit, u1]
+    {
+      VALUE n = rb_ary_new();
+      rb_ary_push(n, ID2SYM(rb_intern("lit")));
+      rb_ary_push(n, node->nd_lit);
+      rb_ary_push(current, n);
+    }
     break;
 
   case NODE_NEWLINE:

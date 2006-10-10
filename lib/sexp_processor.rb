@@ -137,7 +137,7 @@ class SexpProcessor
     @warn_on_default = true
     @auto_shift_type = false
     @strict = false
-    @unsupported = []
+    @unsupported = [:alloca, :cfunc, :cref, :evstr, :ifunc, :last, :memo, :newline, :opt_n, :method] # internal nodes that you can't get to
     @unsupported_checked = false
     @debug = {}
     @expected = Sexp
@@ -217,7 +217,7 @@ class SexpProcessor
       exp = new_exp
     end
 
-    # now do a pass with the real processor (or generic
+    # now do a pass with the real processor (or generic)
     meth = @processors[type] || @default_method
     if meth then
 

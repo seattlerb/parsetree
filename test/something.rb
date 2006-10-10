@@ -55,17 +55,4 @@ class Something
       6
     end
   end
-
-  def self.bmethod_maker
-    define_method(:bmethod_added) do |x|
-      x + 1
-    end
-  end
-  
-  def self.dmethod_maker
-    define_method :dmethod_added, self.method(:bmethod_maker)
-  end if RUBY_VERSION < "1.9"
-  
-  bmethod_maker
-  dmethod_maker if RUBY_VERSION < "1.9"
 end

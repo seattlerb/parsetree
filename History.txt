@@ -1,9 +1,10 @@
-*** 1.5.1 / 2006-10-05
+*** 1.5.1 / 2006-10-XX
 
 + 1 minor enhancement:
 	+ Stripped pt_testcase.rb bare to work with just ruby and parsetree.
-+ 1 bug fix:
++ 2 bug fixes:
 	+ Fixed a bug in op_asgn1
+	+ Fixed a bug in undef
 
 *** 1.5.0 / 2006-09-24
 
