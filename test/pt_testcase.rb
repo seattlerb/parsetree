@@ -40,16 +40,17 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
   @@testcases = {
     
+    # FIX: should be [:const, :Object]
     "alias"  => {
       "Ruby"        => "class X\n  alias :y :x\nend",
       "ParseTree"   => [:class, :X, :Object, [:scope, [:alias, [:lit, :y], [:lit, :x]]]],
       "Ruby2Ruby"   => "class X\n  alias_method :y, :x\n  \nend", # FIX dbl \n
     },
 
-    # "and"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "and"  => {
+      "Ruby"        => "(a and b)",
+      "ParseTree"   => [:and, [:vcall, :a], [:vcall, :b]],
+    },
 
     "args" => {
       "Ruby"      => "def x(a, b = 42, \*c, &d)\n  p(a, b, c, d)\nend",
@@ -64,14 +65,14 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
     
     # HACK brain to tired to make work in ruby2ruby
-    # "argscat"  => {
-    #   "Ruby"        => "a = b, c, *d",
-    #   "ParseTree"   => [:lasgn, :a,
-    #                     [:svalue,
-    #                      [:argscat,
-    #                       [:array, [:vcall, :b], [:vcall, :c]],
-    #                       [:vcall, :d]]]],
-    # },
+#     "argscat"  => {
+#       "Ruby"        => "a = b, c, *d",
+#       "ParseTree"   => [:lasgn, :a,
+#                         [:svalue,
+#                          [:argscat,
+#                           [:array, [:vcall, :b], [:vcall, :c]],
+#                           [:vcall, :d]]]],
+#     },
 
     "argspush"  => {
       "Ruby"        => "a[*b] = c",
@@ -82,10 +83,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "Ruby2Ruby"   => "a.[]=(*b, c)" # HACK until we can get things ironed out
     },
 
-    # "array"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "array"  => {
+      "Ruby"        => "[1, :b, \"c\"]",
+      "ParseTree"   => [:array, [:lit, 1], [:lit, :b], [:str, "c"]],
+    },
 
     "attrasgn" => {
       "Ruby"        => "y = 0\n42.method=(y)\n",
@@ -109,15 +110,15 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:back_ref, :+]],
     },
     
-    # "begin"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+#     "begin"  => {
+#       "Ruby"        => "begin\n  (1 + 1)\nend",
+#       "ParseTree"   => [:begin, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]],
+#     },
 
-    # "block_pass"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+#     "block_pass"  => {
+#       "Ruby"        => "a(&b)",
+#       "ParseTree"   => [:block_pass, [:vcall, :b], [:fcall, :a]],
+#     },
 
     "bmethod"  => {
       "Ruby"        => [Examples, :bmethod_added],
@@ -185,15 +186,38 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:cdecl, :X, [:lit, 42]],
     },
 
-    # "class"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "class"  => {
+      "Ruby"        => "class X < Array\n  def blah\n    puts(\"hello\")\n  end\n  \nend",
+      "ParseTree"   => [:class,
+                        :X,
+                        [:const, :Array],
+                        [:scope,
+                         [:defn,
+                          :blah,
+                          [:scope,
+                           [:block,
+                            [:args],
+                            [:fcall, :puts, [:array, [:str, "hello"]]]]]]]],
+    },
 
-    # "colon2"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "class_obj"  => {
+      "Ruby"        => "class X\n  def blah\n    puts(\"hello\")\n  end\n  \nend",
+      "ParseTree"   => [:class,
+                        :X,
+                        :Object,
+                        [:scope,
+                         [:defn,
+                          :blah,
+                          [:scope,
+                           [:block,
+                            [:args],
+                            [:fcall, :puts, [:array, [:str, "hello"]]]]]]]],
+    },
+
+    "colon2"  => {
+      "Ruby"        => "X::Y",
+      "ParseTree"   => [:colon2, [:const, :X], :Y],
+    },
 
     "colon3"  => {
       "Ruby"        => "::X",
@@ -234,10 +258,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:return, [:lit, 4]]]],
     },
 
-    # "const"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "const"  => {
+      "Ruby"        => "X",
+      "ParseTree"   => [:const, :X],
+    },
 
     "cvar"  => {
       "Ruby"        => "@@x",
@@ -320,15 +344,15 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "Ruby2Ruby" => "def dmethod_added(x)\n  (x + 1)\nend"
     },
 
-    # "dot2"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "dot2"  => {
+      "Ruby"        => "(a..b)",
+      "ParseTree"   => [:dot2, [:vcall, :a], [:vcall, :b]], 
+    },
 
-    # "dot3"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "dot3"  => {
+      "Ruby"        => "(a...b)",
+      "ParseTree"   => [:dot3, [:vcall, :a], [:vcall, :b]], 
+    },
 
     "dregx"  => {
       "Ruby"        => "/x#\{(1 + 1)}y/",
@@ -399,10 +423,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "Ruby2Ruby" => "def an_alias\n  (1 + 1)\nend"
     },
 
-    # "fcall"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "fcall"  => {
+      "Ruby"        => "p(4)",
+      "ParseTree"   => [:fcall, :p, [:array, [:lit, 4]]],
+    },
 
     "flip2"  => {
       "Ruby"        => "x = if ((i % 4) == 0)..((i % 3) == 0) then\n  i\nelse\n  nil\nend",
@@ -440,10 +464,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:nil]]],
     },
 
-    # "for"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "for"  => {
+      "Ruby"        => "for o in ary\n  puts(o)\nend\n",
+      "ParseTree"   => [:for, [:vcall, :ary], [:lasgn, :o],
+                        [:fcall, :puts, [:array, [:lvar, :o]]]],
+    },
 
     "gasgn"  => {
       "Ruby"        => "$x = 42",
@@ -465,10 +490,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:hash, [:lit, 1], [:lit, 2], [:lit, 3], [:lit, 4]],
     },
 
-    # "iasgn"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "iasgn"  => {
+      "Ruby"        => "@a = 4",
+      "ParseTree"   => [:iasgn, :@a, [:lit, 4]],
+    },
 
     "iteration1" => {
       "Ruby"        => "loop do end",
@@ -581,6 +606,16 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:str, "x"],
     },
 
+    "lit_range2" => {
+      "Ruby"        => "(1..10)",
+      "ParseTree"   => [:lit, 1..10],
+    },
+
+    "lit_range3" => {
+      "Ruby"        => "(1...10)",
+      "ParseTree"   => [:lit, 1...10],
+    },
+
     "lit_regexp" => {
       "Ruby"        => "/x/",
       "ParseTree"   => [:lit, /x/],
@@ -591,10 +626,12 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:lit, :x],
     },
 
-    # "masgn"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "masgn"  => {
+      "Ruby"        => "a, b = c, d",
+      "ParseTree"   => [:masgn,
+                        [:array, [:lasgn, :a], [:lasgn, :b]],
+                        [:array,  [:vcall, :c], [:vcall, :d]]], 
+    },
 
     "match"  => {
       "Ruby"        => "if /x/ then\n  1\nend",
@@ -611,10 +648,12 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:match3, [:lit, /x/], [:str, "blah"]],
     },
 
-    # "module"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "module"  => {
+      "Ruby"        => "module X\n  def y\n    # do nothing\n  end\n  \nend",
+      "ParseTree"   => [:module, :X,
+                        [:scope,
+                         [:defn, :y, [:scope, [:block, [:args], [:nil]]]]]],
+    },
 
     "next"  => {
       "Ruby"        => "loop do\n  if false then\n    next\n  end\nend",
@@ -624,10 +663,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:if, [:false], [:next], nil]],
     },
 
-    # "not"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "not"  => {
+      "Ruby"        => "(not true)",
+      "ParseTree"   => [:not, [:true]],
+    },
 
     "nth_ref"  => {
       "Ruby"        => "$1",
@@ -680,10 +719,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:op_asgn_or, [:lvar, :a], [:lasgn, :a, [:lit, 1]]]],
     },
 
-    # "or"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "or"  => {
+      "Ruby"        => "(a or b)",
+      "ParseTree"   => [:or, [:vcall, :a], [:vcall, :b]],
+    },
 
     "postexe"  => {
       "Ruby"        => "END {\n  1\n}",
@@ -696,45 +735,52 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:fcall, :loop], nil, [:if, [:false], [:redo], nil]],
     },
 
-    # "resbody"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+#     "resbody"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
 
-    # "rescue"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+#     "rescue"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
 
-    # "retry"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+#     "retry"  => {
+#       "Ruby"        => "XXX",
+#       "ParseTree"   => [],
+#     },
 
     "sclass"  => {
       "Ruby"        => "class << self\n  42\nend",
       "ParseTree"   => [:sclass, [:self], [:scope, [:lit, 42]]],
     },
 
-    # "splat"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+#     "splat"  => {
+#       "Ruby"        => "a(*b)",
+#       "ParseTree"   => [:fcall, :a, [:splat, [:vcall, :b]]],
+#     },
 
-    # "super"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "super"  => {
+      "Ruby"        => "def x\n  super(4)\nend",
+      "ParseTree"   => [:defn, :x, [:scope, [:block, [:args], [:super, [:array, [:lit, 4]]]]]],
+    },
 
-    # "svalue"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "super_multi"  => {
+      "Ruby"        => "def x\n  super(4, 2, 1)\nend",
+      "ParseTree"   => [:defn, :x, [:scope, [:block, [:args], [:super, [:array, [:lit, 4], [:lit, 2], [:lit, 1]]]]]],
+    },
 
-    # "to_ary"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+#     "svalue"  => {
+#       "Ruby"        => "a = *b",
+#       "ParseTree"   => [:lasgn, :a, [:svalue, [:splat, [:vcall, :b]]]],
+#     },
+
+    "to_ary"  => {
+      "Ruby"        => "a, b = c",
+      "ParseTree"   => [:masgn,
+                        [:array, [:lasgn, :a], [:lasgn, :b]],
+                        [:to_ary, [:vcall, :c]]],
+    },
 
     "true" => {
       "Ruby"      => "true",
@@ -755,10 +801,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "Ruby2Ruby"   => "undef :x\nundef :y\nundef :z\n",
     },
 
-    # "until"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "until"  => {
+      "Ruby"        => "until false do\n  (1 + 1)\nend",
+      "ParseTree"   => [:until, [:false],
+                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
+    },
 
     "valias"  => {
       "Ruby"        => "alias $y $x",
@@ -788,20 +835,30 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:xstr, 'touch 5'],
     },
 
-    # "yield"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "yield"  => {
+      "Ruby"        => "yield",
+      "ParseTree"   => [:yield],
+    },
+
+    "yield_arg"  => {
+      "Ruby"        => "yield(42)",
+      "ParseTree"   => [:yield, [:lit, 42]],
+    },
+
+    "yield_args"  => {
+      "Ruby"        => "yield(42, 24)",
+      "ParseTree"   => [:yield, [:array, [:lit, 42], [:lit, 24]]],
+    },
 
     "zarray" => {
       "Ruby"        => "a = []",
       "ParseTree"   => [:lasgn, :a, [:zarray]],
     },
 
-    # "zsuper"  => {
-    #   "Ruby"        => "XXX",
-    #   "ParseTree"   => [],
-    # },
+    "zsuper"  => {
+      "Ruby"        => "def x\n  super\nend",
+      "ParseTree"   => [:defn, :x, [:scope, [:block, [:args], [:zsuper]]]],
+    },
   }
 
 #   def test_audit_nodes

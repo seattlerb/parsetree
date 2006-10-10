@@ -185,7 +185,7 @@ class TestParseTree < ParseTreeTestCase
 		 "Must return -3 for missing methods")
   end
 
-  def test_class
+  def test_whole_class
     assert_equal([@@__all],
 		 @processor.parse_tree(Something),
 		 "Must return a lot of shit")
