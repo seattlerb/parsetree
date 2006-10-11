@@ -8,7 +8,8 @@ require './lib/parse_tree.rb'
 
 Hoe.new("ParseTree", ParseTree::VERSION) do |p|
   p.summary = "Extract and enumerate ruby parse trees."
-  p.description = File.read("README.txt").split(/\n\n+/)[2]
+  p.description = p.paragraphs_of("README.txt", 2).join("\n\n")
+  p.changes = p.paragraphs_of("History.txt", 1).join("\n\n")
   p.clean_globs << File.expand_path("~/.ruby_inline")
   p.extra_deps << ['RubyInline', '>= 3.2.0']
 end

@@ -110,10 +110,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:back_ref, :+]],
     },
     
-#     "begin"  => {
-#       "Ruby"        => "begin\n  (1 + 1)\nend",
-#       "ParseTree"   => [:begin, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]],
-#     },
+    "begin"  => {
+      "Ruby"        => "begin\n  (1 + 1)\nend",
+      "ParseTree"   => [:begin, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]],
+    },
 
     "block_pass"  => {
       "Ruby"        => "a(&b)",
@@ -391,7 +391,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
     
     "ensure" => {
-      "Ruby"        => "def bbegin\n  begin\n    (1 + 1)\n  rescue SyntaxError\n    e1 = $!\n    2\n  rescue Exception\n    e2 = $!\n    3\n  else\n    4\n  ensure\n    5\n  end\nend",
+      "Ruby"        => "def bbegin\n  begin\n    (1 + 1)\n  rescue SyntaxError => e1\n    2\n  rescue Exception => e2\n    3\n  else\n    4\n  ensure\n    5\n  end\nend",
       "ParseTree"   => [:defn, :bbegin,
                         [:scope,
                          [:block,
@@ -750,7 +750,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "rescue_exceptions"  => {
-      "Ruby"        => "begin\n  blah\nrescue RuntimeError => r\nend\n",
+      "Ruby"        => "begin\n  blah\nrescue RuntimeError => r\n  # do nothing\nend\n",
       "ParseTree"   => [:begin,
                         [:rescue,
                          [:vcall, :blah],
