@@ -865,10 +865,10 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines, VALU
   NODE *node = NULL;
   ID id;
   VALUE result = rb_ary_new();
+  VALUE version = rb_const_get_at(rb_cObject,rb_intern("RUBY_VERSION"));
 
   (void) self; // quell warnings
 
-  VALUE version = rb_const_get_at(rb_cObject,rb_intern("RUBY_VERSION"));
   if (strcmp(StringValuePtr(version), #{RUBY_VERSION.inspect})) {
     rb_fatal("bad version, %s != #{RUBY_VERSION}\\n", StringValuePtr(version));
   }
