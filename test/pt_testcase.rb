@@ -42,7 +42,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     
     "alias"  => {
       "Ruby"        => "class X\n  alias :y :x\nend",
-      "ParseTree"   => [:class, :X, [:const, :Object],
+      "ParseTree"   => [:class, :X, nil,
                         [:scope, [:alias, [:lit, :y], [:lit, :x]]]],
       "Ruby2Ruby"   => "class X\n  alias_method :y, :x\n  \nend", # FIX dbl \n
     },
@@ -204,7 +204,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "Ruby"        => "class X\n  def blah\n    puts(\"hello\")\n  end\n  \nend",
       "ParseTree"   => [:class,
                         :X,
-                        [:const, :Object],
+                        nil,
                         [:scope,
                          [:defn,
                           :blah,
@@ -277,7 +277,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
     "cvdecl"  => {
       "Ruby"        => "class X\n  @@blah = 1\n  \nend",
-      "ParseTree"   => [:class, :X, [:const, :Object],
+      "ParseTree"   => [:class, :X, nil,
                         [:scope, [:cvdecl, :@@blah, [:lit, 1]]]],
     },
 
@@ -604,11 +604,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:lit, 1],
     },
 
-    "lit_str" => {
-      "Ruby"        => "\"x\"",
-      "ParseTree"   => [:str, "x"],
-    },
-
     "lit_range2" => {
       "Ruby"        => "(1..10)",
       "ParseTree"   => [:lit, 1..10],
@@ -622,6 +617,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
     "lit_regexp" => {
       "Ruby"        => "/x/",
       "ParseTree"   => [:lit, /x/],
+    },
+
+    "lit_str" => {
+      "Ruby"        => "\"x\"",
+      "ParseTree"   => [:str, "x"],
     },
 
     "lit_sym" => {

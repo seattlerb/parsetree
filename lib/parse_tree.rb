@@ -673,10 +673,7 @@ again_no_block:
       if (node->nd_super) {
         add_to_parse_tree(current, node->nd_super, newlines, locals);
       } else {
-        VALUE n = rb_ary_new();
-        rb_ary_push(n, ID2SYM(rb_intern("const")));
-        rb_ary_push(n, ID2SYM(rb_intern("Object")));
-        rb_ary_push(current, n);
+        rb_ary_push(current, Qnil);
       }
     }
     add_to_parse_tree(current, node->nd_body, newlines, locals);

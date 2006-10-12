@@ -29,3 +29,11 @@ desc 'Run a very basic demo'
 task :demo do
   sh "echo 1+1 | ruby #{Hoe::RUBY_FLAGS} ./bin/parse_tree_show -f"
 end
+
+desc 'Show what tests are not sorted'
+task :sort do
+  sh "pgrep '^    \\\"(\\w+)' test/pt_testcase.rb | cut -f 2 -d\\\" > x"
+  sh "sort x > y"
+  sh "diff x y"
+  sh "rm -f x y"
+end
