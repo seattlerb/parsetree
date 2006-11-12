@@ -28,11 +28,6 @@ class Something
     5 == unknown_args(4, "known")
   end
 
-  def attrasgn
-    42.method = y
-    self.type = other.type
-  end
-
   # TODO: sort list
   def bbegin
     begin

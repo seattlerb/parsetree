@@ -36,6 +36,26 @@ class ParseTreeTestCase < Test::Unit::TestCase
     Unique.reset
   end
 
+  def self.add_test name, data, klass = self.name[4..-1]
+    name = name.to_s
+    klass = klass.to_s
+    if testcases.has_key? name then
+      if testcases[name].has_key? klass then
+        warn "testcase #{klass}##{name} already has data"
+      else
+        testcases[name][klass] = data
+      end
+    else
+      warn "testcase #{name} does not exist"
+    end
+  end
+
+  def self.unsupported_tests *tests
+    tests.flatten.each do |name|
+      add_test name, :unsupported
+    end
+  end
+
   @@testcase_order = %w(Ruby ParseTree)
 
   @@testcases = {
@@ -44,7 +64,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "Ruby"        => "class X\n  alias :y :x\nend",
       "ParseTree"   => [:class, :X, nil,
                         [:scope, [:alias, [:lit, :y], [:lit, :x]]]],
-      "Ruby2Ruby"   => "class X\n  alias_method :y, :x\n  \nend", # FIX dbl \n
+      "Ruby2Ruby"   => "class X\n  alias_method :y, :x\nend", # FIX dbl \n
     },
 
     "and"  => {
@@ -52,19 +72,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:and, [:vcall, :a], [:vcall, :b]],
     },
 
-    "args" => {
-      "Ruby"      => "def x(a, b = 42, \*c, &d)\n  p(a, b, c, d)\nend",
-      "ParseTree" => [:defn, :x,
-                      [:scope,
-                       [:block,
-                        [:args, :a, :b, "*c".intern, # s->e
-                         [:block, [:lasgn, :b, [:lit, 42]]]],
-                         [:block_arg, :d],
-                        [:fcall, :p,
-                         [:array, [:lvar, :a], [:lvar, :b],
-                          [:lvar, :c], [:lvar, :d]]]]]]
-    },
-    
     "argscat"  => {
       "Ruby"        => "a = b, c, *d",
       "ParseTree"   => [:lasgn, :a,
@@ -186,32 +193,44 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:cdecl, :X, [:lit, 42]],
     },
 
-    "class"  => {
-      "Ruby"        => "class X < Array\n  def blah\n    puts(\"hello\")\n  end\n  \nend",
-      "ParseTree"   => [:class,
-                        :X,
-                        [:const, :Array],
-                        [:scope,
-                         [:defn,
-                          :blah,
-                          [:scope,
-                           [:block,
-                            [:args],
-                            [:fcall, :puts, [:array, [:str, "hello"]]]]]]]],
-    },
-
-    "class_obj"  => {
-      "Ruby"        => "class X\n  def blah\n    puts(\"hello\")\n  end\n  \nend",
+    "class_plain"  => {
+      "Ruby"        => "class X\n  puts((1 + 1))\n  def blah\n    puts(\"hello\")\n  end\nend",
       "ParseTree"   => [:class,
                         :X,
                         nil,
                         [:scope,
-                         [:defn,
-                          :blah,
-                          [:scope,
-                           [:block,
-                            [:args],
-                            [:fcall, :puts, [:array, [:str, "hello"]]]]]]]],
+                         [:block,
+                          [:fcall, :puts, [:array, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]]],
+                          [:defn,
+                           :blah,
+                           [:scope,
+                            [:block,
+                             [:args],
+                             [:fcall, :puts, [:array, [:str, "hello"]]]]]]]]],
+    },
+
+    "class_super_object"  => {
+      "Ruby"        => "class X < Object\nend",
+      "ParseTree"   => [:class,
+                        :X,
+                        [:const, :Object],
+                        [:scope]],
+    },
+
+    "class_super_array"  => {
+      "Ruby"        => "class X < Array\nend",
+      "ParseTree"   => [:class,
+                        :X,
+                        [:const, :Array],
+                        [:scope]],
+    },
+
+    "class_super_expr"  => {
+      "Ruby"        => "class X < expr\nend",
+      "ParseTree"   => [:class,
+                        :X,
+                        [:vcall, :expr],
+                        [:scope]],
     },
 
     "colon2"  => {
@@ -256,6 +275,12 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:call, [:lit, 42], :<, [:array, [:lit, 0]]],
                          [:return, [:lit, 3]],
                          [:return, [:lit, 4]]]],
+      "Ruby2Ruby"   => "if (42 == 0) then\n  return 2\nelse\n  if (42 < 0) then\n    return 3\n  else\n    return 4\n  end\nend",
+    },
+
+    "conditional5" => {
+      "Ruby"       => "unless true then\n  if false then\n    return\n  end\nend",
+      "ParseTree"  => [:if, [:true], nil, [:if, [:false], [:return], nil]],
     },
 
     "const"  => {
@@ -276,7 +301,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "cvdecl"  => {
-      "Ruby"        => "class X\n  @@blah = 1\n  \nend",
+      "Ruby"        => "class X\n  @@blah = 1\nend",
       "ParseTree"   => [:class, :X, nil,
                         [:scope, [:cvdecl, :@@blah, [:lit, 1]]]],
     },
@@ -298,6 +323,19 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:defined, [:gvar, :$x]],
     },
 
+    "defn_args" => {
+      "Ruby"      => "def x(a, b = 42, \*c, &d)\n  p(a, b, c, d)\nend",
+      "ParseTree" => [:defn, :x,
+                      [:scope,
+                       [:block,
+                        [:args, :a, :b, "*c".intern, # s->e
+                         [:block, [:lasgn, :b, [:lit, 42]]]],
+                         [:block_arg, :d],
+                        [:fcall, :p,
+                         [:array, [:lvar, :a], [:lvar, :b],
+                          [:lvar, :c], [:lvar, :d]]]]]]
+    },
+    
     "defn_empty" => {
       "Ruby"        => "def empty\n  # do nothing\nend",
       "ParseTree"   => [:defn, :empty, [:scope, [:block, [:args], [:nil]]]],
@@ -308,14 +346,23 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:defn, :something?, [:scope, [:block, [:args], [:nil]]]],
     },
 
+# TODO:
+#   add_test("defn_optargs",
+#            s(:defn, :x,
+#              s(:args, :a, "*args".intern),
+#              s(:scope,
+#                s(:block,
+#                  s(:call, nil, :p,
+#                    s(:arglist, s(:lvar, :a), s(:lvar, :args)))))))
+
     "defn_or" => {
-      "Ruby"        => "def |\n  # do nothing\nend",
-      "ParseTree"   => [:defn, :|, [:scope, [:block, [:args], [:nil]]]],
+      "Ruby"        => "def |(o)\n  # do nothing\nend",
+      "ParseTree"   => [:defn, :|, [:scope, [:block, [:args, :o], [:nil]]]],
     },
     
     "defn_zarray" => { # tests memory allocation for returns
-      "Ruby"        => "def empty\n  a = []\n  return a\nend",
-      "ParseTree"   => [:defn, :empty,
+      "Ruby"        => "def zarray\n  a = []\n  return a\nend",
+      "ParseTree"   => [:defn, :zarray,
                         [:scope,
                          [:block, [:args],
                           [:lasgn, :a, [:zarray]], [:return, [:lvar, :a]]]]],
@@ -391,23 +438,29 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
     
     "ensure" => {
-      "Ruby"        => "def bbegin\n  begin\n    (1 + 1)\n  rescue SyntaxError => e1\n    2\n  rescue Exception => e2\n    3\n  else\n    4\n  ensure\n    5\n  end\nend",
-      "ParseTree"   => [:defn, :bbegin,
-                        [:scope,
-                         [:block,
-                          [:args],
-                          [:begin,
-                           [:ensure,
-                            [:rescue,
-                             [:call, [:lit, 1], :+, [:array, [:lit, 1]]],
-                             [:resbody,
-                              [:array, [:const, :SyntaxError]],
-                              [:block, [:lasgn, :e1, [:gvar, :$!]], [:lit, 2]],
-                              [:resbody,
-                               [:array, [:const, :Exception]],
-                               [:block, [:lasgn, :e2, [:gvar, :$!]], [:lit, 3]]]],
-                             [:lit, 4]],
-                            [:lit, 5]]]]]],
+      "Ruby"        => "begin
+  (1 + 1)
+rescue SyntaxError => e1
+  2
+rescue Exception => e2
+  3
+else
+  4
+ensure
+  5
+end",
+      "ParseTree"   => [:begin,
+                        [:ensure,
+                         [:rescue,
+                          [:call, [:lit, 1], :+, [:array, [:lit, 1]]],
+                          [:resbody,
+                           [:array, [:const, :SyntaxError]],
+                           [:block, [:lasgn, :e1, [:gvar, :$!]], [:lit, 2]],
+                           [:resbody,
+                            [:array, [:const, :Exception]],
+                            [:block, [:lasgn, :e2, [:gvar, :$!]], [:lit, 3]]]],
+                          [:lit, 4]],
+                         [:lit, 5]]],
     },
 
     "false" => {
@@ -652,7 +705,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "module"  => {
-      "Ruby"        => "module X\n  def y\n    # do nothing\n  end\n  \nend",
+      "Ruby"        => "module X\n  def y\n    # do nothing\n  end\nend",
       "ParseTree"   => [:module, :X,
                         [:scope,
                          [:defn, :y, [:scope, [:block, [:args], [:nil]]]]]],
@@ -739,14 +792,19 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:fcall, :loop], nil, [:if, [:false], [:redo], nil]],
     },
 
-#     "rescue"  => { # TODO: expression style rescues
-#       "Ruby"        => "blah rescue nil",
-#       "ParseTree"   => [:rescue, [:vcall, :blah], [:resbody, nil, [:nil]]],
-#     },
+    "rescue"  => {
+      "Ruby"        => "blah rescue nil",
+      "ParseTree"   => [:rescue, [:vcall, :blah], [:resbody, nil, [:nil]]],
+    },
 
-    "rescue_block"  => {
+    "rescue_block_nada"  => {
       "Ruby"        => "begin\n  blah\nrescue\n  # do nothing\nend\n",
       "ParseTree"   => [:begin, [:rescue, [:vcall, :blah], [:resbody, nil]]]
+    },
+
+    "rescue_block_body"  => {
+      "Ruby"        => "begin\n  blah\nrescue\n  nil\nend\n",
+      "ParseTree"   => [:begin, [:rescue, [:vcall, :blah], [:resbody, nil, [:nil]]]],
     },
 
     "rescue_exceptions"  => {
@@ -774,6 +832,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:fcall, :a, [:splat, [:vcall, :b]]],
     },
 
+    # TODO: all supers need to pass args
     "super"  => {
       "Ruby"        => "def x\n  super(4)\nend",
       "ParseTree"   => [:defn, :x,
@@ -823,10 +882,16 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "Ruby2Ruby"   => "undef :x\nundef :y\nundef :z\n",
     },
 
-    "until"  => {
+    "until_pre"  => {
       "Ruby"        => "until false do\n  (1 + 1)\nend",
       "ParseTree"   => [:until, [:false],
                         [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
+    },
+
+    "until_post"  => {
+      "Ruby"        => "begin\n  (1 + 1)\nend until false",
+      "ParseTree"   => [:until, [:false],
+                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], false],
     },
 
     "valias"  => {
@@ -839,17 +904,21 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:vcall, :method],
     },
 
-    "whiles" => {
-      "Ruby"        => "def whiles\n  while false do\n    puts(\"false\")\n  end\n  begin\n    puts(\"true\")\n  end while false\nend",
-      "ParseTree"   => [:defn,
-                        :whiles,
-                        [:scope,
-                         [:block,
-                          [:args],
-                          [:while, [:false],
-                           [:fcall, :puts, [:array, [:str, "false"]]], true],
-                          [:while, [:false],
-                           [:fcall, :puts, [:array, [:str, "true"]]], false]]]],
+    "while_pre" => {
+      "Ruby"        => "while false do\n  (1 + 1)\nend",
+      "ParseTree"   => [:while, [:false],
+                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
+    },
+
+    "while_pre_nil" => {
+      "Ruby"        => "while false do\nend",
+      "ParseTree"   => [:while, [:false], nil, true],
+    },
+
+    "while_post" => {
+      "Ruby"        => "begin\n  (1 + 1)\nend while false",
+      "ParseTree"   => [:while, [:false],
+                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], false],
     },
 
     "xstr" => {
@@ -912,8 +981,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
 #     flunk
 #   end
 
-  def self.previous(key)
-    idx = @@testcase_order.index(key)-1
+  def self.previous(key, extra=0)
+    idx = @@testcase_order.index(key)-1-extra
     case key
     when "RubyToRubyC" then
       idx -= 1
@@ -921,36 +990,42 @@ class ParseTreeTestCase < Test::Unit::TestCase
     @@testcase_order[idx]
   end
 
-  # lets us used unprocessed :self outside of tests, called when subclassed
-  def self.clone_same
-    @@testcases.each do |node, data|
-      data.each do |key, val|
-        if val == :same then
-          prev_key = self.previous(key)
-          data[key] = data[prev_key].deep_clone
-        end
-      end
-    end
-  end
+#   # lets us used unprocessed :self outside of tests, called when subclassed
+#   def self.clone_same
+#     @@testcases.each do |node, data|
+#       data.each do |key, val|
+#         if val == :same then
+#           prev_key = self.previous(key)
+#           data[key] = data[prev_key].deep_clone
+#         end
+#       end
+#     end
+#   end
 
   def self.inherited(c)
-    self.clone_same
-
     output_name = c.name.to_s.sub(/^Test/, '')
     raise "Unknown class #{c}" unless @@testcase_order.include? output_name
 
     input_name = self.previous(output_name)
 
     @@testcases.each do |node, data|
-      next if data[input_name] == :skip
+      next if [:skip, :unsupported].include? data[input_name]
       next if data[output_name] == :skip
 
       c.send(:define_method, "test_#{node}".intern) do
         flunk "Processor is nil" if processor.nil?
         assert data.has_key?(input_name), "Unknown input data"
+        unless data.has_key?(output_name) then
+          $stderr.puts "add_test(#{node.inspect}, :same)"
+        end
         assert data.has_key?(output_name), "Unknown expected data"
         input = data[input_name].deep_clone
-        expected = data[output_name].deep_clone
+
+        expected = if data[output_name] == :same then
+                     input
+                   else
+                     data[output_name]
+                   end.deep_clone
 
         case expected
         when :unsupported then
@@ -964,7 +1039,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
           _, expected, extra_expected = *expected if Array === expected and expected.first == :defx
           _, input, extra_input = *input if Array === input and input.first == :defx
           
-          assert_equal expected, processor.process(input)
+          debug = input.deep_clone
+          assert_equal expected, processor.process(input), "failed on input: #{debug.inspect}"
           extra_input.each do |input| processor.process(input) end
           extra = processor.extra_methods rescue []
           assert_equal extra_expected, extra

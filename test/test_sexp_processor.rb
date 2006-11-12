@@ -84,30 +84,6 @@ class TestSexpProcessor < Test::Unit::TestCase
     @processor = TestProcessor.new
   end
 
-  def test_sexp_accessors
-    @processor.sexp_accessors = {
-      :acc1 => [:thing_one, :thing_two, :thing_three]
-    }
-
-    a = s(:acc1, 1, 2, 3)
-
-    assert_equal s(:acc2, 3, 2, 1), @processor.process(a)
-  end
-
-  def test_sexp_accessors_reset
-    @processor.sexp_accessors = {
-      :acc1 => [:thing_one, :thing_two, :thing_three]
-    }
-
-    a = s(:acc1, 1, 2, 3)
-    b = @processor.process(a)
-
-    assert_raises NoMethodError do
-      @processor.process(b)
-    end
-  end
-  def test_sexp_accessors=; end # handled
-
   def test_process_specific
     a = [:specific, 1, 2, 3]
     expected = a[1..-1]

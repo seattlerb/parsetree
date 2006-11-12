@@ -59,25 +59,6 @@ class TestSexp < SexpTestCase # ZenTest FULL
 #    raise NotImplementedError, 'Need to write test_class_index'
   end
 
-  def test_accessors; end # handled
-
-  def test_accessors_equals
-    a = s(:call, s(:lit, 1), "func", s(:array, s(:lit, 2)))
-    a.accessors = [:lhs, :name, :rhs]
-
-    assert_equal a.accessors, [:lhs, :name, :rhs]
-
-    assert_equal s(:lit, 1), a.lhs
-    assert_equal "func", a.name
-    assert_equal s(:array, s(:lit, 2)), a.rhs
-
-    a.accessors = []
-
-    assert_raises NoMethodError do
-      a.lhs
-    end
-  end
-
   def test_array_type_eh
     assert_equal false, @sexp.array_type?
     @sexp.unshift :array
@@ -213,15 +194,27 @@ class TestSexp < SexpTestCase # ZenTest FULL
   end
 
   def test_method_missing
+    assert_nil @sexp.not_there
+    assert_equal s(:lit, 42), @basic_sexp.lit
+  end
+
+  def test_method_missing_ambigious
     assert_raises NoMethodError do
-      @sexp.no_such_method
+      pirate = s(:says, s(:arrr!), s(:arrr!), s(:arrr!))
+      pirate.arrr!
     end
+  end
 
-    @sexp.accessors = [:its_a_method_now]
+  def test_method_missing_deep
+    sexp = s(:blah, s(:a, s(:b, s(:c, :yay!))))
+    assert_equal(s(:c, :yay!), sexp.a.b.c)
+  end
 
-    assert_nothing_raised do
-      assert_equal 2, @sexp.its_a_method_now
-    end
+  def test_method_missing_delete
+    sexp = s(:blah, s(:a, s(:b, s(:c, :yay!))))
+
+    assert_equal(s(:c, :yay!), sexp.a.b.c(true))
+    assert_equal(s(:blah, s(:a, s(:b))), sexp)
   end
 
   def test_pretty_print

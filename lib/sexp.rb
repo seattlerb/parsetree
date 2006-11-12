@@ -11,15 +11,9 @@ class Sexp < Array # ZenTest FULL
   @@array_types = [ :array, :args, ]
 
   ##
-  # Named positional parameters.
-  # Use with +SexpProcessor.require_empty=false+.
-  attr_accessor :accessors
-
-  ##
   # Create a new Sexp containing +args+.
 
   def initialize(*args)
-    @accessors = []
     super(args)
   end
 
@@ -123,35 +117,19 @@ class Sexp < Array # ZenTest FULL
     return "s(#{sexp_str})"
   end
 
-  ##
-  # Fancy-Schmancy method used to implement named positional accessors
-  # via +accessors+.
-  #
-  # Example:
-  #
-  #   class MyProcessor < SexpProcessor
-  #     def initialize
-  #       super
-  #       self.require_empty = false
-  #       self.sexp_accessors = {
-  #         :call => [:lhs, :name, :rhs]
-  #       }
-  #       ...
-  #     end
-  #   
-  #     def process_call(exp)
-  #       lhs = exp.lhs
-  #       name = exp.name
-  #       rhs = exp.rhs
-  #       ...
-  #     end
-  #   end
+  def method_missing(meth, delete=false)
+    matches = find_all { | sexp | Sexp === sexp and sexp.first == meth }
 
-  def method_missing(meth, *a, &b)
-    super unless @accessors.include? meth
-
-    index = @accessors.index(meth) + 1 # skip type
-    return self.at(index)
+    case matches.size
+    when 0 then
+      nil
+    when 1 then
+      match = matches.first
+      delete match if delete
+      match
+    else
+      raise NoMethodError, "multiple nodes for #{meth} were found in #{inspect}"
+    end
   end
 
   def pretty_print(q) # :nodoc:

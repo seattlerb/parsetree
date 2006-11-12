@@ -25,7 +25,7 @@ require 'inline'
 
 class ParseTree
 
-  VERSION = '1.6.0'
+  VERSION = '1.6.1'
 
   ##
   # Front end translation method. 
@@ -82,7 +82,7 @@ class ParseTree
       code = if Class === klass then
                sc = klass.superclass
                sc_name = ((sc.nil? or sc.name.empty?) ? "nil" : sc.name).intern
-               [:class, klassname, sc_name]
+               [:class, klassname, [:const, sc_name]]
              else
                [:module, klassname]
              end
@@ -399,7 +399,11 @@ again_no_block:
   case NODE_WHILE:
   case NODE_UNTIL:
     add_to_parse_tree(current,  node->nd_cond, newlines, locals);
-    add_to_parse_tree(current,  node->nd_body, newlines, locals); 
+    if (node->nd_body) {
+      add_to_parse_tree(current,  node->nd_body, newlines, locals); 
+    } else {
+      rb_ary_push(current, Qnil);
+    }
     rb_ary_push(current, node->nd_3rd == 0 ? Qfalse : Qtrue);
     break;
 

@@ -37,7 +37,7 @@ class TestParseTree < ParseTreeTestCase
   end
 
   def test_class_initialize
-    expected = [[:class, :SomethingWithInitialize, :Object,
+    expected = [[:class, :SomethingWithInitialize, [:const, :Object],
       [:defn, :initialize, [:scope, [:block, [:args], [:nil]]]],
       [:defn, :protected_meth, [:scope, [:block, [:args], [:nil]]]],
     ]]
@@ -159,7 +159,7 @@ class TestParseTree < ParseTreeTestCase
           :type=, 
           [:array, [:call, [:vcall, :other], :type]]]]]]
   
-  @@__all = [:class, :Something, :Object]
+  @@__all = [:class, :Something, [:const, :Object]]
   
   Something.instance_methods(false).sort.each do |meth|
     if class_variables.include?("@@#{meth}") then

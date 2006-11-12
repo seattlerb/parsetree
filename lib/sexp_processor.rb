@@ -122,11 +122,6 @@ class SexpProcessor
   attr_accessor :require_empty
 
   ##
-  # Adds accessor methods to the Sexp
-
-  attr_accessor :sexp_accessors
-
-  ##
   # Creates a new SexpProcessor.  Use super to invoke this
   # initializer from SexpProcessor subclasses, then use the
   # attributes above to customize the functionality of the
@@ -142,7 +137,6 @@ class SexpProcessor
     @debug = {}
     @expected = Sexp
     @require_empty = true
-    @sexp_accessors = {}
     @exceptions = {}
 
     # we do this on an instance basis so we can subclass it for
@@ -189,14 +183,6 @@ class SexpProcessor
     exp_orig = exp.deep_clone if $DEBUG or
       @debug.has_key? type or @exceptions.has_key?(type)
 
-    if Sexp === exp then
-      if @sexp_accessors.include? type then
-        exp.accessors = @sexp_accessors[type]
-      else
-        exp.accessors = [] # clean out accessor list in case it changed
-      end
-    end
-    
     raise UnsupportedNodeError, "'#{type}' is not a supported node type" if @unsupported.include? type
 
     # do a pass through the rewriter first, if any, reassign back to exp
