@@ -12,6 +12,7 @@ Hoe.new("ParseTree", ParseTree::VERSION) do |p|
   p.changes = p.paragraphs_of("History.txt", 1).join("\n\n")
   p.clean_globs << File.expand_path("~/.ruby_inline")
   p.extra_deps << ['RubyInline', '>= 3.2.0']
+  p.spec_extras[:require_paths] = proc { |paths| paths << 'test'; p paths }
 end
 
 desc 'Run against ruby 1.9 (from a multiruby install) with -d.'
