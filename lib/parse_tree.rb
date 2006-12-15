@@ -37,7 +37,12 @@ class ParseTree
       pt.parse_tree_for_string(klass_or_str).first
     else
       unless method.nil? then
-        pt.parse_tree_for_method(klass_or_str, method)
+        if method.to_s =~ /^self\./ then
+          method = method.to_s[5..-1].intern
+          pt.parse_tree_for_method(klass_or_str, method, true)
+        else
+          pt.parse_tree_for_method(klass_or_str, method)
+        end
       else
         pt.parse_tree(klass_or_str).first
       end
