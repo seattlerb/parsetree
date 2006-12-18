@@ -28,7 +28,7 @@ class ParseTree
   VERSION = '1.6.1'
 
   ##
-  # Front end translation method. 
+  # Front end translation method.
 
   def self.translate(klass_or_str, method=nil)
     pt = self.new(false)
@@ -250,6 +250,7 @@ class ParseTree
 
     builder.prefix %{
         #define nd_3rd   u3.node
+        static VALUE current_case = Qnil;
     }
 
     builder.prefix %{
@@ -377,12 +378,17 @@ again_no_block:
       break;
 
   case NODE_CASE:
-    add_to_parse_tree(current, node->nd_head, newlines, locals); /* expr */
+    current_case = current;
+    if (node->nd_head != NULL) {
+      add_to_parse_tree(current, node->nd_head, newlines, locals); /* expr */
+    } else {
+      rb_ary_push(current, Qnil);
+    }
     node = node->nd_body;
     while (node) {
       add_to_parse_tree(current, node, newlines, locals);
       if (nd_type(node) == NODE_WHEN) {                 /* when */
-        node = node->nd_next; 
+        node = node->nd_next;
       } else {
         break;                                          /* else */
       }
@@ -390,9 +396,15 @@ again_no_block:
         rb_ary_push(current, Qnil);                     /* no else */
       }
     }
+    current_case = Qnil;
     break;
 
   case NODE_WHEN:
+    if (current_case == Qnil) { /* when without case, ie, no expr in case */
+      rb_ary_pop(ary); /* reset what current is pointing at */
+      node = NEW_CASE(0, node);
+      goto again;
+    }
     add_to_parse_tree(current, node->nd_head, newlines, locals); /* args */
     if (node->nd_body) {
       add_to_parse_tree(current, node->nd_body, newlines, locals); /* body */
@@ -405,7 +417,7 @@ again_no_block:
   case NODE_UNTIL:
     add_to_parse_tree(current,  node->nd_cond, newlines, locals);
     if (node->nd_body) {
-      add_to_parse_tree(current,  node->nd_body, newlines, locals); 
+      add_to_parse_tree(current,  node->nd_body, newlines, locals);
     } else {
       rb_ary_push(current, Qnil);
     }
@@ -444,7 +456,7 @@ again_no_block:
     break;
 
   // rescue body:
-  // begin stmt rescue exception => var; stmt; [rescue e2 => v2; s2;]* end 
+  // begin stmt rescue exception => var; stmt; [rescue e2 => v2; s2;]* end
   // stmt rescue stmt
   // a = b rescue c
 
@@ -457,7 +469,7 @@ again_no_block:
       add_to_parse_tree(current, node->nd_2nd, newlines, locals);
       add_to_parse_tree(current, node->nd_1st, newlines, locals);
     break;
-	
+
   case NODE_ENSURE:
     add_to_parse_tree(current, node->nd_head, newlines, locals);
     if (node->nd_ensr) {
@@ -580,7 +592,7 @@ again_no_block:
     add_to_parse_tree(current, node->nd_head, newlines, locals);
     if (node->nd_args) {
       if (node->nd_args != (NODE *)-1) {
-	add_to_parse_tree(current, node->nd_args, newlines, locals);
+        add_to_parse_tree(current, node->nd_args, newlines, locals);
       }
     }
     add_to_parse_tree(current, node->nd_value, newlines, locals);
@@ -618,22 +630,22 @@ again_no_block:
   case NODE_HASH:
     {
       NODE *list;
-	
+
       list = node->nd_head;
       while (list) {
-	add_to_parse_tree(current, list->nd_head, newlines, locals);
-	list = list->nd_next;
-	if (list == 0)
-	  rb_bug("odd number list for Hash");
-	add_to_parse_tree(current, list->nd_head, newlines, locals);
-	list = list->nd_next;
+        add_to_parse_tree(current, list->nd_head, newlines, locals);
+        list = list->nd_next;
+        if (list == 0)
+          rb_bug("odd number list for Hash");
+        add_to_parse_tree(current, list->nd_head, newlines, locals);
+        list = list->nd_next;
       }
     }
     break;
 
   case NODE_ARRAY:
       while (node) {
-	add_to_parse_tree(current, node->nd_head, newlines, locals);
+        add_to_parse_tree(current, node->nd_head, newlines, locals);
         node = node->nd_next;
       }
     break;
@@ -647,20 +659,20 @@ again_no_block:
       NODE *list = node->nd_next;
       rb_ary_push(current, rb_str_new3(node->nd_lit));
       while (list) {
-	if (list->nd_head) {
-	  switch (nd_type(list->nd_head)) {
-	  case NODE_STR:
-	    add_to_parse_tree(current, list->nd_head, newlines, locals);
-	    break;
-	  case NODE_EVSTR:
-	    add_to_parse_tree(current, list->nd_head->nd_body, newlines, locals);
-	    break;
-	  default:
-	    add_to_parse_tree(current, list->nd_head, newlines, locals);
-	    break;
-	  }
-	}
-	list = list->nd_next;
+        if (list->nd_head) {
+          switch (nd_type(list->nd_head)) {
+          case NODE_STR:
+            add_to_parse_tree(current, list->nd_head, newlines, locals);
+            break;
+          case NODE_EVSTR:
+            add_to_parse_tree(current, list->nd_head->nd_body, newlines, locals);
+            break;
+          default:
+            add_to_parse_tree(current, list->nd_head, newlines, locals);
+            break;
+          }
+        }
+        list = list->nd_next;
       }
     }
     break;
@@ -669,7 +681,7 @@ again_no_block:
   case NODE_DEFS:
     if (node->nd_defn) {
       if (nd_type(node) == NODE_DEFS)
-	add_to_parse_tree(current, node->nd_recv, newlines, locals);
+        add_to_parse_tree(current, node->nd_recv, newlines, locals);
       rb_ary_push(current, ID2SYM(node->nd_mid));
       add_to_parse_tree(current, node->nd_defn, newlines, locals);
     }
@@ -710,8 +722,8 @@ again_no_block:
       while (optnode) {
         // optional arg names
         rb_ary_push(current, ID2SYM(locals[i + 3]));
-	i++;
-	optnode = optnode->nd_next;
+        i++;
+        optnode = optnode->nd_next;
       }
 
       if (arg_count > 0) {
@@ -732,11 +744,11 @@ again_no_block:
       optnode = node->nd_opt;
       // block?
       if (optnode) {
-	add_to_parse_tree(current, node->nd_opt, newlines, locals);
+        add_to_parse_tree(current, node->nd_opt, newlines, locals);
       }
     }
   }  break;
-	
+
   case NODE_LVAR:
   case NODE_DVAR:
   case NODE_IVAR:

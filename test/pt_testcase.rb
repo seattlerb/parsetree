@@ -14,11 +14,11 @@ class Examples
       x + 1
     end
   end
-  
+
   def self.dmethod_maker
     define_method :dmethod_added, self.method(:bmethod_maker)
   end if RUBY_VERSION < "1.9"
-  
+
   bmethod_maker
   dmethod_maker if RUBY_VERSION < "1.9"
 end
@@ -59,7 +59,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
   @@testcase_order = %w(Ruby ParseTree)
 
   @@testcases = {
-    
+
     "alias"  => {
       "Ruby"        => "class X\n  alias :y :x\nend",
       "ParseTree"   => [:class, :X, nil,
@@ -107,7 +107,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:defn, :writer=, [:attrset, :@writer]],
       "Ruby2Ruby"   => "attr_writer :writer"
     },
-    
+
     "back_ref"  => {
       "Ruby"        => "[$&, $`, $', $+]",
       "ParseTree"   => [:array,
@@ -116,7 +116,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:back_ref, "'".intern], # s->e
                         [:back_ref, :+]],
     },
-    
+
     "begin"  => {
       "Ruby"        => "begin\n  (1 + 1)\nend",
       "ParseTree"   => [:begin, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]],
@@ -142,14 +142,14 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:iter,
                         [:fcall, :loop], nil, [:if, [:true], [:break], nil]],
     },
-    
+
     "break_arg"  => {
       "Ruby"        => "loop do\n  if true then\n    break 42\n  end\nend",
       "ParseTree"   => [:iter,
                         [:fcall, :loop], nil,
                         [:if, [:true], [:break, [:lit, 42]], nil]],
     },
-    
+
     "call" => {
       "Ruby"        => "self.method",
       "ParseTree" => [:call, [:self], :method],
@@ -186,6 +186,17 @@ class ParseTreeTestCase < Test::Unit::TestCase
                        [:when, [:array, [:str, "green"]],
                         [:lasgn, :var, [:lit, 3]]],
                        nil]]
+    },
+
+    "case_no_expr" => { # TODO: nested
+      "Ruby" => "case\nwhen 1 then\n  :a\nwhen 2 then\n  :b\nelse\n  :c\nend",
+      "ParseTree" => [:case, nil,
+                      [:when,
+                       [:array, [:lit, 1]],
+                       [:lit, :a]],
+                      [:when,
+                       [:array, [:lit, 2]], [:lit, :b]],
+                      [:lit, :c]],
     },
 
     "cdecl"  => {
@@ -335,7 +346,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:array, [:lvar, :a], [:lvar, :b],
                           [:lvar, :c], [:lvar, :d]]]]]]
     },
-    
+
     "defn_empty" => {
       "Ruby"        => "def empty\n  # do nothing\nend",
       "ParseTree"   => [:defn, :empty, [:scope, [:block, [:args], [:nil]]]],
@@ -359,7 +370,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "Ruby"        => "def |(o)\n  # do nothing\nend",
       "ParseTree"   => [:defn, :|, [:scope, [:block, [:args, :o], [:nil]]]],
     },
-    
+
     "defn_zarray" => { # tests memory allocation for returns
       "Ruby"        => "def zarray\n  a = []\n  return a\nend",
       "ParseTree"   => [:defn, :zarray,
@@ -396,12 +407,12 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
     "dot2"  => {
       "Ruby"        => "(a..b)",
-      "ParseTree"   => [:dot2, [:vcall, :a], [:vcall, :b]], 
+      "ParseTree"   => [:dot2, [:vcall, :a], [:vcall, :b]],
     },
 
     "dot3"  => {
       "Ruby"        => "(a...b)",
-      "ParseTree"   => [:dot3, [:vcall, :a], [:vcall, :b]], 
+      "ParseTree"   => [:dot3, [:vcall, :a], [:vcall, :b]],
     },
 
     "dregx"  => {
@@ -436,7 +447,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:lasgn, :t, [:lit, 5]],
                         [:dxstr, 'touch ', [:lvar, :t]]],
     },
-    
+
     "ensure" => {
       "Ruby"        => "begin
   (1 + 1)
@@ -686,7 +697,7 @@ end",
       "Ruby"        => "a, b = c, d",
       "ParseTree"   => [:masgn,
                         [:array, [:lasgn, :a], [:lasgn, :b]],
-                        [:array,  [:vcall, :c], [:vcall, :d]]], 
+                        [:array,  [:vcall, :c], [:vcall, :d]]],
     },
 
     "match"  => {
@@ -749,13 +760,13 @@ end",
                           :new, [:array, [:lit, :var]]]],
                         [:lasgn, :c,
                          [:call, [:lvar, :s], :new, [:array, [:nil]]]],
-                        
+
                         [:op_asgn2, [:lvar, :c], :var=, "||".intern, # s->e
                          [:lit, 20]],
                         [:op_asgn2, [:lvar, :c], :var=, "&&".intern, # s->e
                          [:lit, 21]],
                         [:op_asgn2, [:lvar, :c], :var=, :+, [:lit, 22]],
-                        
+
                         [:op_asgn2,
                          [:call,
                           [:call, [:lvar, :c], :d], :e], :f=, "||".intern,
@@ -784,6 +795,22 @@ end",
     "postexe"  => {
       "Ruby"        => "END {\n  1\n}",
       "ParseTree"   => [:iter, [:postexe], nil, [:lit, 1]],
+    },
+
+    "proc_no_args" => {
+      "Ruby" => "proc do\n  (x + 1)\nend",
+      "ParseTree" => [:iter,
+                      [:fcall, :proc],
+                      nil,
+                      [:call, [:vcall, :x], :+, [:array, [:lit, 1]]]],
+    },
+
+    "proc_args" => {
+      "Ruby" => "proc do |x|\n  (x + 1)\nend",
+      "ParseTree" => [:iter,
+                      [:fcall, :proc],
+                      [:dasgn_curr, :x],
+                      [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]],
     },
 
     "redo"  => {
@@ -963,7 +990,7 @@ end",
 #       # HACK
 #       nodes -= [:alloca, :argspush, :cfunc, :cref, :evstr, :ifunc, :last, :memo, :newline, :opt_n, :method].map { |s| s.to_s }
 #     end
-    
+
 #     untested = nodes-tested
 
 #     puts
@@ -977,7 +1004,7 @@ end",
 #     },
 # )
 #     end
-    
+
 #     flunk
 #   end
 
@@ -1038,7 +1065,7 @@ end",
 
           _, expected, extra_expected = *expected if Array === expected and expected.first == :defx
           _, input, extra_input = *input if Array === input and input.first == :defx
-          
+
           debug = input.deep_clone
           assert_equal expected, processor.process(input), "failed on input: #{debug.inspect}"
           extra_input.each do |input| processor.process(input) end
