@@ -87,7 +87,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:vcall, :a],
                         :[]=,
                         [:argspush, [:splat, [:vcall, :b]], [:vcall, :c]]],
-      "Ruby2Ruby"   => "a.[]=(*b, c)" # HACK until we can get things ironed out
     },
 
     "array"  => {
@@ -96,10 +95,15 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "attrasgn" => {
-      "Ruby"        => "y = 0\n42.method=(y)\n",
+      "Ruby"        => "y = 0\n42.method = y\n",
       "ParseTree"   => [:block,
                         [:lasgn, :y, [:lit, 0]],
                         [:attrasgn, [:lit, 42], :method=, [:array, [:lvar, :y]]]],
+    },
+
+    "attrasgn_index_equals" => {
+      "Ruby"        => "a[42] = 24",
+      "ParseTree"   => [:attrasgn, [:vcall, :a], :[]=, [:array, [:lit, 42], [:lit, 24]]],
     },
 
     "attrset" => {
@@ -158,6 +162,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
     "call_arglist"  => {
       "Ruby"        => "puts(42)",
       "ParseTree"   => [:fcall, :puts, [:array, [:lit, 42]]],
+    },
+
+    "call_index" => { # see attrasgn_index_equals for opposite
+      "Ruby"        => "a[42]",
+      "ParseTree"   => [:call, [:vcall, :a], :[], [:array, [:lit, 42]]],
     },
 
     "case" => {
