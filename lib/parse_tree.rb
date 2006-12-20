@@ -101,7 +101,7 @@ class ParseTree
         code << parse_tree_for_method(klass, m.to_sym)
       end
 
-      klass.singleton_methods.sort.each do |m|
+      klass.singleton_methods(false).sort.each do |m|
         code << parse_tree_for_method(klass, m.to_sym, true)
       end
 

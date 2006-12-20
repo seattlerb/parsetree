@@ -709,6 +709,12 @@ end",
                         [:array,  [:vcall, :c], [:vcall, :d]]],
     },
 
+    "masgn_iasgn"  => {
+      "Ruby"        => "a, @b = c, d",
+      "ParseTree"   => [:masgn,
+                        [:array, [:lasgn, :a], [:iasgn, :@b]],
+                        [:array,  [:vcall, :c], [:vcall, :d]]],
+    },
     "match"  => {
       "Ruby"        => "if /x/ then\n  1\nend",
       "ParseTree"   => [:if, [:match, [:lit, /x/]], [:lit, 1], nil],
