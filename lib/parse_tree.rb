@@ -25,7 +25,7 @@ require 'inline'
 
 class ParseTree
 
-  VERSION = '1.6.3'
+  VERSION = '1.6.4'
 
   ##
   # Front end translation method.

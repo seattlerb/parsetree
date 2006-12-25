@@ -9,18 +9,15 @@ class Examples
   def a_method; 1+1; end
   alias an_alias a_method
 
-  def self.bmethod_maker
-    define_method(:bmethod_added) do |x|
-      x + 1
-    end
+  define_method(:unsplatted) do |x|
+    x + 1
   end
 
-  def self.dmethod_maker
-    define_method :dmethod_added, self.method(:bmethod_maker)
-  end if RUBY_VERSION < "1.9"
+  define_method :splatted do |*args|
+    args.first + 42
+  end
 
-  bmethod_maker
-  dmethod_maker if RUBY_VERSION < "1.9"
+  define_method :dmethod_added, instance_method(:a_method) if RUBY_VERSION < "1.9"
 end
 
 class ParseTreeTestCase < Test::Unit::TestCase
@@ -132,13 +129,24 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "bmethod"  => {
-      "Ruby"        => [Examples, :bmethod_added],
+      "Ruby"        => [Examples, :unsplatted],
       "ParseTree"   => [:defn,
-                        :bmethod_added,
+                        :unsplatted,
                         [:bmethod,
                          [:dasgn_curr, :x],
                          [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]],
-      "Ruby2Ruby"   => "def bmethod_added(x)\n  (x + 1)\nend"
+      "Ruby2Ruby"   => "def unsplatted(x)\n  (x + 1)\nend"
+    },
+
+    "bmethod_splat" => {
+      "Ruby" => [Examples, :splatted],
+      "ParseTree" => [:defn, :splatted,
+                      [:bmethod,
+                       [:masgn, [:dasgn_curr, :args]],
+                       [:call,
+                        [:call, [:dvar, :args], :first], :+,
+                        [:array, [:lit, 42]]]]],
+      "Ruby2Ruby" => "def splatted(*args)\n  (args.first + 42)\nend",
     },
 
     "break"  => {
@@ -423,15 +431,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:defn,
                         :dmethod_added,
                         [:dmethod,
-                         :bmethod_maker,
+                         :a_method,
                          [:scope,
                           [:block,
                            [:args],
-                           [:iter,
-                            [:fcall, :define_method,
-                             [:array, [:lit, :bmethod_added]]],
-                            [:dasgn_curr, :x],
-                            [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]]]],
+                           [:call, [:lit, 1], :+, [:array, [:lit, 1]]]]]]],
       "Ruby2Ruby" => "def dmethod_added(x)\n  (x + 1)\nend"
     },
 
