@@ -250,7 +250,7 @@ class ParseTree
 
     builder.prefix %{
         #define nd_3rd   u3.node
-        static VALUE current_case = Qnil;
+        static unsigned case_level = 0;
     }
 
     builder.prefix %{
@@ -378,7 +378,7 @@ again_no_block:
       break;
 
   case NODE_CASE:
-    current_case = current;
+    case_level++;
     if (node->nd_head != NULL) {
       add_to_parse_tree(current, node->nd_head, newlines, locals); /* expr */
     } else {
@@ -396,11 +396,11 @@ again_no_block:
         rb_ary_push(current, Qnil);                     /* no else */
       }
     }
-    current_case = Qnil;
+    case_level--;
     break;
 
   case NODE_WHEN:
-    if (current_case == Qnil) { /* when without case, ie, no expr in case */
+    if (!case_level) { /* when without case, ie, no expr in case */
       rb_ary_pop(ary); /* reset what current is pointing at */
       node = NEW_CASE(0, node);
       goto again;

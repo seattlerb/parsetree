@@ -61,7 +61,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "Ruby"        => "class X\n  alias :y :x\nend",
       "ParseTree"   => [:class, :X, nil,
                         [:scope, [:alias, [:lit, :y], [:lit, :x]]]],
-      "Ruby2Ruby"   => "class X\n  alias_method :y, :x\nend", # FIX dbl \n
+      "Ruby2Ruby"   => "class X\n  alias_method :y, :x\nend",
     },
 
     "and"  => {
@@ -150,13 +150,13 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "break"  => {
-      "Ruby"        => "loop do\n  if true then\n    break\n  end\nend",
+      "Ruby"        => "loop do\n  break if true\nend",
       "ParseTree"   => [:iter,
                         [:fcall, :loop], nil, [:if, [:true], [:break], nil]],
     },
 
     "break_arg"  => {
-      "Ruby"        => "loop do\n  if true then\n    break 42\n  end\nend",
+      "Ruby"        => "loop do\n  break 42 if true\nend",
       "ParseTree"   => [:iter,
                         [:fcall, :loop], nil,
                         [:if, [:true], [:break, [:lit, 42]], nil]],
@@ -203,6 +203,33 @@ class ParseTreeTestCase < Test::Unit::TestCase
                        [:when, [:array, [:str, "green"]],
                         [:lasgn, :var, [:lit, 3]]],
                        nil]]
+    },
+
+    "case_nested" => {
+      "Ruby"        => "var1 = 1\nvar2 = 2\nresult = nil\ncase var1\nwhen 1 then\n  case var2\n  when 1 then\n    result = 1\n  when 2 then\n    result = 2\n  else\n    result = 3\n  end\nwhen 2 then\n  case var2\n  when 1 then\n    result = 4\n  when 2 then\n    result = 5\n  else\n    result = 6\n  end\nelse\n  result = 7\nend\n",
+      "ParseTree" => [:block,
+                      [:lasgn, :var1, [:lit, 1]],
+                      [:lasgn, :var2, [:lit, 2]],
+                      [:lasgn, :result, [:nil]],
+                      [:case,
+                       [:lvar, :var1],
+                       [:when, [:array, [:lit, 1]],
+                        [:case,
+                         [:lvar, :var2],
+                         [:when, [:array, [:lit, 1]],
+                          [:lasgn, :result, [:lit, 1]]],
+                         [:when, [:array, [:lit, 2]],
+                          [:lasgn, :result, [:lit, 2]]],
+                         [:lasgn, :result, [:lit, 3]]]],
+                       [:when, [:array, [:lit, 2]],
+                        [:case,
+                         [:lvar, :var2],
+                         [:when, [:array, [:lit, 1]],
+                          [:lasgn, :result, [:lit, 4]]],
+                         [:when, [:array, [:lit, 2]],
+                          [:lasgn, :result, [:lit, 5]]],
+                         [:lasgn, :result, [:lit, 6]]]],
+                       [:lasgn, :result, [:lit, 7]]]]
     },
 
     "case_no_expr" => { # TODO: nested
@@ -271,16 +298,16 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:colon3, :X],
     },
 
-    "conditional1" => {
-      "Ruby"        => "if (42 == 0) then\n  return 1\nend",
+    "conditional1" => { # TODO: rename
+      "Ruby"        => "return 1 if (42 == 0)",
       "ParseTree"   => [:if,
                         [:call, [:lit, 42], :==, [:array, [:lit, 0]]],
                         [:return, [:lit, 1]],
                         nil],
     },
 
-    "conditional2" => {
-      "Ruby"        => "unless (42 == 0) then\n  return 2\nend",
+    "conditional2" => { # TODO: remove
+      "Ruby"        => "return 2 unless (42 == 0)",
       "ParseTree"   => [:if,
                         [:call, [:lit, 42], :==, [:array, [:lit, 0]]],
                         nil,
@@ -307,7 +334,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "conditional5" => {
-      "Ruby"       => "unless true then\n  if false then\n    return\n  end\nend",
+      "Ruby"       => "return if false unless true",
       "ParseTree"  => [:if, [:true], nil, [:if, [:false], [:return], nil]],
     },
 
@@ -741,7 +768,7 @@ end",
                         [:array,  [:vcall, :c], [:vcall, :d]]],
     },
     "match"  => {
-      "Ruby"        => "if /x/ then\n  1\nend",
+      "Ruby"        => "1 if /x/",
       "ParseTree"   => [:if, [:match, [:lit, /x/]], [:lit, 1], nil],
     },
 
@@ -763,7 +790,7 @@ end",
     },
 
     "next"  => {
-      "Ruby"        => "loop do\n  if false then\n    next\n  end\nend",
+      "Ruby"        => "loop do\n  next if false\nend",
       "ParseTree"   => [:iter,
                         [:fcall, :loop],
                         nil,
@@ -854,7 +881,7 @@ end",
     },
 
     "redo"  => {
-      "Ruby"        => "loop do\n  if false then\n    redo\n  end\nend",
+      "Ruby"        => "loop do\n  redo if false\nend",
       "ParseTree"   => [:iter,
                         [:fcall, :loop], nil, [:if, [:false], [:redo], nil]],
     },
