@@ -338,6 +338,18 @@ class ParseTreeTestCase < Test::Unit::TestCase
                           [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]],
     },
 
+    "dasgn_curr" => {
+      "Ruby"        => "data.each do |x, y|\n  a = 1\n  b = a\n  b = a = x\nend",
+      "ParseTree"   => [:iter,
+                        [:call, [:vcall, :data], :each],
+                        [:masgn, [:array, [:dasgn_curr, :x], [:dasgn_curr, :y]]],
+                        [:block,
+                         [:dasgn_curr, :a, [:dasgn_curr, :b]],
+                         [:dasgn_curr, :a, [:lit, 1]],
+                         [:dasgn_curr, :b, [:dvar, :a]],
+                         [:dasgn_curr, :b, [:dasgn_curr, :a, [:dvar, :x]]]]],
+    },
+
     "defined"  => {
       "Ruby"        => "defined? $x",
       "ParseTree"   => [:defined, [:gvar, :$x]],
@@ -378,6 +390,15 @@ class ParseTreeTestCase < Test::Unit::TestCase
     "defn_or" => {
       "Ruby"        => "def |(o)\n  # do nothing\nend",
       "ParseTree"   => [:defn, :|, [:scope, [:block, [:args, :o], [:nil]]]],
+    },
+
+    "defn_rescue" => {
+      "Ruby" => "def blah\n    42\n  rescue\n    24\nend",
+      "ParseTree" => [:defn, :blah,
+                      [:scope, [:block, [:args],
+                                [:rescue,
+                                 [:lit, 42],
+                                 [:resbody, nil, [:lit, 24]]]]]],
     },
 
     "defn_zarray" => { # tests memory allocation for returns
