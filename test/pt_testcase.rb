@@ -6,7 +6,7 @@ class Examples
   attr_reader :reader
   attr_writer :writer
 
-  def a_method; 1+1; end
+  def a_method(x); x+1; end
   alias an_alias a_method
 
   define_method(:unsplatted) do |x|
@@ -434,8 +434,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          :a_method,
                          [:scope,
                           [:block,
-                           [:args],
-                           [:call, [:lit, 1], :+, [:array, [:lit, 1]]]]]]],
+                           [:args, :x],
+                           [:call, [:lvar, :x], :+, [:array, [:lit, 1]]]]]]],
       "Ruby2Ruby" => "def dmethod_added(x)\n  (x + 1)\nend"
     },
 
@@ -519,9 +519,9 @@ end",
                       [:fbody,
                        [:scope,
                         [:block,
-                         [:args],
-                         [:call, [:lit, 1], :+, [:array, [:lit, 1]]]]]]],
-      "Ruby2Ruby" => "def an_alias\n  (1 + 1)\nend"
+                         [:args, :x],
+                         [:call, [:lvar, :x], :+, [:array, [:lit, 1]]]]]]],
+      "Ruby2Ruby" => "def an_alias(x)\n  (x + 1)\nend"
     },
 
     "fcall"  => {
