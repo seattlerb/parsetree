@@ -14,7 +14,8 @@ class Examples
   end
 
   define_method :splatted do |*args|
-    args.first + 42
+    y = args.first
+    y + 42
   end
 
   define_method :dmethod_added, instance_method(:a_method) if RUBY_VERSION < "1.9"
@@ -143,10 +144,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree" => [:defn, :splatted,
                       [:bmethod,
                        [:masgn, [:dasgn_curr, :args]],
-                       [:call,
-                        [:call, [:dvar, :args], :first], :+,
-                        [:array, [:lit, 42]]]]],
-      "Ruby2Ruby" => "def splatted(*args)\n  (args.first + 42)\nend",
+                       [:block,
+                        [:dasgn_curr, :y],
+                        [:dasgn_curr, :y, [:call, [:dvar, :args], :first]],
+                        [:call, [:dvar, :y], :+, [:array, [:lit, 42]]]]]],
+      "Ruby2Ruby" => "def splatted(*args)\n  y = args.first\n  (y + 42)\nend",
     },
 
     "break"  => {
