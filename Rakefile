@@ -7,6 +7,7 @@ $: << "../../RubyInline/dev"
 require './lib/parse_tree.rb'
 
 Hoe.new("ParseTree", ParseTree::VERSION) do |p|
+  p.rubyforge_name = "parsetree"
   p.summary = "Extract and enumerate ruby parse trees."
   p.description = p.paragraphs_of("README.txt", 2).join("\n\n")
   p.changes = p.paragraphs_of("History.txt", 1).join("\n\n")
