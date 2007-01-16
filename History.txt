@@ -1,3 +1,11 @@
+*** 1.6.4 / 2007-01-15
+
++ 1 minor enhancement:
+	Switched short if/unless to 1 line expressions.
++ 2 bug fixes:
+ 	Fixed the nested case/when bug. YAY!
+	Added dasgn_curr and defn_rescue test cases.
+
 *** 1.6.3 / 2006-12-20
 
 + 1 bug fix:

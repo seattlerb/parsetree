@@ -147,20 +147,20 @@ class TestParseTree < ParseTreeTestCase
                 :unknown_args,
                 [:array, [:lit, 4], [:str, "known"]]]]]]]]
 
-  
+
   @@attrasgn = [:defn,
     :attrasgn,
     [:scope,
       [:block,
         [:args],
         [:attrasgn, [:lit, 42], :method=, [:array, [:vcall, :y]]],
-        [:attrasgn, 
+        [:attrasgn,
           [:self],
-          :type=, 
+          :type=,
           [:array, [:call, [:vcall, :other], :type]]]]]]
-  
+
   @@__all = [:class, :Something, [:const, :Object]]
-  
+
   Something.instance_methods(false).sort.each do |meth|
     if class_variables.include?("@@#{meth}") then
       @@__all << eval("@@#{meth}")
@@ -171,6 +171,7 @@ class TestParseTree < ParseTreeTestCase
   end
 
   Something.singleton_methods.sort.each do |meth|
+    next if meth =~ /yaml/ # rubygems introduced a bug
     if class_variables.include?("@@self_#{meth}") then
       @@__all << eval("@@self_#{meth}")
       eval "def test_self_#{meth}; assert_equal @@self_#{meth}, @processor.parse_tree_for_method(Something, :#{meth}, true); end"
@@ -181,14 +182,13 @@ class TestParseTree < ParseTreeTestCase
 
   def test_missing
     assert_equal(@@missing,
-		 @processor.parse_tree_for_method(Something, :missing),
-		 "Must return -3 for missing methods")
+                 @processor.parse_tree_for_method(Something, :missing),
+                 "Must return -3 for missing methods")
   end
 
   def test_whole_class
     assert_equal([@@__all],
-		 @processor.parse_tree(Something),
-		 "Must return a lot of shit")
+                 @processor.parse_tree(Something),
+                 "Must return a lot of shit")
   end
 end
-
