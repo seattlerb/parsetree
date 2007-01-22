@@ -590,10 +590,8 @@ again_no_block:
 
   case NODE_MASGN:
     add_to_parse_tree(current, node->nd_head, newlines, locals);
-    if (node->nd_args) {
-      if (node->nd_args != (NODE *)-1) {
-        add_to_parse_tree(current, node->nd_args, newlines, locals);
-      }
+    if (node->nd_args && node->nd_args != (NODE *)-1) {
+      add_to_parse_tree(current, node->nd_args, newlines, locals);
     }
     add_to_parse_tree(current, node->nd_value, newlines, locals);
     break;

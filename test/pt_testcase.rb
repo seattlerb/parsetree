@@ -866,20 +866,20 @@ end",
       "ParseTree"   => [:iter, [:postexe], nil, [:lit, 1]],
     },
 
-    "proc_no_args" => {
-      "Ruby" => "proc do\n  (x + 1)\nend",
-      "ParseTree" => [:iter,
-                      [:fcall, :proc],
-                      nil,
-                      [:call, [:vcall, :x], :+, [:array, [:lit, 1]]]],
-    },
-
     "proc_args" => {
       "Ruby" => "proc do |x|\n  (x + 1)\nend",
       "ParseTree" => [:iter,
                       [:fcall, :proc],
                       [:dasgn_curr, :x],
                       [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]],
+    },
+
+    "proc_no_args" => {
+      "Ruby" => "proc do\n  (x + 1)\nend",
+      "ParseTree" => [:iter,
+                      [:fcall, :proc],
+                      nil,
+                      [:call, [:vcall, :x], :+, [:array, [:lit, 1]]]],
     },
 
     "redo"  => {
@@ -893,14 +893,14 @@ end",
       "ParseTree"   => [:rescue, [:vcall, :blah], [:resbody, nil, [:nil]]],
     },
 
-    "rescue_block_nada"  => {
-      "Ruby"        => "begin\n  blah\nrescue\n  # do nothing\nend\n",
-      "ParseTree"   => [:begin, [:rescue, [:vcall, :blah], [:resbody, nil]]]
-    },
-
     "rescue_block_body"  => {
       "Ruby"        => "begin\n  blah\nrescue\n  nil\nend\n",
       "ParseTree"   => [:begin, [:rescue, [:vcall, :blah], [:resbody, nil, [:nil]]]],
+    },
+
+    "rescue_block_nada"  => {
+      "Ruby"        => "begin\n  blah\nrescue\n  # do nothing\nend\n",
+      "ParseTree"   => [:begin, [:rescue, [:vcall, :blah], [:resbody, nil]]]
     },
 
     "rescue_exceptions"  => {
@@ -978,16 +978,16 @@ end",
       "Ruby2Ruby"   => "undef :x\nundef :y\nundef :z\n",
     },
 
-    "until_pre"  => {
-      "Ruby"        => "until false do\n  (1 + 1)\nend",
-      "ParseTree"   => [:until, [:false],
-                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
-    },
-
     "until_post"  => {
       "Ruby"        => "begin\n  (1 + 1)\nend until false",
       "ParseTree"   => [:until, [:false],
                         [:call, [:lit, 1], :+, [:array, [:lit, 1]]], false],
+    },
+
+    "until_pre"  => {
+      "Ruby"        => "until false do\n  (1 + 1)\nend",
+      "ParseTree"   => [:until, [:false],
+                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
     },
 
     "valias"  => {
@@ -1114,7 +1114,7 @@ end",
         unless data.has_key?(output_name) then
           $stderr.puts "add_test(#{node.inspect}, :same)"
         end
-        assert data.has_key?(output_name), "Unknown expected data"
+        assert data.has_key?(output_name), "Missing test data: #{self.class} #{node}"
         input = data[input_name].deep_clone
 
         expected = if data[output_name] == :same then
