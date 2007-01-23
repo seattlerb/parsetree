@@ -129,13 +129,36 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:block_pass, [:vcall, :b], [:fcall, :a]],
     },
 
+    "block_pass_omgwtf" => {
+      "Ruby" => "define_attr_method(:x, :sequence_name, &Proc.new { |*args| nil })",
+      "ParseTree" => [:block_pass,
+                      [:iter,
+                       [:call, [:const, :Proc], :new],
+                       [:masgn, [:dasgn_curr, :args]],
+                       [:nil]],
+                      [:fcall, :define_attr_method,
+                       [:array, [:lit, :x], [:lit, :sequence_name]]]],
+    },
+
+    "block_pass_splat" => {
+      "Ruby" => "def blah(*args, &block)\n  other(*args, &block)\nend",
+      "ParseTree" => [:defn, :blah,
+                      [:scope,
+                       [:block,
+                        [:args, "*args".intern],
+                        [:block_arg, :block],
+                        [:block_pass,
+                         [:lvar, :block],
+                         [:fcall, :other, [:splat, [:lvar, :args]]]]]]],
+    },
+
     "bmethod"  => {
       "Ruby"        => [Examples, :unsplatted],
       "ParseTree"   => [:defn,
                         :unsplatted,
                         [:bmethod,
                          [:dasgn_curr, :x],
-                         [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]],
+                         [:call, [:dvar, :x], "+".intern, [:array, [:lit, 1]]]]],
       "Ruby2Ruby"   => "def unsplatted(x)\n  (x + 1)\nend"
     },
 
@@ -152,13 +175,13 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "break"  => {
-      "Ruby"        => "loop do\n  break if true\nend",
+      "Ruby"        => "loop { break if true }",
       "ParseTree"   => [:iter,
                         [:fcall, :loop], nil, [:if, [:true], [:break], nil]],
     },
 
     "break_arg"  => {
-      "Ruby"        => "loop do\n  break 42 if true\nend",
+      "Ruby"        => "loop { break 42 if true }",
       "ParseTree"   => [:iter,
                         [:fcall, :loop], nil,
                         [:if, [:true], [:break, [:lit, 42]], nil]],
@@ -364,7 +387,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "dasgn"  => {
-      "Ruby"        => "a.each do |x|\n  b.each do |y|\n    x = (x + 1)\n  end\nend",
+      "Ruby"        => "a.each { |x| b.each { |y| x = (x + 1) } }",
       "ParseTree"   => [:iter,
                         [:call, [:vcall, :a], :each],
                         [:dasgn_curr, :x],
@@ -626,12 +649,12 @@ end",
     },
 
     "iteration1" => {
-      "Ruby"        => "loop do end",
+      "Ruby"        => "loop { }",
       "ParseTree"   => [:iter, [:fcall, :loop], nil],
     },
 
     "iteration2" => {
-      "Ruby" => "array = [1, 2, 3]\narray.each do |x|\n  puts(x.to_s)\nend\n",
+      "Ruby" => "array = [1, 2, 3]\narray.each { |x| puts(x.to_s) }\n",
       "ParseTree"   => [:block,
                         [:lasgn, :array,
                          [:array, [:lit, 1], [:lit, 2], [:lit, 3]]],
@@ -642,7 +665,7 @@ end",
     },
 
     "iteration3" => {
-      "Ruby"        => "1.upto(3) do |n|\n  puts(n.to_s)\nend",
+      "Ruby"        => "1.upto(3) { |n| puts(n.to_s) }",
       "ParseTree"   => [:iter,
                         [:call, [:lit, 1], :upto, [:array, [:lit, 3]]],
                         [:dasgn_curr, :n],
@@ -650,7 +673,7 @@ end",
     },
 
     "iteration4" => {
-      "Ruby"        => "3.downto(1) do |n|\n  puts(n.to_s)\nend",
+      "Ruby"        => "3.downto(1) { |n| puts(n.to_s) }",
       "ParseTree"   => [:iter,
                         [:call, [:lit, 3], :downto, [:array, [:lit, 1]]],
                         [:dasgn_curr, :n],
@@ -662,13 +685,13 @@ end",
       "ParseTree"   => [:block,
                         [:lasgn, :argl, [:lit, 10]],
                         [:while,
-                         [:call, [:lvar, :argl], :>=, [:array, [:lit, 1]]],
+                         [:call, [:lvar, :argl], ">=".intern, [:array, [:lit, 1]]],
                          [:block,
                           [:fcall, :puts, [:array, [:str, "hello"]]],
                           [:lasgn,
                            :argl,
                            [:call, [:lvar, :argl],
-                            :-, [:array, [:lit, 1]]]]], true]],
+                            "-".intern, [:array, [:lit, 1]]]]], true]],
     },
 
     "iteration6" => {
@@ -766,9 +789,28 @@ end",
     "masgn_iasgn"  => {
       "Ruby"        => "a, @b = c, d",
       "ParseTree"   => [:masgn,
-                        [:array, [:lasgn, :a], [:iasgn, :@b]],
+                        [:array, [:lasgn, :a], [:iasgn, "@b".intern]],
                         [:array,  [:vcall, :c], [:vcall, :d]]],
     },
+
+    "masgn_attrasgn"  => {
+      "Ruby"        => "a, b.c = d, e",
+      "ParseTree"   => [:masgn,
+                         [:array, [:lasgn, :a], [:attrasgn, [:vcall, :b], :c=]],
+                         [:array, [:vcall, :d], [:vcall, :e]]],
+    },
+
+    "masgn_splat"  => {
+      "Ruby"        => "a, b, *c = d, e, f, g",
+      "ParseTree"   => [:masgn,
+                        [:array, [:lasgn, :a], [:lasgn, :b]],
+                        [:lasgn, :c],
+                        [:array,
+                         [:vcall, :d], [:vcall, :e],
+                         [:vcall, :f], [:vcall, :g]]]
+    },
+
+
     "match"  => {
       "Ruby"        => "1 if /x/",
       "ParseTree"   => [:if, [:match, [:lit, /x/]], [:lit, 1], nil],
@@ -792,7 +834,7 @@ end",
     },
 
     "next"  => {
-      "Ruby"        => "loop do\n  next if false\nend",
+      "Ruby"        => "loop { next if false }",
       "ParseTree"   => [:iter,
                         [:fcall, :loop],
                         nil,
@@ -862,12 +904,12 @@ end",
     },
 
     "postexe"  => {
-      "Ruby"        => "END {\n  1\n}",
+      "Ruby"        => "END { 1 }",
       "ParseTree"   => [:iter, [:postexe], nil, [:lit, 1]],
     },
 
     "proc_args" => {
-      "Ruby" => "proc do |x|\n  (x + 1)\nend",
+      "Ruby" => "proc { |x| (x + 1) }",
       "ParseTree" => [:iter,
                       [:fcall, :proc],
                       [:dasgn_curr, :x],
@@ -875,7 +917,7 @@ end",
     },
 
     "proc_no_args" => {
-      "Ruby" => "proc do\n  (x + 1)\nend",
+      "Ruby" => "proc { (x + 1) }",
       "ParseTree" => [:iter,
                       [:fcall, :proc],
                       nil,
@@ -883,7 +925,7 @@ end",
     },
 
     "redo"  => {
-      "Ruby"        => "loop do\n  redo if false\nend",
+      "Ruby"        => "loop { redo if false }",
       "ParseTree"   => [:iter,
                         [:fcall, :loop], nil, [:if, [:false], [:redo], nil]],
     },
