@@ -65,7 +65,7 @@ class SexpTypeError < SexpProcessorError; end
 #       super
 #       self.strict = false
 #     end
-#   
+#
 #     def process_lit(exp)
 #       val = exp.shift
 #       return val
@@ -73,7 +73,7 @@ class SexpTypeError < SexpProcessorError; end
 #   end
 
 class SexpProcessor
-  
+
   ##
   # A default method to call if a process_<type> method is not found
   # for the Sexp type.
@@ -138,6 +138,7 @@ class SexpProcessor
     @expected = Sexp
     @require_empty = true
     @exceptions = {}
+    @process_level = 0
 
     # we do this on an instance basis so we can subclass it for
     # different processors.
@@ -154,6 +155,36 @@ class SexpProcessor
     end
   end
 
+  def assert_empty(meth, exp, exp_orig)
+    unless exp.empty? then
+      msg = "exp not empty after #{self.class}.#{meth} on #{exp.inspect}"
+      msg += " from #{exp_orig.inspect}" if $DEBUG
+      raise NotEmptyError, msg
+    end
+  end
+
+  def rewrite(exp)
+    meth = @rewriters[exp.first]
+    if meth then
+      r = self.send(meth, exp)
+      self.assert_empty(meth, exp, nil) if @require_empty
+      r
+    else
+      result = exp.class.new
+      until exp.empty? do
+        sub_exp = exp.shift
+        sub_result = nil
+
+        if Array === sub_exp then
+          result << rewrite(sub_exp)
+        else
+          result << sub_exp
+        end
+      end
+      result
+    end
+  end
+
   ##
   # Default Sexp processor.  Invokes process_<type> methods matching
   # the Sexp type given.  Performs additional checks as specified by
@@ -161,6 +192,8 @@ class SexpProcessor
 
   def process(exp)
     return nil if exp.nil?
+
+    @process_level += 1
 
     unless @unsupported_checked then
       m = public_methods.grep(/^process_/) { |o| o.sub(/^process_/, '').intern }
@@ -180,28 +213,13 @@ class SexpProcessor
       puts "// DEBUG: #{str}" if str =~ @debug[type]
     end
 
+    exp_orig = nil
     exp_orig = exp.deep_clone if $DEBUG or
       @debug.has_key? type or @exceptions.has_key?(type)
 
     raise UnsupportedNodeError, "'#{type}' is not a supported node type" if @unsupported.include? type
 
-    # do a pass through the rewriter first, if any, reassign back to exp
-    # TODO: maybe the whole rewriting thing needs to be nuked
-    meth = @rewriters[type]
-    if meth then
-      new_exp = error_handler(type, exp_orig) do
-        self.send(meth, exp)
-      end
-      # REFACTOR: duplicated from below
-      if @require_empty and not exp.empty? then
-        msg = "exp not empty after #{self.class}.#{meth} on #{exp.inspect}"
-        if $DEBUG then
-          msg += " from #{exp_orig.inspect}" 
-        end
-        raise NotEmptyError, msg
-      end
-      exp = new_exp
-    end
+    exp = self.rewrite(exp) if @process_level == 1
 
     # now do a pass with the real processor (or generic)
     meth = @processors[type] || @default_method
@@ -219,11 +237,7 @@ class SexpProcessor
 
       raise SexpTypeError, "Result must be a #{@expected}, was #{result.class}:#{result.inspect}" unless @expected === result
 
-      if @require_empty and not exp.empty? then
-        msg = "exp not empty after #{self.class}.#{meth} on #{exp.inspect}"
-        msg += " from #{exp_orig.inspect}" if $DEBUG
-        raise NotEmptyError, msg
-      end
+      self.assert_empty(meth, exp, exp_orig) if @require_empty
     else
       unless @strict then
         until exp.empty? do
@@ -255,6 +269,9 @@ class SexpProcessor
         raise UnknownNodeError, msg
       end
     end
+
+    @process_level -= 1
+
     result
   end
 

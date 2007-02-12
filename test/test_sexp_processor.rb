@@ -52,16 +52,15 @@ class TestProcessor < SexpProcessor # ZenTest SKIP
 
   def process_string(exp)
     return exp.shift
-  end 
+  end
 
-  def rewrite_rewritable(exp)
+  def rewrite_rewritable(exp) # (a b c) => (a c b)
     return s(exp.shift, exp.pop, exp.shift)
   end
 
   def process_rewritable(exp)
     return s(exp.shift, exp.shift == 2, exp.shift == 1)
   end
-
 end
 
 class TestProcessorDefault < SexpProcessor # ZenTest SKIP
@@ -140,7 +139,6 @@ class TestSexpProcessor < Test::Unit::TestCase
 
   def test_require_empty_false
     @processor.require_empty = false
-    @processor.expected = Object
 
     assert_nothing_raised do
       @processor.process([:nonempty, 1, 2, 3])
@@ -159,9 +157,24 @@ class TestSexpProcessor < Test::Unit::TestCase
     assert_equal([1, 2, 3], @processor.process(s(:strip, 1, 2, 3)))
   end
 
+  def test_rewrite
+    assert_equal(s(:rewritable, :b, :a),
+                 @processor.rewrite(s(:rewritable, :a, :b)))
+  end
+
+  def test_rewrite_deep
+    assert_equal(s(:specific, s(:rewritable, :b, :a)),
+                 @processor.rewrite(s(:specific, s(:rewritable, :a, :b))))
+  end
+
   def test_process_rewrite
     assert_equal(s(:rewritable, true, true),
                  @processor.process(s(:rewritable, 1, 2)))
+  end
+
+  def test_process_rewrite_deep
+    assert_equal(s(s(:rewritable, :b, :a)),
+                 @processor.process(s(:specific, s(:rewritable, :a, :b))))
   end
 
   def test_process_rewrite_not_empty
