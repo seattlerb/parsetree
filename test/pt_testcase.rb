@@ -453,12 +453,13 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "defn_rescue" => {
-      "Ruby" => "def blah\n    42\n  rescue\n    24\nend",
+      "Ruby" => "def blah\n  42 rescue 24\nend",
       "ParseTree" => [:defn, :blah,
-                      [:scope, [:block, [:args],
-                                [:rescue,
-                                 [:lit, 42],
-                                 [:resbody, nil, [:lit, 24]]]]]],
+                      [:scope,
+                       [:block, [:args],
+                        [:rescue,
+                         [:lit, 42],
+                         [:resbody, nil, [:lit, 24]]]]]],
     },
 
     "defn_zarray" => { # tests memory allocation for returns
@@ -936,17 +937,20 @@ end",
     },
 
     "rescue_block_body"  => {
-      "Ruby"        => "begin\n  blah\nrescue\n  nil\nend\n",
-      "ParseTree"   => [:begin, [:rescue, [:vcall, :blah], [:resbody, nil, [:nil]]]],
+      "Ruby"        => "begin\n  blah\nrescue\n  42\nend",
+      "ParseTree"   => [:begin,
+                        [:rescue,
+                         [:vcall, :blah],
+                         [:resbody, nil, [:lit, 42]]]],
     },
 
     "rescue_block_nada"  => {
-      "Ruby"        => "begin\n  blah\nrescue\n  # do nothing\nend\n",
+      "Ruby"        => "begin\n  blah\nrescue\n  # do nothing\nend",
       "ParseTree"   => [:begin, [:rescue, [:vcall, :blah], [:resbody, nil]]]
     },
 
     "rescue_exceptions"  => {
-      "Ruby"        => "begin\n  blah\nrescue RuntimeError => r\n  # do nothing\nend\n",
+      "Ruby"        => "begin\n  blah\nrescue RuntimeError => r\n  # do nothing\nend",
       "ParseTree"   => [:begin,
                         [:rescue,
                          [:vcall, :blah],
