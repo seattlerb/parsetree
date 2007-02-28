@@ -453,13 +453,17 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "defn_rescue" => {
-      "Ruby" => "def blah\n  42 rescue 24\nend",
-      "ParseTree" => [:defn, :blah,
-                      [:scope,
-                       [:block, [:args],
-                        [:rescue,
-                         [:lit, 42],
-                         [:resbody, nil, [:lit, 24]]]]]],
+      "Ruby" => "def eql?(resource)\n  self.uuid == resource.uuid rescue false\nend",
+      "ParseTree" => [:defn, :eql?,
+           [:scope,
+            [:block,
+             [:args, :resource],
+             [:rescue,
+              [:call,
+               [:call, [:self], :uuid],
+               :==,
+               [:array, [:call, [:lvar, :resource], :uuid]]],
+              [:resbody, nil, [:false]]]]]],
     },
 
     "defn_zarray" => { # tests memory allocation for returns
@@ -1182,7 +1186,9 @@ end",
           _, input, extra_input = *input if Array === input and input.first == :defx
 
           debug = input.deep_clone
+          $-w = nil if node == "match"
           assert_equal expected, processor.process(input), "failed on input: #{debug.inspect}"
+          $-w = true if node == "match"
           extra_input.each do |input| processor.process(input) end
           extra = processor.extra_methods rescue []
           assert_equal extra_expected, extra
