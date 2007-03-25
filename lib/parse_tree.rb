@@ -254,6 +254,15 @@ class ParseTree
     }
 
     builder.prefix %{
+      static VALUE wrap_into_node(const char * name, VALUE val) {
+        VALUE n = rb_ary_new();
+        rb_ary_push(n, ID2SYM(rb_intern(name)));
+        rb_ary_push(n, val);
+        return n;
+      }
+    }
+
+    builder.prefix %{
         struct METHOD {
           VALUE klass, rklass;
           VALUE recv;
@@ -299,7 +308,7 @@ static void add_to_parse_tree(VALUE ary,
   static VALUE node_names = Qnil;
 
   if (NIL_P(node_names)) {
-    node_names = rb_const_get_at(rb_const_get_at(rb_cObject,rb_intern("ParseTree")),rb_intern("NODE_NAMES"));
+    node_names = rb_const_get_at(rb_path2class("ParseTree"),rb_intern("NODE_NAMES"));
   }
 
   if (!node) return;
@@ -547,6 +556,25 @@ again_no_block:
     break;
 
   case NODE_OP_ASGN1:
+
+#{if_version :>,  "1.8.4", "#if 0"}
+#{if_version :<=, "1.8.4", "#if 1"}
+    add_to_parse_tree(current, node->nd_recv, newlines, locals);
+    add_to_parse_tree(current, node->nd_args->nd_next, newlines, locals);
+    rb_ary_pop(rb_ary_entry(current, -1));
+    switch (node->nd_mid) {
+    case 0:
+      rb_ary_push(current, ID2SYM(rb_intern("||")));
+      break;
+    case 1:
+      rb_ary_push(current, ID2SYM(rb_intern("&&")));
+      break;
+    default:
+      rb_ary_push(current, ID2SYM(node->nd_mid));
+      break;
+    }
+    add_to_parse_tree(current, node->nd_args->nd_head, newlines, locals);
+#else
     add_to_parse_tree(current, node->nd_recv, newlines, locals);
     add_to_parse_tree(current, node->nd_args->nd_2nd, newlines, locals);
     switch (node->nd_mid) {
@@ -561,6 +589,7 @@ again_no_block:
       break;
     }
     add_to_parse_tree(current, node->nd_args->nd_head, newlines, locals);
+#endif
     break;
 
   case NODE_OP_ASGN2:
@@ -609,16 +638,33 @@ again_no_block:
     break;
 
   case NODE_VALIAS:           // u1 u2 (alias $global $global2)
+#{if_version  :>, "1.8.4", "#if 0"}
+#{if_version :<=, "1.8.4", "#if 1"}
+    rb_ary_push(current, ID2SYM(node->u2.id));
+    rb_ary_push(current, ID2SYM(node->u1.id));
+#else
     rb_ary_push(current, ID2SYM(node->u1.id));
     rb_ary_push(current, ID2SYM(node->u2.id));
+#endif
     break;
   case NODE_ALIAS:            // u1 u2 (alias :blah :blah2)
+#{if_version  :>, "1.8.4", "#if 0"}
+#{if_version :<=, "1.8.4", "#if 1"}
+    rb_ary_push(current, wrap_into_node("lit", ID2SYM(node->u2.id)));
+    rb_ary_push(current, wrap_into_node("lit", ID2SYM(node->u1.id)));
+#else
     add_to_parse_tree(current, node->nd_1st, newlines, locals);
     add_to_parse_tree(current, node->nd_2nd, newlines, locals);
+#endif
     break;
 
   case NODE_UNDEF:            // u2    (undef name, ...)
+#{if_version  :>, "1.8.4", "#if 0"}
+#{if_version :<=, "1.8.4", "#if 1"}
+    rb_ary_push(current, wrap_into_node("lit", ID2SYM(node->u2.id)));
+#else
     add_to_parse_tree(current, node->nd_value, newlines, locals);
+#endif
     break;
 
   case NODE_COLON3:           // u2    (::OUTER_CONST)
@@ -765,10 +811,7 @@ again_no_block:
 
   case NODE_MATCH:            // u1 -> [:lit, u1]
     {
-      VALUE n = rb_ary_new();
-      rb_ary_push(n, ID2SYM(rb_intern("lit")));
-      rb_ary_push(n, node->nd_lit);
-      rb_ary_push(current, n);
+      rb_ary_push(current, wrap_into_node("lit", node->nd_lit));
     }
     break;
 
