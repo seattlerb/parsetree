@@ -1,5 +1,8 @@
 #!/usr/local/bin/ruby -w
 
+abort "*** Sorry, ParseTree doesn't work with ruby #{RUBY_VERSION}" if
+  RUBY_VERSION >= "1.9"
+
 begin require 'rubygems'; rescue LoadError; end
 
 require 'inline'
@@ -343,10 +346,14 @@ again_no_block:
       }
       contnode = node->nd_next;
 
-      // NOTE: this will break the moment there is a block w/in a block
+      // FIX: this will break the moment there is a block w/in a block
       old_ary = ary;
       ary = current;
       node = node->nd_head;
+      if (nd_type(node) == NODE_DASGN_CURR
+          && (!node->nd_value || nd_type(node->nd_value) == NODE_DASGN_CURR)) {
+        goto finish;
+      }
       goto again;
       break;
 
@@ -895,7 +902,7 @@ again_no_block:
     break;
   }
 
- //  finish:
+  finish:
   if (contnode) {
       node = contnode;
       contnode = NULL;
