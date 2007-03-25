@@ -556,27 +556,14 @@ again_no_block:
     break;
 
   case NODE_OP_ASGN1:
-
+    add_to_parse_tree(current, node->nd_recv, newlines, locals);
 #{if_version :>,  "1.8.4", "#if 0"}
 #{if_version :<=, "1.8.4", "#if 1"}
-    add_to_parse_tree(current, node->nd_recv, newlines, locals);
     add_to_parse_tree(current, node->nd_args->nd_next, newlines, locals);
-    rb_ary_pop(rb_ary_entry(current, -1));
-    switch (node->nd_mid) {
-    case 0:
-      rb_ary_push(current, ID2SYM(rb_intern("||")));
-      break;
-    case 1:
-      rb_ary_push(current, ID2SYM(rb_intern("&&")));
-      break;
-    default:
-      rb_ary_push(current, ID2SYM(node->nd_mid));
-      break;
-    }
-    add_to_parse_tree(current, node->nd_args->nd_head, newlines, locals);
+    rb_ary_pop(rb_ary_entry(current, -1)); // no idea why I need this
 #else
-    add_to_parse_tree(current, node->nd_recv, newlines, locals);
     add_to_parse_tree(current, node->nd_args->nd_2nd, newlines, locals);
+#endif
     switch (node->nd_mid) {
     case 0:
       rb_ary_push(current, ID2SYM(rb_intern("||")));
@@ -589,7 +576,6 @@ again_no_block:
       break;
     }
     add_to_parse_tree(current, node->nd_args->nd_head, newlines, locals);
-#endif
     break;
 
   case NODE_OP_ASGN2:
