@@ -152,6 +152,19 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:fcall, :other, [:splat, [:lvar, :args]]]]]]],
     },
 
+    "block_pass_args_and_splat" => {
+      "Ruby" => "def blah(*args, &block)\n  other(42, *args, &block)\nend",
+      "ParseTree" => [:defn, :blah,
+                      [:scope,
+                       [:block,
+                        [:args, "*args".intern],
+                        [:block_arg, :block],
+                        [:block_pass,
+                         [:lvar, :block],
+                         [:fcall, :other,
+                          [:argscat, [:array, [:lit, 42]], [:lvar, :args]]]]]]],
+    },
+
     "bmethod"  => {
       "Ruby"        => [Examples, :unsplatted],
       "ParseTree"   => [:defn,
@@ -451,7 +464,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "defn_rescue" => {
-      "Ruby" => "def eql?(resource)\n  self.uuid == resource.uuid rescue false\nend",
+      "Ruby" => "def eql?(resource)\n  (self.uuid == resource.uuid) rescue false\nend",
       "ParseTree" => [:defn, :eql?,
            [:scope,
             [:block,
