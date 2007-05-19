@@ -124,6 +124,15 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:begin, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]],
     },
 
+    "begin_rescue_ensure" => {
+      "Ruby" => "begin\n    rescue\n      # do nothing\n  ensure\n    nil\nend",
+      "ParseTree" => [:begin,
+                       [:ensure,
+                         [:rescue,
+                           [:resbody, nil]],
+                           [:nil]]]
+    },
+
     "block_pass"  => {
       "Ruby"        => "a(&b)",
       "ParseTree"   => [:block_pass, [:vcall, :b], [:fcall, :a]],
