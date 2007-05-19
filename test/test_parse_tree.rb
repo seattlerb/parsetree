@@ -45,6 +45,28 @@ class TestParseTree < ParseTreeTestCase
     assert_equal expected, tree
   end
 
+  def test_class_translate_string
+    str = "class A; def a; end; end"
+
+    sexp = ParseTree.translate str
+
+    expected = [:class, :A, nil,
+                 [:scope,
+                   [:defn, :a, [:scope, [:block, [:args], [:nil]]]]]]
+
+    assert_equal expected, sexp
+  end
+
+  def test_class_translate_string_method
+    str = "class A; def a; end; def b; end; end"
+
+    sexp = ParseTree.translate str, :a
+
+    expected = [:defn, :a, [:scope, [:block, [:args], [:nil]]]]
+
+    assert_equal expected, sexp
+  end
+
   def test_parse_tree_for_string
     actual   = @processor.parse_tree_for_string '1 + nil', '(string)', 1, false
     expected = [[:call, [:lit, 1], :+, [:array, [:nil]]]]

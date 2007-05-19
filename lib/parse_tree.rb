@@ -36,8 +36,16 @@ class ParseTree
   def self.translate(klass_or_str, method=nil)
     pt = self.new(false)
     case klass_or_str
-    when String
-      pt.parse_tree_for_string(klass_or_str).first
+    when String then
+      sexp = pt.parse_tree_for_string(klass_or_str).first
+      if method then
+        # class, scope, block, *methods
+        sexp.last.last[1..-1].find do |defn|
+          defn[1] == method
+        end
+      else
+        sexp
+      end
     else
       unless method.nil? then
         if method.to_s =~ /^self\./ then

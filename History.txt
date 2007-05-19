@@ -2,6 +2,7 @@
 
 + N minor enhancements:
 	+ Added begin/rescue/ensure test.
+	+ Added primitive method selection to ParseTree::translate.
 
 *** 1.7.0 / 2007-02-13
 
