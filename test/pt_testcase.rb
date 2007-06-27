@@ -1170,7 +1170,8 @@ end",
 
   def self.inherited(c)
     output_name = c.name.to_s.sub(/^Test/, '')
-    raise "Unknown class #{c}" unless @@testcase_order.include? output_name
+    raise "Unknown class #{c} in @@testcase_order" unless
+      @@testcase_order.include? output_name
 
     input_name = self.previous(output_name)
 

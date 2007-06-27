@@ -1,3 +1,5 @@
+require 'parse_tree'
+
 ##
 # Sexps are the basic storage mechanism of SexpProcessor.  Sexps have
 # a +type+ (to be renamed +node_type+) which is the first element of
@@ -15,6 +17,13 @@ class Sexp < Array # ZenTest FULL
 
   def initialize(*args)
     super(args)
+  end
+
+  ##
+  # Creates a new Sexp for +klass+ or +method+ in +klass+.
+
+  def self.for(klass, method = nil)
+    Sexp.from_array ParseTree.translate(klass, method)
   end
 
   def self.from_array(a)

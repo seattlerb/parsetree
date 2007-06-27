@@ -33,6 +33,12 @@ end
 
 class TestSexp < SexpTestCase # ZenTest FULL
 
+  class SexpFor
+    def method
+      1
+    end
+  end
+
   def util_pretty_print(expect, input)
     io = StringIO.new
     PP.pp(input, io)
@@ -49,6 +55,14 @@ class TestSexp < SexpTestCase # ZenTest FULL
     @re = s(:lit, 42)
     @bad1 = s(:lit, 24)
     @bad1 = s(:blah, 42)
+  end
+
+  def test_class_for
+    sexp = Sexp.for SexpFor
+    assert_equal s(:class, :"TestSexp::SexpFor"), sexp[0..1]
+
+    sexp = Sexp.for SexpFor, :method
+    assert_equal s(:defn, :method), sexp[0..1]
   end
 
   def test_class_from_array
@@ -89,7 +103,7 @@ class TestSexp < SexpTestCase # ZenTest FULL
     sexp2 = s(1, 2, 5)
     assert_not_equal(@sexp, sexp2)
   end
- 
+
   def test_equals2_sexp
     sexp2 = s(1, 2, 3)
     if @sexp.class == Sexp then
@@ -142,14 +156,14 @@ class TestSexp < SexpTestCase # ZenTest FULL
 
     util_equals3 s(:a), s(:blah, s(:blah, s(:a)))       # left deeper
   end
-  
+
 #   def test_equalstilde_any
 #     result = @basic_sexp =~ s(:lit, ANY())
 #     p result
 #     assert result
 #   end
 
-  def test_equalstilde_fancy   
+  def test_equalstilde_fancy
     assert_nil     s(:b) =~ s(:a, s(:b), :c)
     assert_not_nil s(:a, s(:b), :c) =~ s(:b)
   end
