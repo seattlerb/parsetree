@@ -133,6 +133,14 @@ class ParseTreeTestCase < Test::Unit::TestCase
                            [:nil]]]
     },
 
+    "block_lasgn" => {
+      "Ruby"        => "x = (y = 1\n(y + 2))",
+      "ParseTree"   => [:lasgn, :x,
+                        [:block,
+                         [:lasgn, :y, [:lit, 1]],
+                         [:call, [:lvar, :y], :+, [:array, [:lit, 2]]]]],
+    },
+
     "block_pass"  => {
       "Ruby"        => "a(&b)",
       "ParseTree"   => [:block_pass, [:vcall, :b], [:fcall, :a]],
