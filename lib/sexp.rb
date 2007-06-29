@@ -1,12 +1,12 @@
 require 'parse_tree'
 
+$TESTING ||= false # unless defined $TESTING
+
 ##
 # Sexps are the basic storage mechanism of SexpProcessor.  Sexps have
 # a +type+ (to be renamed +node_type+) which is the first element of
 # the Sexp. The type is used by SexpProcessor to determine whom to
 # dispatch the Sexp to for processing.
-
-$TESTING ||= false # unless defined $TESTING
 
 class Sexp < Array # ZenTest FULL
 
@@ -25,6 +25,9 @@ class Sexp < Array # ZenTest FULL
   def self.for(klass, method = nil)
     Sexp.from_array ParseTree.translate(klass, method)
   end
+
+  ##
+  # Creates a new Sexp from Array +a+, typically from ParseTree::translate.
 
   def self.from_array(a)
     ary = Array === a ? a : [a]
@@ -53,6 +56,9 @@ class Sexp < Array # ZenTest FULL
     end
   end
 
+  ##
+  # Returns true if this Sexp's pattern matches +sexp+.
+
   def ===(sexp)
     return nil unless Sexp === sexp
     pattern = self # this is just for my brain
@@ -65,6 +71,9 @@ class Sexp < Array # ZenTest FULL
 
     return nil
   end
+
+  ##
+  # Returns true if this Sexp matches +pattern+.  (Opposite of #===.)
 
   def =~(pattern)
     return pattern === self
@@ -106,6 +115,9 @@ class Sexp < Array # ZenTest FULL
     end
   end
 
+  ##
+  # Replaces all Sexps matching +pattern+ with Sexp +repl+.
+
   def gsub(pattern, repl)
     return repl if pattern == self
 
@@ -125,6 +137,9 @@ class Sexp < Array # ZenTest FULL
     sexp_str = self.map {|x|x.inspect}.join(', ')
     return "s(#{sexp_str})"
   end
+
+  ##
+  # Returns the node named +node+, deleting it if +delete+ is true.
 
   def method_missing(meth, delete=false)
     matches = find_all { | sexp | Sexp === sexp and sexp.first == meth }
@@ -164,7 +179,7 @@ class Sexp < Array # ZenTest FULL
   end if $DEBUG or $TESTING
 
   ##
-  # Returnes the bare bones structure of the sexp.
+  # Returns the bare bones structure of the sexp.
   # s(:a, :b, s(:c, :d), :e) => s(:a, s(:c))
 
   def structure
@@ -179,6 +194,9 @@ class Sexp < Array # ZenTest FULL
     end
     result
   end
+
+  ##
+  # Replaces the Sexp matching +pattern+ with +repl+.
 
   def sub(pattern, repl)
     return repl.dup if pattern == self
