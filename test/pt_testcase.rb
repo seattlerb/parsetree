@@ -826,6 +826,16 @@ end",
                         [:array,  [:vcall, :c], [:vcall, :d]]],
     },
 
+    "masgn_argscat"  => {
+      "Ruby"        => "a, b, *c = 1, 2, *[3, 4]",
+      "ParseTree"   => [:masgn,
+                        [:array, [:lasgn, :a], [:lasgn, :b]],
+                        [:lasgn, :c],
+                        [:argscat,
+                         [:array, [:lit, 1], [:lit, 2]],
+                         [:array, [:lit, 3], [:lit, 4]]]]
+    },
+
     "masgn_attrasgn"  => {
       "Ruby"        => "a, b.c = d, e",
       "ParseTree"   => [:masgn,
@@ -842,7 +852,6 @@ end",
                          [:vcall, :d], [:vcall, :e],
                          [:vcall, :f], [:vcall, :g]]]
     },
-
 
     "match"  => {
       "Ruby"        => "1 if /x/",

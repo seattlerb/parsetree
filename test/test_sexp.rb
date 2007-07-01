@@ -17,6 +17,11 @@ class SexpTestCase < Test::Unit::TestCase
 
   include SexpMatchSpecials
 
+  def util_equals(x, y)
+    result = x == y
+    assert_not_nil result, "#{x.inspect} does not === #{y.inspect}"
+  end
+
   def util_equals3(x, y)
     result = x === y
     assert_not_nil result, "#{x.inspect} does not === #{y.inspect}"
@@ -294,6 +299,12 @@ class TestSexpAny < SexpTestCase
 
   def setup
     super
+  end
+
+  def test_equals
+    util_equals @any, s()
+    util_equals @any, s(:a)
+    util_equals @any, s(:a, :b, s(:c))
   end
 
   def test_equals3

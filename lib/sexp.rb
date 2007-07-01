@@ -240,6 +240,10 @@ end
 class SexpMatchSpecial < Sexp; end
 
 class SexpAny < SexpMatchSpecial
+  def ==(o)
+    Sexp === o
+  end
+
   def ===(o)
     return Sexp === o
   end
