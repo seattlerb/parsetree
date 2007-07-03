@@ -226,6 +226,14 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:fcall, :puts, [:array, [:lit, 42]]],
     },
 
+    "call_expr" => {
+      "Ruby"        => "(v = (1 + 1)).zero?",
+      "ParseTree"   => [:call,
+                        [:lasgn, :v,
+                         [:call, [:lit, 1], :+, [:array, [:lit, 1]]]],
+                        :zero?],
+    },
+
     "call_index" => { # see attrasgn_index_equals for opposite
       "Ruby"        => "a[42]",
       "ParseTree"   => [:call, [:vcall, :a], :[], [:array, [:lit, 42]]],
@@ -676,9 +684,39 @@ end",
       "ParseTree"   => [:hash, [:lit, 1], [:lit, 2], [:lit, 3], [:lit, 4]],
     },
 
+    "hash_rescue"  => {
+      "Ruby"        => "{ 1 => (2 rescue 3) }",
+      "ParseTree"   => [:hash,
+                        [:lit, 1],
+                        [:rescue, [:lit, 2], [:resbody, nil, [:lit, 3]]]],
+    },
+
     "iasgn"  => {
       "Ruby"        => "@a = 4",
       "ParseTree"   => [:iasgn, :@a, [:lit, 4]],
+    },
+
+    "if_block_condition" => {
+      "Ruby"        => "if (x = 5\n(x + 1)) then\n  nil\nend",
+      "ParseTree"   => [:if,
+                        [:block,
+                         [:lasgn, :x, [:lit, 5]],
+                         [:call,
+                          [:lvar, :x],
+                          :+,
+                          [:array, [:lit, 1]]]],
+                        [:nil],
+                        nil],
+    },
+
+    "if_lasgn_short" => {
+      "Ruby"        => "if x = obj.x then\n  x.do_it\nend",
+      "ParseTree"   => [:if,
+                        [:lasgn, :x,
+                         [:call, [:vcall, :obj], :x]],
+                        [:call,
+                         [:lvar, :x], :do_it],
+                        nil],
     },
 
     "iteration1" => {
@@ -841,6 +879,24 @@ end",
       "ParseTree"   => [:masgn,
                          [:array, [:lasgn, :a], [:attrasgn, [:vcall, :b], :c=]],
                          [:array, [:vcall, :d], [:vcall, :e]]],
+    },
+
+    "masgn_masgn" => {
+      "Ruby"        => "a, (b, c) = [1, [2, 3]]",
+      "ParseTree"   => [:masgn,
+                        [:array,
+                         [:lasgn, :a],
+                         [:masgn,
+                          [:array,
+                           [:lasgn, :b],
+                           [:lasgn, :c]]]],
+                        [:to_ary,
+                         [:array,
+                          [:lit, 1],
+                          [:array,
+                           [:lit, 2],
+                           [:lit, 3]]]]]
+
     },
 
     "masgn_splat"  => {
