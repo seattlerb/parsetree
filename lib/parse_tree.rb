@@ -773,7 +773,11 @@ again_no_block:
 
       if (arg_count > 0) {
         // *arg name
-        VALUE sym = rb_str_intern(rb_str_plus(rb_str_new2("*"), rb_str_new2(rb_id2name(locals[i + 3]))));
+        VALUE sym = rb_str_new2("*");
+        if (locals[i + 3]) {
+          rb_str_concat(sym, rb_str_new2(rb_id2name(locals[i + 3])));
+        }
+        sym = rb_str_intern(sym);
         rb_ary_push(current, sym);
       } else if (arg_count == 0) {
         // nothing to do in this case, empty list

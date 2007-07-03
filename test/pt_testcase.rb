@@ -476,14 +476,25 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:defn, :something?, [:scope, [:block, [:args], [:nil]]]],
     },
 
-# TODO:
-#   add_test("defn_optargs",
-#            s(:defn, :x,
-#              s(:args, :a, "*args".intern),
-#              s(:scope,
-#                s(:block,
-#                  s(:call, nil, :p,
-#                    s(:arglist, s(:lvar, :a), s(:lvar, :args)))))))
+    "defn_optargs" => {
+      "Ruby"      => "def x(a, *args)\n  p(a, args)\nend",
+      "ParseTree" => [:defn, :x,
+                      [:scope,
+                       [:block,
+                        [:args, :a, "*args".intern],
+                        [:fcall, :p,
+                         [:array, [:lvar, :a], [:lvar, :args]]]]]],
+    },
+
+    "defn_splat_no_name" => {
+      "Ruby"      => "def x(a, *)\n  p(a)\nend",
+      "ParseTree" => [:defn, :x,
+                      [:scope,
+                       [:block,
+                        [:args, :a, "*".intern],
+                        [:fcall, :p,
+                         [:array, [:lvar, :a]]]]]],
+    },
 
     "defn_or" => {
       "Ruby"        => "def |(o)\n  # do nothing\nend",
