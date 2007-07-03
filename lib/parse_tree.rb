@@ -307,10 +307,10 @@ class ParseTree
   # add_to_parse_tree(ary, node, include_newlines, local_variables)
 
   builder.c_raw %Q@
-static void add_to_parse_tree(VALUE ary,
-                              NODE * n,
-                              VALUE newlines,
-                              ID * locals) {
+void add_to_parse_tree(VALUE ary,
+                       NODE * n,
+                       VALUE newlines,
+                       ID * locals) {
   NODE * volatile node = n;
   NODE * volatile contnode = NULL;
   VALUE old_ary = Qnil;
@@ -882,8 +882,9 @@ again_no_block:
     break;
 
   case NODE_CFUNC:
-    rb_ary_push(current, INT2FIX(node->nd_cfnc));
-    rb_ary_push(current, INT2FIX(node->nd_argc));
+  case NODE_IFUNC:
+    rb_ary_push(current, INT2NUM((long)node->nd_cfnc));
+    rb_ary_push(current, INT2NUM(node->nd_argc));
     break;
 
 #{if_version :<, "1.9", "#if 0"}
@@ -899,7 +900,6 @@ again_no_block:
   // I think these are all runtime only... not positive but...
   case NODE_MEMO:               // enum.c zip
   case NODE_CREF:
-  case NODE_IFUNC:
   // #defines:
   // case NODE_LMASK:
   // case NODE_LSHIFT:
