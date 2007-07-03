@@ -190,7 +190,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         :unsplatted,
                         [:bmethod,
                          [:dasgn_curr, :x],
-                         [:call, [:dvar, :x], "+".intern, [:array, [:lit, 1]]]]],
+                         [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]],
       "Ruby2Ruby"   => "def unsplatted(x)\n  (x + 1)\nend"
     },
 
@@ -504,15 +504,15 @@ class ParseTreeTestCase < Test::Unit::TestCase
     "defn_rescue" => {
       "Ruby" => "def eql?(resource)\n  (self.uuid == resource.uuid) rescue false\nend",
       "ParseTree" => [:defn, :eql?,
-           [:scope,
-            [:block,
-             [:args, :resource],
-             [:rescue,
-              [:call,
-               [:call, [:self], :uuid],
-               :==,
-               [:array, [:call, [:lvar, :resource], :uuid]]],
-              [:resbody, nil, [:false]]]]]],
+                      [:scope,
+                       [:block,
+                        [:args, :resource],
+                        [:rescue,
+                         [:call,
+                          [:call, [:self], :uuid],
+                          :==,
+                          [:array, [:call, [:lvar, :resource], :uuid]]],
+                         [:resbody, nil, [:false]]]]]],
     },
 
     "defn_zarray" => { # tests memory allocation for returns
