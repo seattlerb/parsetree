@@ -89,7 +89,8 @@ class TestParseTree < ParseTreeTestCase
     assert_equal expected, actual
   end
 
-  @@self_classmethod = [:defn, :"self.classmethod",
+  @@self_classmethod = [:defs,
+                        [:self], :classmethod,
                         [:scope,
                          [:block,
                           [:args],

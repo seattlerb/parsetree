@@ -131,7 +131,6 @@ class ParseTree
   def parse_tree_for_method(klass, method, is_cls_meth=false)
     $stderr.puts "** parse_tree_for_method(#{klass}, #{method}):" if $DEBUG
     r = parse_tree_for_meth(klass, method.to_sym, @include_newlines, is_cls_meth)
-    r[1] = :"self.#{r[1]}" if is_cls_meth
     r
   end
 
@@ -946,7 +945,10 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines, VALU
   }
   if (st_lookup(RCLASS(klass)->m_tbl, id, &n)) {
     node = (NODE*)n;
-    rb_ary_push(result, ID2SYM(rb_intern("defn")));
+    rb_ary_push(result, ID2SYM(rb_intern(is_cls_meth ? "defs": "defn")));
+    if (is_cls_meth) {
+      rb_ary_push(result, rb_ary_new3(1, ID2SYM(rb_intern("self"))));
+    }
     rb_ary_push(result, ID2SYM(id));
     add_to_parse_tree(result, node->nd_body, newlines, NULL);
   } else {
