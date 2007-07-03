@@ -12,12 +12,6 @@ class TestUnifier < SexpProcessor
   include UnifiedRuby
 end
 
-class Array
-  def to_sexp
-    Sexp.from_array self
-  end
-end
-
 # TODO:
 #
 # 1) DONE [vf]call => call
@@ -45,54 +39,54 @@ class TestUnifiedRuby < Test::Unit::TestCase
   end
 
   def test_rewrite_defn_attr
-    @insert = [:defn, :writer=, [:attrset, :@writer]].to_sexp
+    @insert = s(:defn, :writer=, s(:attrset, :@writer))
     @expect = @insert.deep_clone
 
     doit
   end
 
   def test_rewrite_defn_bmethod
-    @insert = [:defn,
+    @insert = s(:defn,
                :unsplatted,
-               [:bmethod,
-                [:dasgn_curr, :x],
-                [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]].to_sexp
-    @expect = [:defn,
+               s(:bmethod,
+                s(:dasgn_curr, :x),
+                s(:call, s(:dvar, :x), :+, s(:array, s(:lit, 1)))))
+    @expect = s(:defn,
                :unsplatted,
-               [:args, :x],
-               [:scope,
-                [:block,
-                 [:call, [:lvar, :x], :+, [:array, [:lit, 1]]]]]].to_sexp
+               s(:args, :x),
+               s(:scope,
+                s(:block,
+                 s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1))))))
 
     doit
   end
 
   def test_rewrite_defn_dmethod
-    @insert = [:defn,
+    @insert = s(:defn,
                :dmethod_added,
-               [:dmethod,
+               s(:dmethod,
                 :a_method,
-                [:scope,
-                 [:block,
-                  [:args, :x],
-                  [:call, [:lvar, :x], :+, [:array, [:lit, 1]]]]]]].to_sexp
-    @expect = [:defn,
+                s(:scope,
+                 s(:block,
+                  s(:args, :x),
+                  s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1)))))))
+    @expect = s(:defn,
                :a_method,
-               [:args, :x],
-               [:scope,
-                [:block,
-                 [:call, [:lvar, :x], :+, [:array, [:lit, 1]]]]]].to_sexp
+               s(:args, :x),
+               s(:scope,
+                s(:block,
+                 s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1))))))
 
     doit
   end
 
   def test_rewrite_defn_fbody
-    @insert = [:defn, :an_alias,
-               [:fbody,
-                [:scope,
-                 [:block,
-                  [:args, :x],
-                  [:call, [:lvar, :x], :+, [:array, [:lit, 1]]]]]]].to_sexp
+    @insert = s(:defn, :an_alias,
+               s(:fbody,
+                s(:scope,
+                 s(:block,
+                  s(:args, :x),
+                  s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1)))))))
     @expect = s(:defn, :an_alias,
                 s(:args, :x),
                 s(:scope,
