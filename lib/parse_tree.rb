@@ -306,7 +306,7 @@ class ParseTree
   ##
   # add_to_parse_tree(ary, node, include_newlines, local_variables)
 
-  builder.c_raw %Q@
+  builder.prefix %Q@
 void add_to_parse_tree(VALUE ary,
                        NODE * n,
                        VALUE newlines,
