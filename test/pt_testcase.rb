@@ -1,3 +1,5 @@
+$TESTING = true
+
 require 'test/unit/testcase'
 require 'sexp_processor' # for deep_clone
 require 'unique'
