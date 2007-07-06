@@ -11,6 +11,10 @@ class Examples
   def a_method(x); x+1; end
   alias an_alias a_method
 
+  define_method(:bmethod_noargs) do
+    x + 1
+  end
+
   define_method(:unsplatted) do |x|
     x + 1
   end
@@ -191,6 +195,16 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:bmethod,
                          [:dasgn_curr, :x],
                          [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]],
+      "Ruby2Ruby"   => "def unsplatted(x)\n  (x + 1)\nend"
+    },
+
+    "bmethod_noargs"  => {
+      "Ruby"        => [Examples, :bmethod_noargs],
+      "ParseTree"   => [:defn,
+                        :bmethod_noargs,
+                        [:bmethod,
+                         nil,
+                         [:call, [:vcall, :x], "+".intern, [:array, [:lit, 1]]]]],
       "Ruby2Ruby"   => "def unsplatted(x)\n  (x + 1)\nend"
     },
 

@@ -543,7 +543,11 @@ again_no_block:
     {
       struct BLOCK *data;
       Data_Get_Struct(node->nd_cval, struct BLOCK, data);
-      add_to_parse_tree(current, data->var, newlines, locals);
+      if (data->var == 0 || data->var == (NODE *)1 || data->var == (NODE *)2) {
+        rb_ary_push(current, Qnil);
+      } else {
+        add_to_parse_tree(current, data->var, newlines, locals);
+      }
       add_to_parse_tree(current, data->body, newlines, locals);
       break;
     }

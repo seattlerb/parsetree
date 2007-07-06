@@ -21,9 +21,21 @@ class Sexp < Array # ZenTest FULL
 
   ##
   # Creates a new Sexp for +klass+ or +method+ in +klass+.
+  #
+  # If +walk_ancestors+ is true and +method+ is provided, walks the ancestors
+  # of +klass+ until a method definition is found.
 
-  def self.for(klass, method = nil)
-    Sexp.from_array ParseTree.translate(klass, method)
+  def self.for(klass, method = nil, walk_ancestors = false)
+    sexp = if walk_ancestors and method then
+             klass.ancestors.each do |klass|
+               sexp = ParseTree.translate klass, method
+               break sexp unless sexp == [nil]
+             end
+           else
+             ParseTree.translate klass, method
+           end
+
+    Sexp.from_array sexp
   end
 
   ##
