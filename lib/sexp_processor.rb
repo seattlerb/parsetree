@@ -164,25 +164,10 @@ class SexpProcessor
   end
 
   def rewrite(exp)
+    exp.map! { |sub| Array === sub ? rewrite(sub) : sub }
     meth = @rewriters[exp.first]
-    if meth then
-      r = self.send(meth, exp)
-      self.assert_empty(meth, exp, nil) if @require_empty
-      r
-    else
-      result = exp.class.new
-      until exp.empty? do
-        sub_exp = exp.shift
-        sub_result = nil
-
-        if Array === sub_exp then
-          result << rewrite(sub_exp)
-        else
-          result << sub_exp
-        end
-      end
-      result
-    end
+    exp  = self.send(meth, exp) if meth
+    exp
   end
 
   ##

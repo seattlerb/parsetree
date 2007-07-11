@@ -24,9 +24,12 @@ class TestProcessor < SexpProcessor # ZenTest SKIP
   end
 
   def process_specific(exp)
-    result = exp[1..-1]
-    exp.clear
-    self.expected.new(*result)
+    name = exp.shift
+    result = s(:blah)
+    until exp.empty?
+      result.push process(exp.shift)
+    end
+    result
   end
 
   def process_strip(exp)
@@ -59,7 +62,15 @@ class TestProcessor < SexpProcessor # ZenTest SKIP
   end
 
   def process_rewritable(exp)
-    return s(exp.shift, exp.shift == 2, exp.shift == 1)
+    @n ||= 0
+    exp.shift # name
+    result = s(:rewritten)
+    until exp.empty?
+      result.push process(exp.shift)
+    end
+    result.push @n
+    @n += 1
+    result
   end
 end
 
@@ -84,12 +95,12 @@ class TestSexpProcessor < Test::Unit::TestCase
   end
 
   def test_process_specific
-    a = [:specific, 1, 2, 3]
-    expected = a[1..-1]
+    a = [:specific, [:x, 1], [:y, 2], [:z, 3]]
+    expected = [:blah, [:x, 1], [:y, 2], [:z, 3]]
     assert_equal(expected, @processor.process(a))
   end
 
-  def test_process_general
+  def test_process_generic
     a = [:blah, 1, 2, 3]
     expected = a.deep_clone
     assert_equal(expected, @processor.process(a))
@@ -167,20 +178,56 @@ class TestSexpProcessor < Test::Unit::TestCase
                  @processor.rewrite(s(:specific, s(:rewritable, :a, :b))))
   end
 
+  def test_rewrite_not_empty
+    insert = s(:rewritable, 1, 2, 2)
+    expect = s(:rewritable, 2, 1)
+    result = @processor.rewrite(insert)
+    assert_equal(expect, result)
+    assert_equal(s(2), insert) # post-processing
+  end
+
   def test_process_rewrite
-    assert_equal(s(:rewritable, true, true),
-                 @processor.process(s(:rewritable, 1, 2)))
+    assert_equal(s(:rewritten, s(:y, 2), s(:x, 1), 0),
+                 @processor.process(s(:rewritable, s(:x, 1), s(:y, 2))))
   end
 
   def test_process_rewrite_deep
-    assert_equal(s(s(:rewritable, :b, :a)),
-                 @processor.process(s(:specific, s(:rewritable, :a, :b))))
+    assert_equal(s(:blah, s(:rewritten, s(:b), s(:a), 0)),
+                 @processor.process(s(:specific, s(:rewritable, s(:a), s(:b)))))
   end
 
-  def test_process_rewrite_not_empty
-    assert_raise(NotEmptyError) do
-      @processor.process(s(:rewritable, 1, 2, 2))
-    end
+  def test_rewrite_depth_first
+    inn = s(:specific,
+            s(:rewritable,
+              s(:a),
+              s(:rewritable,
+                s(:rewritable, s(:b), s(:c)),
+                s(:d))))
+    out = s(:specific,
+            s(:rewritable,
+              s(:rewritable,
+                s(:d),
+                s(:rewritable, s(:c), s(:b))),
+              s(:a)))
+
+    assert_equal(out, @processor.rewrite(inn))
+  end
+
+  def test_process_rewrite_depth_first
+    inn = s(:specific,
+            s(:rewritable,
+              s(:a),
+              s(:rewritable,
+                s(:rewritable, s(:b), s(:c)),
+                s(:d))))
+    out = s(:blah,
+            s(:rewritten,
+              s(:rewritten,
+                s(:d),
+                s(:rewritten, s(:c), s(:b), 0), 1),
+              s(:a), 2))
+
+    assert_equal(out, @processor.process(inn))
   end
 
   def test_assert_type_hit

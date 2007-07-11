@@ -205,7 +205,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:bmethod,
                          nil,
                          [:call, [:vcall, :x], "+".intern, [:array, [:lit, 1]]]]],
-      "Ruby2Ruby"   => "def unsplatted(x)\n  (x + 1)\nend"
+      "Ruby2Ruby"   => "def bmethod_noargs\n  (x + 1)\nend"
     },
 
     "bmethod_splat" => {
@@ -1094,8 +1094,12 @@ end",
     },
 
     "splat"  => {
-      "Ruby"        => "a(*b)",
-      "ParseTree"   => [:fcall, :a, [:splat, [:vcall, :b]]],
+      "Ruby"        => "def x(*b)\n  a(*b)\nend",
+      "ParseTree"   => [:defn, :x,
+                        [:scope,
+                         [:block,
+                          [:args, :"*b"],
+                          [:fcall, :a, [:splat, [:lvar, :b]]]]]],
     },
 
     # TODO: all supers need to pass args
