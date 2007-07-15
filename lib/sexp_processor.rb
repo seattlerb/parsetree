@@ -166,6 +166,7 @@ class SexpProcessor
   def rewrite(exp)
     exp.map! { |sub| Array === sub ? rewrite(sub) : sub }
 
+    type = exp.first
     begin
       meth = @rewriters[type]
       exp  = self.send(meth, exp) if meth

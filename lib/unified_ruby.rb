@@ -1,5 +1,36 @@
 
 module UnifiedRuby
+  def rewrite_bmethod(exp)
+    exp[0] = :scope
+
+    args =
+      if exp.masgn and exp.masgn.dasgn_curr then
+        arg = exp.masgn(true).dasgn_curr(true).sexp_body
+        raise "nope: #{arg.size}" unless arg.size == 1
+        s(:args, :"*#{arg.last}")
+      else
+        args = exp.dasgn_curr(true)
+        if args then
+          s(:args, *args.sexp_body)
+        else
+          exp.delete_at 1 # nil
+          s(:args)
+        end
+      end
+
+    exp = s(:scope, s(:block, *exp.sexp_body)) unless exp.block
+    exp.block.insert 1, args
+    exp.find_and_replace_all(:dvar, :lvar)
+
+    exp
+  end
+
+  def rewrite_dmethod(exp)
+    exp.shift # type
+    exp.shift # dmethod name
+    exp.shift # scope / block / body
+  end
+
   # s(:defn, :name, s(:scope, s(:block, s(:args, ...), ...)))
   # s(:defn, :name, s(:bmethod, s(:masgn, s(:dasgn_curr, :args)), s(:block, ...)))
   # s(:defn, :name, s(:fbody, s(:bmethod, s(:masgn, s(:dasgn_curr, :params)), s(:block, ...))))
@@ -9,40 +40,8 @@ module UnifiedRuby
   def rewrite_defn(exp)
     exp = Sexp.from_array(exp) if Array === exp # HACK for ruby2ruby for now
 
-    # remove dmethod envelope
-    if exp.dmethod then
-      exp.dmethod.delete_at 1
-      exp.push(*exp.dmethod(true).sexp_body)
-    end
-
-    # remove bmethod and convert dvars to lvars
-    if exp.bmethod then
-      if exp.bmethod.masgn and exp.bmethod.masgn.dasgn_curr then
-        arg = exp.bmethod.masgn(true).dasgn_curr(true).sexp_body
-        raise "nope: #{arg.size}" unless arg.size == 1
-        exp.push s(:args, :"*#{arg.last}")
-      else
-        args = exp.bmethod.dasgn_curr(true)
-        if args then
-          exp.push s(:args, *args.sexp_body)
-        else
-          exp.bmethod.delete_at 1
-          exp.push s(:args)
-        end
-      end
-
-      body = exp.bmethod(true).sexp_body
-
-      unless body.block then
-        exp.push s(:scope, s(:block, *body))
-      else
-        exp.push s(:scope, *body)
-      end
-      exp.find_and_replace_all(:dvar, :lvar)
-    end
-
     # move args up
-    args = exp.scope.block.args(true) rescue nil
+    args = exp.scope.block.args(true) rescue nil # TODO: remove rescue
     exp.insert 2, args if args
 
     # move block_arg up and in

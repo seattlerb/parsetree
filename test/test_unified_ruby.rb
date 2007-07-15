@@ -31,6 +31,43 @@ class TestUnifiedRuby < Test::Unit::TestCase
     assert_equal @expect, @sp.process(@insert)
   end
 
+  def test_rewrite_bmethod
+    @insert = s(:bmethod,
+                s(:dasgn_curr, :x),
+                s(:call, s(:dvar, :x), :+, s(:array, s(:lit, 1))))
+    @expect = s(:scope,
+                s(:block,
+                  s(:args, :x),
+                  s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1)))))
+
+    doit
+  end
+
+  def test_rewrite_bmethod_noargs
+    @insert = s(:bmethod,
+                nil,
+                s(:call, s(:vcall, :x), :+, s(:array, s(:lit, 1))))
+    @expect = s(:scope,
+                s(:block,
+                  s(:args),
+                  s(:call, s(:call, nil, :x, s(:arglist)),
+                    :+, s(:array, s(:lit, 1)))))
+
+    doit
+  end
+
+  def test_rewrite_bmethod_splat
+    @insert = s(:bmethod,
+                s(:masgn, s(:dasgn_curr, :params)),
+                s(:lit, 42))
+    @expect = s(:scope,
+                s(:block,
+                  s(:args, :"*params"),
+                  s(:lit, 42)))
+
+    doit
+  end
+
   def test_rewrite_defn
     @insert = s(:defn, :x, s(:scope, s(:block, s(:args), s(:nil))))
     @expect = s(:defn, :x, s(:args), s(:scope, s(:block, s(:nil))))
@@ -66,86 +103,6 @@ class TestUnifiedRuby < Test::Unit::TestCase
     doit
   end
 
-  def test_rewrite_defn_bmethod
-    @insert = s(:defn,
-                :unsplatted,
-                s(:bmethod,
-                  s(:dasgn_curr, :x),
-                  s(:call, s(:dvar, :x), :+, s(:array, s(:lit, 1)))))
-    @expect = s(:defn,
-                :unsplatted,
-                s(:args, :x),
-                s(:scope,
-                  s(:block,
-                    s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1))))))
-
-    doit
-  end
-
-  def test_rewrite_defn_bmethod_noargs
-    @insert = s(:defn, :bmethod_noargs,
-                s(:bmethod,
-                  nil,
-                  s(:call, s(:vcall, :x), "+".intern, s(:array, s(:lit, 1)))))
-    @expect = s(:defn, :bmethod_noargs,
-                s(:args),
-                s(:scope,
-                  s(:block,
-                    s(:call, s(:call, nil, :x, s(:arglist)),
-                      "+".intern, s(:array, s(:lit, 1))))))
-
-    doit
-  end
-
-  def test_rewrite_defn_bmethod_splat
-    @insert = s(:defn, :group,
-                s(:bmethod,
-                  s(:masgn, s(:dasgn_curr, :params)),
-                  s(:lit, 42)))
-    @expect = s(:defn, :group,
-                s(:args, :"*params"),
-                s(:scope,
-                  s(:block, s(:lit, 42))))
-
-    doit
-  end
-
-  def test_rewrite_defn_define_method
-    @insert = s(:defn, :splatted,
-                s(:bmethod,
-                  s(:masgn, s(:dasgn_curr, :args)),
-                  s(:block,
-                    s(:dasgn_curr, :y, s(:call, s(:dvar, :args), :first)),
-                    s(:call, s(:dvar, :y), :+, s(:array, s(:lit, 42))))))
-    @expect = s(:defn, :splatted,
-                s(:args, :"*args"),
-                s(:scope,
-                  s(:block,
-                    s(:dasgn_curr, :y, s(:call, s(:lvar, :args), :first)),
-                    s(:call, s(:lvar, :y), :+, s(:array, s(:lit, 42))))))
-
-    doit
-  end
-
-  def test_rewrite_defn_dmethod
-    @insert = s(:defn,
-                :dmethod_added,
-                s(:dmethod,
-                  :a_method,
-                  s(:scope,
-                    s(:block,
-                      s(:args, :x),
-                      s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1)))))))
-    @expect = s(:defn,
-                :dmethod_added,
-                s(:args, :x),
-                s(:scope,
-                  s(:block,
-                    s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1))))))
-
-    doit
-  end
-
   def test_rewrite_defn_fbody
     @insert = s(:defn, :an_alias,
                 s(:fbody,
@@ -158,6 +115,21 @@ class TestUnifiedRuby < Test::Unit::TestCase
                 s(:scope,
                   s(:block,
                     s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1))))))
+
+    doit
+  end
+
+  def test_rewrite_dmethod
+    @insert = s(:dmethod,
+                :a_method,
+                s(:scope,
+                  s(:block,
+                    s(:args, :x),
+                    s(:lit, 42))))
+    @expect = s(:scope,
+                s(:block,
+                  s(:args, :x),
+                  s(:lit, 42)))
 
     doit
   end
