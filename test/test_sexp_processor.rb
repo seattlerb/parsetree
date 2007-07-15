@@ -72,6 +72,11 @@ class TestProcessor < SexpProcessor # ZenTest SKIP
     @n += 1
     result
   end
+
+  def rewrite_major_rewrite(exp)
+    exp[0] = :rewritable
+    exp
+  end
 end
 
 class TestProcessorDefault < SexpProcessor # ZenTest SKIP
@@ -171,6 +176,11 @@ class TestSexpProcessor < Test::Unit::TestCase
   def test_rewrite
     assert_equal(s(:rewritable, :b, :a),
                  @processor.rewrite(s(:rewritable, :a, :b)))
+  end
+
+  def test_rewrite_different_type
+    assert_equal(s(:rewritable, :b, :a),
+                 @processor.rewrite(s(:major_rewrite, :a, :b)))
   end
 
   def test_rewrite_deep
