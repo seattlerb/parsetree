@@ -212,6 +212,11 @@ class SexpProcessor
 
     exp = self.rewrite(exp) if @process_level == 1
 
+    if @debug.has_key? type then
+      str = exp.inspect
+      puts "// DEBUG (rewritten): #{str}" if str =~ @debug[type]
+    end
+
     # now do a pass with the real processor (or generic)
     meth = @processors[type] || @default_method
     if meth then

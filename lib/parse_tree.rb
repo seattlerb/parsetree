@@ -7,6 +7,13 @@ begin require 'rubygems'; rescue LoadError; end
 
 require 'inline'
 
+class Class
+  def modules
+    a = self.ancestors
+    a[1..a.index(superclass)-1]
+  end
+end
+
 ##
 # ParseTree is a RubyInline-style extension that accesses and
 # traverses the internal parse tree created by ruby.
@@ -109,7 +116,17 @@ class ParseTree
       # protected methods are included in instance_methods, go figure!
 
       method_names.sort.each do |m|
-        code << parse_tree_for_method(klass, m.to_sym)
+        r = parse_tree_for_method(klass, m.to_sym)
+p m => r if r == [nil]
+        code << r
+      end
+
+      klass.modules.each do |mod| # TODO: add a test for this damnit
+        mod.instance_methods.each do |m|
+          r = parse_tree_for_method(mod, m.to_sym)
+p m => r if r == [nil]
+          code << r
+        end
       end
 
       klass.singleton_methods(false).sort.each do |m|

@@ -166,6 +166,20 @@ class TestUnifiedRuby < Test::Unit::TestCase
     doit
   end
 
+  def test_rewrite_resbody_empty
+    # begin require 'rubygems'; rescue LoadError; end
+    @insert = s(:begin,
+                s(:rescue,
+                  s(:fcall, :require, s(:array, s(:str, "rubygems"))),
+                  s(:resbody, s(:array, s(:const, :LoadError)))))
+    @expect = s(:begin,
+                s(:rescue,
+                  s(:call, nil, :require, s(:arglist, s(:str, "rubygems"))),
+                  s(:resbody, s(:array, s(:const, :LoadError)), nil)))
+
+    doit
+  end
+
   def test_rewrite_resbody_lasgn
     @insert = s(:resbody,
                 s(:array, s(:const, :SyntaxError)),

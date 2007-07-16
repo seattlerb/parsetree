@@ -25,12 +25,6 @@ module UnifiedRuby
     exp
   end
 
-  def rewrite_dmethod(exp)
-    exp.shift # type
-    exp.shift # dmethod name
-    exp.shift # scope / block / body
-  end
-
   ##
   # :defn is one of the most complex of all the ASTs in ruby. We do
   # one of 3 different translations:
@@ -80,6 +74,12 @@ module UnifiedRuby
     exp
   end
 
+  def rewrite_dmethod(exp)
+    exp.shift # type
+    exp.shift # dmethod name
+    exp.shift # scope / block / body
+  end
+
   def rewrite_fbody(exp)
     return *exp.sexp_body
   end
@@ -124,7 +124,7 @@ module UnifiedRuby
         list << body.delete_at(1) if body[1].first == :lasgn
       else
         # do nothing (expression form)
-      end
+      end if body
 
       code << list << body
       if exp then

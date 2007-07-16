@@ -34,8 +34,14 @@ end
 
 desc 'Show what tests are not sorted'
 task :sort do
-  sh "pgrep '^    \\\"(\\w+)' test/pt_testcase.rb | cut -f 2 -d\\\" > x"
-  sh "sort x > y"
-  sh "diff x y"
-  sh "rm -f x y"
+  begin
+    sh "pgrep '^    \\\"(\\w+)' test/pt_testcase.rb | cut -f 2 -d\\\" > x"
+    sh "sort x > y"
+    sh "diff x y"
+
+    sh 'for f in lib/*.rb; do echo $f; grep "^ *def " $f | grep -v sort=skip > x; sort x > y; echo $f; echo; diff x y; done'
+    sh 'for f in test/test_*.rb; do echo $f; grep "^ *def.test_" $f > x; sort x > y; echo $f; echo; diff x y; done'
+  ensure
+    sh 'rm -f x y'
+  end
 end

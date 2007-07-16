@@ -152,6 +152,19 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:block_pass, [:vcall, :b], [:fcall, :a]],
     },
 
+    "block_pass_args_and_splat" => {
+      "Ruby" => "def blah(*args, &block)\n  other(42, *args, &block)\nend",
+      "ParseTree" => [:defn, :blah,
+                      [:scope,
+                       [:block,
+                        [:args, "*args".intern],
+                        [:block_arg, :block],
+                        [:block_pass,
+                         [:lvar, :block],
+                         [:fcall, :other,
+                          [:argscat, [:array, [:lit, 42]], [:lvar, :args]]]]]]],
+    },
+
     "block_pass_omgwtf" => {
       "Ruby" => "define_attr_method(:x, :sequence_name, &Proc.new { |*args| nil })",
       "ParseTree" => [:block_pass,
@@ -173,19 +186,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:block_pass,
                          [:lvar, :block],
                          [:fcall, :other, [:splat, [:lvar, :args]]]]]]],
-    },
-
-    "block_pass_args_and_splat" => {
-      "Ruby" => "def blah(*args, &block)\n  other(42, *args, &block)\nend",
-      "ParseTree" => [:defn, :blah,
-                      [:scope,
-                       [:block,
-                        [:args, "*args".intern],
-                        [:block_arg, :block],
-                        [:block_pass,
-                         [:lvar, :block],
-                         [:fcall, :other,
-                          [:argscat, [:array, [:lit, 42]], [:lvar, :args]]]]]]],
     },
 
     "bmethod"  => {
@@ -342,14 +342,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
                              [:fcall, :puts, [:array, [:str, "hello"]]]]]]]]],
     },
 
-    "class_super_object"  => {
-      "Ruby"        => "class X < Object\nend",
-      "ParseTree"   => [:class,
-                        :X,
-                        [:const, :Object],
-                        [:scope]],
-    },
-
     "class_super_array"  => {
       "Ruby"        => "class X < Array\nend",
       "ParseTree"   => [:class,
@@ -363,6 +355,14 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:class,
                         :X,
                         [:vcall, :expr],
+                        [:scope]],
+    },
+
+    "class_super_object"  => {
+      "Ruby"        => "class X < Object\nend",
+      "ParseTree"   => [:class,
+                        :X,
+                        [:const, :Object],
                         [:scope]],
     },
 
@@ -500,16 +500,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:array, [:lvar, :a], [:lvar, :args]]]]]],
     },
 
-    "defn_splat_no_name" => {
-      "Ruby"      => "def x(a, *)\n  p(a)\nend",
-      "ParseTree" => [:defn, :x,
-                      [:scope,
-                       [:block,
-                        [:args, :a, "*".intern],
-                        [:fcall, :p,
-                         [:array, [:lvar, :a]]]]]],
-    },
-
     "defn_or" => {
       "Ruby"        => "def |(o)\n  # do nothing\nend",
       "ParseTree"   => [:defn, :|, [:scope, [:block, [:args, :o], [:nil]]]],
@@ -527,6 +517,16 @@ class ParseTreeTestCase < Test::Unit::TestCase
                           :==,
                           [:array, [:call, [:lvar, :resource], :uuid]]],
                          [:resbody, nil, [:false]]]]]],
+    },
+
+    "defn_splat_no_name" => {
+      "Ruby"      => "def x(a, *)\n  p(a)\nend",
+      "ParseTree" => [:defn, :x,
+                      [:scope,
+                       [:block,
+                        [:args, :a, "*".intern],
+                        [:fcall, :p,
+                         [:array, [:lvar, :a]]]]]],
     },
 
     "defn_zarray" => { # tests memory allocation for returns
@@ -884,13 +884,6 @@ end",
                         [:array,  [:vcall, :c], [:vcall, :d]]],
     },
 
-    "masgn_iasgn"  => {
-      "Ruby"        => "a, @b = c, d",
-      "ParseTree"   => [:masgn,
-                        [:array, [:lasgn, :a], [:iasgn, "@b".intern]],
-                        [:array,  [:vcall, :c], [:vcall, :d]]],
-    },
-
     "masgn_argscat"  => {
       "Ruby"        => "a, b, *c = 1, 2, *[3, 4]",
       "ParseTree"   => [:masgn,
@@ -906,6 +899,13 @@ end",
       "ParseTree"   => [:masgn,
                          [:array, [:lasgn, :a], [:attrasgn, [:vcall, :b], :c=]],
                          [:array, [:vcall, :d], [:vcall, :e]]],
+    },
+
+    "masgn_iasgn"  => {
+      "Ruby"        => "a, @b = c, d",
+      "ParseTree"   => [:masgn,
+                        [:array, [:lasgn, :a], [:iasgn, "@b".intern]],
+                        [:array,  [:vcall, :c], [:vcall, :d]]],
     },
 
     "masgn_masgn" => {
@@ -1174,6 +1174,12 @@ end",
       "ParseTree"   => [:vcall, :method],
     },
 
+    "while_post" => {
+      "Ruby"        => "begin\n  (1 + 1)\nend while false",
+      "ParseTree"   => [:while, [:false],
+                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], false],
+    },
+
     "while_pre" => {
       "Ruby"        => "while false do\n  (1 + 1)\nend",
       "ParseTree"   => [:while, [:false],
@@ -1183,12 +1189,6 @@ end",
     "while_pre_nil" => {
       "Ruby"        => "while false do\nend",
       "ParseTree"   => [:while, [:false], nil, true],
-    },
-
-    "while_post" => {
-      "Ruby"        => "begin\n  (1 + 1)\nend while false",
-      "ParseTree"   => [:while, [:false],
-                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], false],
     },
 
     "xstr" => {
