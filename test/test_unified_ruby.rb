@@ -103,22 +103,6 @@ class TestUnifiedRuby < Test::Unit::TestCase
     doit
   end
 
-  def test_rewrite_defn_fbody
-    @insert = s(:defn, :an_alias,
-                s(:fbody,
-                  s(:scope,
-                    s(:block,
-                      s(:args, :x),
-                      s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1)))))))
-    @expect = s(:defn, :an_alias,
-                s(:args, :x),
-                s(:scope,
-                  s(:block,
-                    s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1))))))
-
-    doit
-  end
-
   def test_rewrite_dmethod
     @insert = s(:dmethod,
                 :a_method,
@@ -144,6 +128,58 @@ class TestUnifiedRuby < Test::Unit::TestCase
                 s(:block,
                   s(:args, :x),
                   s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1)))))
+
+    doit
+  end
+
+  def test_rewrite_defn_bmethod_alias
+    @insert = s(:defn, :group,
+                s(:fbody,
+                  s(:bmethod,
+                    s(:masgn, s(:dasgn_curr, :params)),
+                    s(:block,
+                      s(:lit, 42)))))
+    @expect = s(:defn, :group,
+                s(:args, :"*params"),
+                s(:scope,
+                  s(:block, s(:lit, 42))))
+
+    doit
+  end
+
+  # TODO: think about flattening out to 1 resbody only
+  def test_rewrite_resbody
+    @insert = s(:resbody,
+                s(:array, s(:const, :SyntaxError)),
+                s(:block, s(:lasgn, :e1, s(:gvar, :$!)), s(:lit, 2)),
+                s(:resbody,
+                  s(:array, s(:const, :Exception)),
+                  s(:block, s(:lasgn, :e2, s(:gvar, :$!)), s(:lit, 3))))
+
+    @expect = s(:resbody,
+                s(:array, s(:const, :SyntaxError), s(:lasgn, :e1, s(:gvar, :$!))),
+                s(:block, s(:lit, 2)),
+                s(:resbody,
+                  s(:array, s(:const, :Exception), s(:lasgn, :e2, s(:gvar, :$!))),
+                  s(:block, s(:lit, 3))))
+
+    doit
+  end
+
+  def test_rewrite_resbody_lasgn
+    @insert = s(:resbody,
+                s(:array, s(:const, :SyntaxError)),
+                s(:lasgn, :e1, s(:gvar, :$!)),
+                s(:resbody,
+                  s(:array, s(:const, :Exception)),
+                  s(:block, s(:lasgn, :e2, s(:gvar, :$!)), s(:lit, 3))))
+
+    @expect = s(:resbody,
+                s(:array, s(:const, :SyntaxError), s(:lasgn, :e1, s(:gvar, :$!))),
+                nil,
+                s(:resbody,
+                  s(:array, s(:const, :Exception), s(:lasgn, :e2, s(:gvar, :$!))),
+                  s(:block, s(:lit, 3))))
 
     doit
   end

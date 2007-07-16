@@ -31,25 +31,51 @@ module UnifiedRuby
     exp.shift # scope / block / body
   end
 
-  # s(:defn, :name, s(:scope, s(:block, s(:args, ...), ...)))
-  # s(:defn, :name, s(:bmethod, s(:masgn, s(:dasgn_curr, :args)), s(:block, ...)))
-  # s(:defn, :name, s(:fbody, s(:bmethod, s(:masgn, s(:dasgn_curr, :params)), s(:block, ...))))
-  # =>
-  # s(:defn, :name, s(:args, ...), s(:scope, s:(block, ...)))
+  ##
+  # :defn is one of the most complex of all the ASTs in ruby. We do
+  # one of 3 different translations:
+  #
+  # 1) From:
+  #
+  #   s(:defn, :name, s(:scope, s(:block, s(:args, ...), ...)))
+  #   s(:defn, :name, s(:bmethod, s(:masgn, s(:dasgn_curr, :args)), s(:block, ...)))
+  #   s(:defn, :name, s(:fbody, s(:bmethod, s(:masgn, s(:dasgn_curr, :splat)), s(:block, ...))))
+  #
+  # to:
+  #
+  #   s(:defn, :name, s(:args, ...), s(:scope, s:(block, ...)))
+  #
+  # 2) From:
+  #
+  #   s(:defn, :writer=, s(:attrset, :@name))
+  #
+  # to:
+  #
+  #   s(:defn, :writer=, s(:args), s(:attrset, :@name))
+  #
+  # 3) From:
+  #
+  #   s(:defn, :reader, s(:ivar, :@name))
+  #
+  # to:
+  #
+  #   s(:defn, :reader, s(:args), s(:ivar, :@name))
+  #
+  #
 
   def rewrite_defn(exp)
-    exp = Sexp.from_array(exp) if Array === exp # HACK for ruby2ruby for now
+    weirdo = exp.ivar || exp.attrset
 
     # move args up
-    args = exp.scope.block.args(true) rescue nil # TODO: remove rescue
+    args = exp.scope.block.args(true) unless weirdo
     exp.insert 2, args if args
 
     # move block_arg up and in
     block_arg = exp.scope.block.block_arg(true) rescue nil
     exp.args << block_arg if block_arg
 
-    # patch up attr_accessor methods - WARN might want to remove at some point
-    exp.insert 2, s(:args) if exp.ivar or exp.attrset
+    # patch up attr_accessor methods
+    exp.insert 2, s(:args) if weirdo
 
     exp
   end
@@ -73,6 +99,41 @@ module UnifiedRuby
     end
 
     exp
+  end
+
+  def rewrite_resbody(exp) # TODO: clean up and move to unified
+    result = []
+
+    code = result
+    while exp and exp.first == :resbody do
+      code << exp.shift
+      list = exp.shift
+      body = exp.shift rescue nil
+      exp  = exp.shift rescue nil
+
+      # code may be nil, :lasgn, or :block
+      case body.first
+      when nil then
+        # do nothing
+      when :lasgn then
+        # TODO: check that it is assigning $!
+        list << body
+        body = nil
+      when :block then
+        # TODO: check that it is assigning $!
+        list << body.delete_at(1) if body[1].first == :lasgn
+      else
+        # do nothing (expression form)
+      end
+
+      code << list << body
+      if exp then
+        code = []
+        result << code
+      end
+    end
+
+    result
   end
 
   def rewrite_vcall(exp)
