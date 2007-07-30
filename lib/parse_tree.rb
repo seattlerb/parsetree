@@ -7,6 +7,12 @@ begin require 'rubygems'; rescue LoadError; end
 
 require 'inline'
 
+class Module
+  def modules
+    ancestors[1..-1]
+  end
+end
+
 class Class
   def modules
     a = self.ancestors
