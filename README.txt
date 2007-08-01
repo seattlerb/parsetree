@@ -8,7 +8,7 @@ ParseTree
 ParseTree is a C extension (using RubyInline) that extracts the parse
 tree for an entire class or a specific method and returns it as a
 s-expression (aka sexp) using ruby's arrays, strings, symbols, and
-integers. 
+integers.
 
 As an example:
 
@@ -33,7 +33,7 @@ becomes:
       [:return, [:lit, 0]]]]]
 
 == FEATURES/PROBLEMS:
-  
+
 * Uses RubyInline, so it just drops in.
 * Includes SexpProcessor and CompositeSexpProcessor.
   * Allows you to write very clean filters.
@@ -80,7 +80,7 @@ or:
 
 == REQUIREMENTS:
 
-* RubyInline 3 or better.
+* RubyInline 3.6 or better.
 
 == INSTALL:
 
