@@ -102,12 +102,12 @@ module UnifiedRuby
   end
 
   def rewrite_resbody(exp) # TODO: clean up and move to unified
-    result = []
+    result = s()
 
     code = result
     while exp and exp.first == :resbody do
       code << exp.shift
-      list = exp.shift
+      list = exp.shift || s(:array)
       body = exp.shift rescue nil
       exp  = exp.shift rescue nil
 
@@ -128,10 +128,14 @@ module UnifiedRuby
 
       code << list << body
       if exp then
-        code = []
+        code = s()
         result << code
       end
     end
+
+    raise unless result.first == :resbody
+    raise unless Sexp === result[1] and result[1].first == :array
+    raise unless result[2].nil? or (Sexp === result[2] and ! result[2].empty?)
 
     result
   end

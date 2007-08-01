@@ -11,6 +11,7 @@ lib/composite_sexp_processor.rb
 lib/parse_tree.rb
 lib/sexp.rb
 lib/sexp_processor.rb
+lib/unified_ruby.rb
 lib/unique.rb
 test/pt_testcase.rb
 test/something.rb
@@ -19,4 +20,5 @@ test/test_composite_sexp_processor.rb
 test/test_parse_tree.rb
 test/test_sexp.rb
 test/test_sexp_processor.rb
+test/test_unified_ruby.rb
 validate.sh

@@ -41,7 +41,7 @@ end
 
 class ParseTree
 
-  VERSION = '1.7.1'
+  VERSION = '1.8.0'
 
   ##
   # Front end translation method.
