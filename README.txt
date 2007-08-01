@@ -3,7 +3,7 @@ ParseTree
     http://www.zenspider.com/ZSS/Products/ParseTree/
     support@zenspider.com
 
-** DESCRIPTION:
+== DESCRIPTION:
 
 ParseTree is a C extension (using RubyInline) that extracts the parse
 tree for an entire class or a specific method and returns it as a
@@ -32,23 +32,26 @@ becomes:
        nil],
       [:return, [:lit, 0]]]]]
 
-** FEATURES/PROBLEMS:
+== FEATURES/PROBLEMS:
   
-+ Uses RubyInline, so it just drops in.
-+ Includes SexpProcessor and CompositeSexpProcessor.
-	+ Allows you to write very clean filters.
-+ Includes parse_tree_show, which lets you quickly snoop code.
-	+ echo "1+1" | parse_tree_show -f for quick snippet output.
-+ Includes parse_tree_abc, which lets you get abc metrics on code.
-	+ abc metrics = numbers of assignments, branches, and calls.
-	+ whitespace independent metric for method complexity.
-+ Includes parse_tree_deps, which shows you basic class level dependencies.
-+ Only works on methods in classes/modules, not arbitrary code.
-+ Does not work on the core classes, as they are not ruby (yet).
+* Uses RubyInline, so it just drops in.
+* Includes SexpProcessor and CompositeSexpProcessor.
+  * Allows you to write very clean filters.
+* Includes UnifiedRuby, allowing you to automatically rewrite ruby quirks.
+* ParseTree#parse_tree_for_string lets you parse arbitrary strings of ruby.
+* Includes parse_tree_show, which lets you quickly snoop code.
+  * echo "1+1" | parse_tree_show -f for quick snippet output.
+* Includes parse_tree_abc, which lets you get abc metrics on code.
+  * abc metrics = numbers of assignments, branches, and calls.
+  * whitespace independent metric for method complexity.
+* Includes parse_tree_deps, which shows you basic class level dependencies.
+* Does not work on the core classes, as they are not ruby (yet).
 
-** SYNOPSYS:
+== SYNOPSYS:
 
-  sexp_array = ParseTree.new.parse_tree(klass)
+  sexp_array = ParseTree.translate(klass)
+  sexp_array = ParseTree.translate(klass, :method)
+  sexp_array = ParseTree.translate("1+1")
 
 or:
 
@@ -75,20 +78,21 @@ or:
 
   % ./parse_tree_abc myfile.rb
 
-** REQUIREMENTS:
+== REQUIREMENTS:
 
-+ RubyInline 3 or better.
+* RubyInline 3 or better.
 
-** INSTALL:
+== INSTALL:
 
-+ sudo rake install
-+ or: sudo gem install ParseTree
+* rake install_gem
+* sudo rake install
+* sudo gem install ParseTree
 
-** LICENSE:
+== LICENSE:
 
 (The MIT License)
 
-Copyright (c) 2001-2004 Ryan Davis, Zen Spider Software
+Copyright (c) 2001-2007 Ryan Davis, Zen Spider Software
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
