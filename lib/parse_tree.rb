@@ -811,6 +811,9 @@ again_no_block:
         // nothing to do in this case, handled above
       } else if (arg_count == -2) {
         // nothing to do in this case, no name == no use
+#if RUBY_VERSION_CODE < 185
+        rb_ary_push(current, rb_str_intern(rb_str_new2("*")));
+#endif
       } else {
         rb_raise(rb_eArgError,
                  "not a clue what this arg value is: %ld", arg_count);

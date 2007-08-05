@@ -108,8 +108,8 @@ module UnifiedRuby
     while exp and exp.first == :resbody do
       code << exp.shift
       list = exp.shift || s(:array)
-      body = exp.shift rescue nil
-      exp  = exp.shift rescue nil
+      body = exp.empty? ? nil : exp.shift
+      exp  = exp.empty? ? nil : exp.shift
 
       # code may be nil, :lasgn, or :block
       case body.first
