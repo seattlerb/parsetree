@@ -68,6 +68,28 @@ class TestUnifiedRuby < Test::Unit::TestCase
     doit
   end
 
+  def test_call_args
+    @insert = s(:call, s(:lit, 42), :y, s(:array, s(:lit, 24)))
+    @expect = s(:call, s(:lit, 42), :y, s(:arglist, s(:lit, 24)))
+
+    doit
+  end
+
+  def test_call_array_args
+    @insert = s(:call, s(:lit, 42), :y, s(:array))
+    @expect = s(:call, s(:lit, 42), :y, s(:arglist))
+
+    doit
+  end
+
+  def test_call_no_args
+    @insert = s(:call, s(:lit, 42), :y)
+    @expect = s(:call, s(:lit, 42), :y, s(:arglist))
+
+    doit
+  end
+
+
   def test_rewrite_defn
     @insert = s(:defn, :x, s(:scope, s(:block, s(:args), s(:nil))))
     @expect = s(:defn, :x, s(:args), s(:scope, s(:block, s(:nil))))

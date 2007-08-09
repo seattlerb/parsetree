@@ -26,7 +26,12 @@ module UnifiedRuby
   end
 
   def rewrite_call(exp)
-    exp[-1][0] = :arglist if Array === exp.last and exp.last.first == :array
+    args = exp.last
+    if Array === args and [:array, :arglist].include? args.first then
+        args[0] = :arglist
+    else
+      exp << s(:arglist)
+    end
 
     exp
   end
