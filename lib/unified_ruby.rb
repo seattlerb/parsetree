@@ -74,6 +74,14 @@ module UnifiedRuby
     exp
   end
 
+  def rewrite_defs(exp)
+    # move args up
+    args = exp.scope.block.args(true)
+    exp.insert 3, args if args
+
+    exp
+  end
+
   def rewrite_dmethod(exp)
     exp.shift # type
     exp.shift # dmethod name

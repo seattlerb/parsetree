@@ -82,6 +82,13 @@ class TestUnifiedRuby < Test::Unit::TestCase
     doit
   end
 
+  def test_rewrite_defs
+    @insert = s(:defs, s(:self), :meth, s(:scope, s(:block, s(:args), s(:true))))
+    @expect = s(:defs, s(:self), :meth, s(:args), s(:scope, s(:block, s(:true))))
+
+    doit
+  end
+
   def test_rewrite_defn_block_arg
     @insert = s(:defn, :blah,
                 s(:scope,
