@@ -38,7 +38,7 @@ class TestUnifiedRuby < Test::Unit::TestCase
     @expect = s(:scope,
                 s(:block,
                   s(:args, :x),
-                  s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1)))))
+                  s(:call, s(:lvar, :x), :+, s(:arglist, s(:lit, 1)))))
 
     doit
   end
@@ -51,7 +51,7 @@ class TestUnifiedRuby < Test::Unit::TestCase
                 s(:block,
                   s(:args),
                   s(:call, s(:call, nil, :x, s(:arglist)),
-                    :+, s(:array, s(:lit, 1)))))
+                    :+, s(:arglist, s(:lit, 1)))))
 
     doit
   end
@@ -134,7 +134,7 @@ class TestUnifiedRuby < Test::Unit::TestCase
     @expect = s(:scope,
                 s(:block,
                   s(:args, :x),
-                  s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1)))))
+                  s(:call, s(:lvar, :x), :+, s(:arglist, s(:lit, 1)))))
 
     doit
   end

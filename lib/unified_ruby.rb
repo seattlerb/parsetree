@@ -25,6 +25,12 @@ module UnifiedRuby
     exp
   end
 
+  def rewrite_call(exp)
+    exp[-1][0] = :arglist if Array === exp.last and exp.last.first == :array
+
+    exp
+  end
+
   ##
   # :defn is one of the most complex of all the ASTs in ruby. We do
   # one of 3 different translations:
@@ -103,7 +109,7 @@ module UnifiedRuby
     elsif args.nil? then
       exp[-1] = s(:arglist)
     else
-      exp[-1] = s(:arglist, args) unless args.nil?
+      exp[-1] = s(:arglist, args)
     end
 
     exp
