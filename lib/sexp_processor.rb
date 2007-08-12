@@ -75,33 +75,15 @@ class SexpTypeError < SexpProcessorError; end
 class SexpProcessor
 
   ##
-  # A default method to call if a process_<type> method is not found
-  # for the Sexp type.
-
-  attr_accessor :default_method
-
-  ##
-  # Emit a warning when the method in #default_method is called.
-
-  attr_accessor :warn_on_default
-
-  ##
   # Automatically shifts off the Sexp type before handing the
   # Sexp to process_<type>
 
   attr_accessor :auto_shift_type
 
   ##
-  # An array that specifies node types that are unsupported by this
-  # processor. SexpProcessor will raise UnsupportedNodeError if you try
-  # to process one of those node types.
+  # Return a stack of contexts. Most recent node is first.
 
-  attr_accessor :unsupported
-
-  ##
-  # Raise an exception if no process_<type> method is found for a Sexp.
-
-  attr_accessor :strict
+  attr_reader :context
 
   ##
   # A Hash of Sexp types and Regexp.
@@ -112,6 +94,12 @@ class SexpProcessor
   attr_accessor :debug
 
   ##
+  # A default method to call if a process_<type> method is not found
+  # for the Sexp type.
+
+  attr_accessor :default_method
+
+  ##
   # Expected result class
 
   attr_accessor :expected
@@ -120,6 +108,23 @@ class SexpProcessor
   # Raise an exception if the Sexp is not empty after processing
 
   attr_accessor :require_empty
+
+  ##
+  # Raise an exception if no process_<type> method is found for a Sexp.
+
+  attr_accessor :strict
+
+  ##
+  # An array that specifies node types that are unsupported by this
+  # processor. SexpProcessor will raise UnsupportedNodeError if you try
+  # to process one of those node types.
+
+  attr_accessor :unsupported
+
+  ##
+  # Emit a warning when the method in #default_method is called.
+
+  attr_accessor :warn_on_default
 
   ##
   # Creates a new SexpProcessor.  Use super to invoke this
@@ -144,6 +149,7 @@ class SexpProcessor
     # different processors.
     @processors = {}
     @rewriters  = {}
+    @context = []
 
     public_methods.each do |name|
       case name
@@ -198,6 +204,10 @@ class SexpProcessor
     result = self.expected.new
 
     type = exp.first
+    raise "type should be a Symbol, not: #{exp.first.inspect}" unless
+      Symbol === type
+
+    @context.unshift type
 
     if @debug.has_key? type then
       str = exp.inspect
@@ -268,6 +278,7 @@ class SexpProcessor
 
     @process_level -= 1
 
+    @context.shift
     result
   end
 

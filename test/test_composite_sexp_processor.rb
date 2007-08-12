@@ -16,6 +16,7 @@ class FakeProcessor1 < SexpProcessor # ZenTest SKIP
 
   def default_processor(exp)
     result = []
+    result << exp.shift
     until exp.empty? do
       result << exp.shift.to_s + " woot"
     end
@@ -36,18 +37,18 @@ class TestCompositeSexpProcessor < Test::Unit::TestCase
   end
 
   def test_process_fake1
-    data = [1, 2, 3]
+    data = [:x, 1, 2, 3]
     @p << FakeProcessor1.new
     result = @p.process(data.dup)
-    assert_equal(data.map {|x| "#{x} woot"}, result)
+    assert_equal [:x, "1 woot", "2 woot", "3 woot"], result
   end
 
   def test_process_fake1_twice
-    data = [1, 2, 3]
+    data = [:x, 1, 2, 3]
     @p << FakeProcessor1.new
     @p << FakeProcessor1.new
     result = @p.process(data.dup)
-    assert_equal(data.map {|x| "#{x} woot woot"}, result)
+    assert_equal [:x, "1 woot woot", "2 woot woot", "3 woot woot"], result
   end
 
   def test_processors
