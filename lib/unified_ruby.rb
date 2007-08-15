@@ -1,5 +1,11 @@
 
 module UnifiedRuby
+  def rewrite_argscat(exp)
+    raise "unknown type #{exp.inspect}" unless exp[1][0] == :array
+    exp[1][0] = :arglist
+    exp
+  end
+
   def rewrite_bmethod(exp)
     exp[0] = :scope
 
@@ -27,11 +33,22 @@ module UnifiedRuby
 
   def rewrite_call(exp)
     args = exp.last
-    if Array === args and [:array, :arglist].include? args.first then
+    case args
+    when nil
+      exp.pop
+    when Array
+      case args.first
+      when :array, :arglist then
         args[0] = :arglist
-    else
-      exp << s(:arglist)
+      when :argscat, :splat then
+        # do nothing
+      else
+        raise "unknown type in call #{args.first.inspect}"
+      end
+      return exp
     end
+
+    exp << s(:arglist)
 
     exp
   end
@@ -108,16 +125,7 @@ module UnifiedRuby
     exp.insert 1, nil
     exp.push nil if exp.size <= 3
 
-    args = exp[-1]
-    if Array === args and args.first == :array then
-      args[0] = :arglist
-    elsif args.nil? then
-      exp[-1] = s(:arglist)
-    else
-      exp[-1] = s(:arglist, args)
-    end
-
-    exp
+    rewrite_call(exp)
   end
 
   def rewrite_resbody(exp) # TODO: clean up and move to unified
