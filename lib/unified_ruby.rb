@@ -104,7 +104,7 @@ module UnifiedRuby
 
   def rewrite_defs(exp)
     # move args up
-    args = exp.scope.block.args(true)
+    args = exp.scope.block.args(true) rescue nil
     exp.insert 3, args if args
 
     exp
@@ -160,9 +160,11 @@ module UnifiedRuby
       end
     end
 
-    raise unless result.first == :resbody
-    raise unless Sexp === result[1] and result[1].first == :array
-    raise unless result[2].nil? or (Sexp === result[2] and ! result[2].empty?)
+    structure = result.structure
+    raise "result structure wrong: #{structure[0..1].inspect}" unless
+      structure.flatten[0..1] == s(:resbody, :array)
+    raise "result body wrong: #{structure[2].inspect}" unless
+      structure[2].nil? or not structure[2].empty?
 
     result
   end

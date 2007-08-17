@@ -263,9 +263,11 @@ class TestSexp < SexpTestCase # ZenTest FULL
 
   def test_structure
     @sexp    = s(:a, 1, 2, s(:b, 3, 4), 5, 6)
+    backup = @sexp.deep_clone
     expected = s(:a, s(:b))
 
     assert_equal(expected, @sexp.structure)
+    assert_equal(backup, @sexp)
   end
 
   def test_sub

@@ -199,7 +199,7 @@ class Sexp < Array # ZenTest FULL
     if Array === self.first then
       result = self.first.structure
     else
-      result << self.shift
+      result << self.first
       self.grep(Array).each do |subexp|
         result << subexp.structure
       end

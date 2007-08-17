@@ -4,46 +4,31 @@ require 'pp'
 begin require 'rubygems' rescue LoadError end
 require 'parse_tree'
 
-def discover_new_classes_from
-  old_classes = []
-  ObjectSpace.each_object(Module) do |klass|
-    old_classes << klass
-  end
+$u ||= false
 
-  yield
+ARGV.push "-" if ARGV.empty?
 
-  new_classes = []
-  ObjectSpace.each_object(Module) do |klass|
-    new_classes << klass
-  end
+if $u then
+  require 'sexp_processor'
+  require 'unified_ruby'
 
-  new_classes -= old_classes
-  new_classes = [ eval($c) ] if defined? $c
-  new_classes
-end
-
-$f = false unless defined? $f
-
-new_classes = discover_new_classes_from do
-  ARGV.unshift "-" if ARGV.empty?
-  ARGV.each do |name|
-    if name == "-" then
-      code = $stdin.read
-      code = "class Example; def example; #{code}; end; end" if $f
-      eval code unless code.nil?
-    else
-      require name
-    end
+  class Unifier < SexpProcessor
+    include UnifiedRuby
   end
 end
 
-result = ParseTree.new.parse_tree(*new_classes)
+parse_tree = ParseTree.new
+unifier = Unifier.new if $u
 
-result = result[0][3][2][1][2..-1] if $f
+ARGV.each do |file|
+  ruby = file == "-" ? $stdin.read : File.read(file)
 
-unless defined? $q then
-  pp result
-else
-  p result
+  sexp = Sexp.from_array parse_tree.parse_tree_for_string(ruby, file).first
+  sexp = unifier.process(sexp) if $u
+
+  unless defined? $q then
+    pp sexp
+  else
+    p sexp
+  end
 end
-
