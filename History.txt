@@ -1,3 +1,25 @@
+=== 2.0.1 / 2007-08-21
+
+* 1 major enhancement:
+
+  * Rewrote parse_tree_show to use parse_tree_for_string.
+    * parse_tree_show adds -n=node filtering -u unifying, and -s structure-only.
+    * parse_tree_show no longer needs -f
+
+* 4 minor enhancements:
+
+  * Added context stack to SexpProcessor! YAY!!!
+  * Enforce type to be symbol in SexpProcessor... just makes life easier.
+  * Processing style change mode to UnifiedRuby. Prefer no rescues.
+  * Sexp#structure is no longer destructive.
+
+* 4 bug fixes:
+
+  * Added 1.8.4 compatibility fix.
+  * Added args lifting in :defs in UnifiedRuby.
+  * Fixed unifying argscat, splat, and a couple other oddities.
+  * Added process_call to UnifiedRuby *sigh* I'm a tard.
+
 === 2.0.0 / 2007-08-01
 
 * 2 major enhancements:

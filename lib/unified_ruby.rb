@@ -1,4 +1,6 @@
 
+$TESTING ||= false
+
 module UnifiedRuby
   def rewrite_argscat(exp)
     raise "unknown type #{exp.inspect}" unless exp[1][0] == :array
@@ -160,11 +162,15 @@ module UnifiedRuby
       end
     end
 
-    structure = result.structure
-    raise "result structure wrong: #{structure[0..1].inspect}" unless
-      structure.flatten[0..1] == s(:resbody, :array)
-    raise "result body wrong: #{structure[2].inspect}" unless
-      structure[2].nil? or not structure[2].empty?
+    if $DEBUG or $TESTING then
+      structure = result.structure
+      raise "result structure wrong: #{structure[0..1].inspect}" unless
+        structure.flatten[0] == :resbody
+      raise "result structure wrong: #{structure[0..1].inspect}" unless
+        s(:array, :splat, :argscat).include? structure.flatten[1]
+      raise "result body wrong: #{structure[2].inspect}" unless
+        structure[2].nil? or not structure[2].empty?
+    end
 
     result
   end

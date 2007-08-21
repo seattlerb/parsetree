@@ -3,8 +3,12 @@
 require 'pp'
 begin require 'rubygems' rescue LoadError end
 require 'parse_tree'
+require 'sexp'
 
 $u ||= false
+$n ||= false
+$s ||= false
+$n = $n.intern if $n
 
 ARGV.push "-" if ARGV.empty?
 
@@ -25,10 +29,15 @@ ARGV.each do |file|
 
   sexp = Sexp.from_array parse_tree.parse_tree_for_string(ruby, file).first
   sexp = unifier.process(sexp) if $u
+  sexp = sexp.structure if $s
 
-  unless defined? $q then
-    pp sexp
-  else
+  if $n then
+    sexp.each_of_type $n do |node|
+      p node
+    end
+  elsif defined? $q then
     p sexp
+  else
+    pp sexp
   end
 end
