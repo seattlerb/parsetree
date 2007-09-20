@@ -1,3 +1,13 @@
+=== 2.0.2 / 2007-09-20
+
+* 2 minor enhancements:
+  * Deactivated gcc-specific compiler flags unless ENV['ANAL'] or on my domain.
+  * Minor code cleanup - happier with -pedantic and the like.
+* 1 bug fix:
+  * FINALLY conquered the splat args bug on certain platforms/versions.
+    Special Thanks to Jonas Pfenniger for debugging this and providing
+    a patch.
+
 === 2.0.1 / 2007-08-21
 
 * 1 major enhancement:

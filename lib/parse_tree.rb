@@ -41,7 +41,7 @@ end
 
 class ParseTree
 
-  VERSION = '2.0.1'
+  VERSION = '2.0.2'
 
   ##
   # Front end translation method.
@@ -79,7 +79,7 @@ class ParseTree
 
   def initialize(include_newlines=$DEBUG)
     if include_newlines then
-      warn "WARNING: include_newlines=true from #{caller[0..9].join(', ')}"
+      warn "WAR\NING: include_newlines=true from #{caller[0..9].join(', ')}"
     end
     @include_newlines = include_newlines
   end
@@ -100,8 +100,6 @@ class ParseTree
   def parse_tree(*klasses)
     result = []
     klasses.each do |klass|
-      # TODO: remove this on v 1.1
-      raise "You should call parse_tree_for_method(#{klasses.first}, #{klass}) instead of parse_tree" if Symbol === klass or String === klass
       klassname = klass.name rescue '' # HACK klass.name should never be nil
                                    # Tempfile's DelegateClass(File) seems to
                                    # cause this
@@ -123,14 +121,12 @@ class ParseTree
 
       method_names.sort.each do |m|
         r = parse_tree_for_method(klass, m.to_sym)
-p m => r if r == [nil]
         code << r
       end
 
       klass.modules.each do |mod| # TODO: add a test for this damnit
         mod.instance_methods.each do |m|
           r = parse_tree_for_method(mod, m.to_sym)
-p m => r if r == [nil]
           code << r
         end
       end
@@ -254,13 +250,27 @@ p m => r if r == [nil]
     builder.include '"node.h"'
     builder.include '"st.h"'
     builder.include '"env.h"'
-    builder.add_compile_flags "-Wall"
-    builder.add_compile_flags "-W"
-    builder.add_compile_flags "-Wpointer-arith"
-    builder.add_compile_flags "-Wcast-qual"
-    builder.add_compile_flags "-Wcast-align"
-    builder.add_compile_flags "-Wwrite-strings"
-    builder.add_compile_flags "-Wmissing-noreturn"
+
+    if ENV['ANAL'] or ENV['DOMAIN'] =~ /zenspider/ then
+      builder.add_compile_flags "-Wall"
+      builder.add_compile_flags "-W"
+      builder.add_compile_flags "-Wpointer-arith"
+      builder.add_compile_flags "-Wcast-qual"
+      builder.add_compile_flags "-Wcast-align"
+      builder.add_compile_flags "-Wwrite-strings"
+      builder.add_compile_flags "-Wmissing-noreturn"
+      builder.add_compile_flags "-Wno-long-long"
+
+      # NOTE: this flag doesn't work w/ gcc 2.95.x - the FreeBSD default
+      # builder.add_compile_flags "-Wno-strict-aliasing"
+      # ruby.h screws these up hardcore:
+      # builder.add_compile_flags "-Wundef"
+      # builder.add_compile_flags "-Wconversion"
+      # builder.add_compile_flags "-Wstrict-prototypes"
+      # builder.add_compile_flags "-Wmissing-prototypes"
+      # builder.add_compile_flags "-Wsign-compare"
+    end
+
     # NOTE: If you get weird compiler errors like:
     #    dereferencing type-punned pointer will break strict-aliasing rules
     # PLEASE do one of the following:
@@ -268,18 +278,6 @@ p m => r if r == [nil]
     # 2) Fix it and send me the patch
     # 3) (quick, but dirty and bad), comment out the following line:
     builder.add_compile_flags "-Werror"
-    # NOTE: this flag doesn't work w/ gcc 2.95.x - the FreeBSD default
-    # builder.add_compile_flags "-Wno-strict-aliasing"
-    # ruby.h screws these up hardcore:
-    # builder.add_compile_flags "-Wundef"
-    # builder.add_compile_flags "-Wconversion"
-    # builder.add_compile_flags "-Wstrict-prototypes"
-    # builder.add_compile_flags "-Wmissing-prototypes"
-    # builder.add_compile_flags "-Wsign-compare"
-
-    def self.if_version(test, version, str)
-      RUBY_VERSION.send(test, version) ? str : ""
-    end
 
     builder.prefix %{
         #define nd_3rd   u3.node
@@ -300,7 +298,9 @@ p m => r if r == [nil]
           VALUE klass, rklass;
           VALUE recv;
           ID id, oid;
-#{if_version :>, "1.8.2", "int safe_level;"}
+#if RUBY_VERSION_CODE > 182
+          int safe_level;
+#endif
           NODE *body;
         };
 
@@ -376,7 +376,7 @@ again_no_block:
       }
       contnode = node->nd_next;
 
-      // FIX: this will break the moment there is a block w/in a block
+      /* FIX: this will break the moment there is a block w/in a block */
       old_ary = ary;
       ary = current;
       node = node->nd_head;
@@ -501,10 +501,12 @@ again_no_block:
       add_to_parse_tree(current, node->nd_3rd, newlines, locals);
     break;
 
+  /*
   // rescue body:
   // begin stmt rescue exception => var; stmt; [rescue e2 => v2; s2;]* end
   // stmt rescue stmt
   // a = b rescue c
+  */
 
   case NODE_RESBODY:
       if (node->nd_3rd) {
@@ -576,7 +578,7 @@ again_no_block:
     }
     break;
 
-#{if_version :>, "1.9", '#if 0'}
+#if RUBY_VERSION_CODE < 190
   case NODE_DMETHOD:
     {
       struct METHOD *data;
@@ -585,10 +587,9 @@ again_no_block:
       add_to_parse_tree(current, data->body, newlines, locals);
       break;
     }
-#{if_version :>, "1.9", '#endif'}
+#endif
 
   case NODE_METHOD:
-    fprintf(stderr, "u1 = %p u2 = %p u3 = %p\\n", node->nd_1st, node->nd_2nd, node->nd_3rd);
     add_to_parse_tree(current, node->nd_3rd, newlines, locals);
     break;
 
@@ -598,10 +599,9 @@ again_no_block:
 
   case NODE_OP_ASGN1:
     add_to_parse_tree(current, node->nd_recv, newlines, locals);
-#{if_version :>,  "1.8.4", "#if 0"}
-#{if_version :<=, "1.8.4", "#if 1"}
+#if RUBY_VERSION_CODE < 185
     add_to_parse_tree(current, node->nd_args->nd_next, newlines, locals);
-    rb_ary_pop(rb_ary_entry(current, -1)); // no idea why I need this
+    rb_ary_pop(rb_ary_entry(current, -1)); /* no idea why I need this */
 #else
     add_to_parse_tree(current, node->nd_args->nd_2nd, newlines, locals);
 #endif
@@ -664,9 +664,8 @@ again_no_block:
     add_to_parse_tree(current, node->nd_value, newlines, locals);
     break;
 
-  case NODE_VALIAS:           // u1 u2 (alias $global $global2)
-#{if_version  :>, "1.8.4", "#if 0"}
-#{if_version :<=, "1.8.4", "#if 1"}
+  case NODE_VALIAS:           /* u1 u2 (alias $global $global2) */
+#if RUBY_VERSION_CODE < 185
     rb_ary_push(current, ID2SYM(node->u2.id));
     rb_ary_push(current, ID2SYM(node->u1.id));
 #else
@@ -674,9 +673,8 @@ again_no_block:
     rb_ary_push(current, ID2SYM(node->u2.id));
 #endif
     break;
-  case NODE_ALIAS:            // u1 u2 (alias :blah :blah2)
-#{if_version  :>, "1.8.4", "#if 0"}
-#{if_version :<=, "1.8.4", "#if 1"}
+  case NODE_ALIAS:            /* u1 u2 (alias :blah :blah2) */
+#if RUBY_VERSION_CODE < 185
     rb_ary_push(current, wrap_into_node("lit", ID2SYM(node->u2.id)));
     rb_ary_push(current, wrap_into_node("lit", ID2SYM(node->u1.id)));
 #else
@@ -685,16 +683,15 @@ again_no_block:
 #endif
     break;
 
-  case NODE_UNDEF:            // u2    (undef name, ...)
-#{if_version  :>, "1.8.4", "#if 0"}
-#{if_version :<=, "1.8.4", "#if 1"}
+  case NODE_UNDEF:            /* u2    (undef name, ...) */
+#if RUBY_VERSION_CODE < 185
     rb_ary_push(current, wrap_into_node("lit", ID2SYM(node->u2.id)));
 #else
     add_to_parse_tree(current, node->nd_value, newlines, locals);
 #endif
     break;
 
-  case NODE_COLON3:           // u2    (::OUTER_CONST)
+  case NODE_COLON3:           /* u2    (::OUTER_CONST) */
     rb_ary_push(current, ID2SYM(node->u2.id));
     break;
 
@@ -777,28 +774,37 @@ again_no_block:
     break;
 
   case NODE_ARGS: {
-    long arg_count = (long)node->nd_rest;
-    if (locals && (node->nd_cnt || node->nd_opt || arg_count != -1)) {
-      int i;
-      int max_args;
-      NODE *optnode;
+    NODE *optnode;
+    int i = 0, max_args = node->nd_cnt;
 
-      max_args = node->nd_cnt;
-      for (i = 0; i < max_args; i++) {
-        // regular arg names
-        rb_ary_push(current, ID2SYM(locals[i + 3]));
+    /* push regular argument names */
+    for (; i < max_args; i++) {
+      rb_ary_push(current, ID2SYM(locals[i + 3]));
+    }
+
+    /* look for optional arguments */
+    optnode = node->nd_opt;
+    while (optnode) {
+      rb_ary_push(current, ID2SYM(locals[i + 3]));
+      i++;
+      optnode = optnode->nd_next;
+    }
+
+    /* look for vargs */
+#if RUBY_VERSION_CODE > 184
+    if (node->nd_rest) {
+      VALUE sym = rb_str_new2("*");
+      if (locals[i + 3]) {
+        rb_str_concat(sym, rb_str_new2(rb_id2name(locals[i + 3])));
       }
-
-      optnode = node->nd_opt;
-      while (optnode) {
-        // optional arg names
-        rb_ary_push(current, ID2SYM(locals[i + 3]));
-        i++;
-        optnode = optnode->nd_next;
-      }
-
+      sym = rb_str_intern(sym);
+      rb_ary_push(current, sym);
+    }
+#else
+    {
+      long arg_count = (long)node->nd_rest;
       if (arg_count > 0) {
-        // *arg name
+        /* *arg name */
         VALUE sym = rb_str_new2("*");
         if (locals[i + 3]) {
           rb_str_concat(sym, rb_str_new2(rb_id2name(locals[i + 3])));
@@ -806,24 +812,22 @@ again_no_block:
         sym = rb_str_intern(sym);
         rb_ary_push(current, sym);
       } else if (arg_count == 0) {
-        // nothing to do in this case, empty list
+        /* nothing to do in this case, empty list */
       } else if (arg_count == -1) {
-        // nothing to do in this case, handled above
+        /* nothing to do in this case, handled above */
       } else if (arg_count == -2) {
-        // nothing to do in this case, no name == no use
-#if RUBY_VERSION_CODE < 185
+        /* nothing to do in this case, no name == no use */
         rb_ary_push(current, rb_str_intern(rb_str_new2("*")));
-#endif
       } else {
         rb_raise(rb_eArgError,
                  "not a clue what this arg value is: %ld", arg_count);
       }
+    }
+#endif
 
-      optnode = node->nd_opt;
-      // block?
-      if (optnode) {
-        add_to_parse_tree(current, node->nd_opt, newlines, locals);
-      }
+    optnode = node->nd_opt;
+    if (optnode) {
+      add_to_parse_tree(current, node->nd_opt, newlines, locals);
     }
   }  break;
 
@@ -837,13 +841,13 @@ again_no_block:
     rb_ary_push(current, ID2SYM(node->nd_vid));
     break;
 
-  case NODE_XSTR:             // u1    (%x{ls})
-  case NODE_STR:              // u1
+  case NODE_XSTR:             /* u1    (%x{ls}) */
+  case NODE_STR:              /* u1 */
   case NODE_LIT:
     rb_ary_push(current, node->nd_lit);
     break;
 
-  case NODE_MATCH:            // u1 -> [:lit, u1]
+  case NODE_MATCH:            /* u1 -> [:lit, u1] */
     {
       rb_ary_push(current, wrap_into_node("lit", node->nd_lit));
     }
@@ -853,28 +857,28 @@ again_no_block:
     rb_ary_push(current, INT2FIX(nd_line(node)));
     rb_ary_push(current, rb_str_new2(node->nd_file));
 
-    if (! RTEST(newlines)) rb_ary_pop(ary); // nuke it
+    if (! RTEST(newlines)) rb_ary_pop(ary); /* nuke it */
 
     node = node->nd_next;
     goto again;
     break;
 
-  case NODE_NTH_REF:          // u2 u3 ($1) - u3 is local_cnt('~') ignorable?
+  case NODE_NTH_REF:          /* u2 u3 ($1) - u3 is local_cnt('~') ignorable? */
     rb_ary_push(current, INT2FIX(node->nd_nth));
     break;
 
-  case NODE_BACK_REF:         // u2 u3 ($& etc)
+  case NODE_BACK_REF:         /* u2 u3 ($& etc) */
     {
     char c = node->nd_nth;
     rb_ary_push(current, rb_str_intern(rb_str_new(&c, 1)));
     }
     break;
 
-  case NODE_BLOCK_ARG:        // u1 u3 (def x(&b)
+  case NODE_BLOCK_ARG:        /* u1 u3 (def x(&b) */
     rb_ary_push(current, ID2SYM(node->u1.id));
     break;
 
-  // these nodes are empty and do not require extra work:
+  /* these nodes are empty and do not require extra work: */
   case NODE_RETRY:
   case NODE_FALSE:
   case NODE_NIL:
@@ -887,12 +891,12 @@ again_no_block:
 
   case NODE_SPLAT:
   case NODE_TO_ARY:
-  case NODE_SVALUE:             // a = b, c
+  case NODE_SVALUE:             /* a = b, c */
     add_to_parse_tree(current, node->nd_head, newlines, locals);
     break;
 
-  case NODE_ATTRASGN:           // literal.meth = y u1 u2 u3
-    // node id node
+  case NODE_ATTRASGN:           /* literal.meth = y u1 u2 u3 */
+    /* node id node */
     if (node->nd_1st == RNODE(1)) {
       add_to_parse_tree(current, NEW_SELF(), newlines, locals);
     } else {
@@ -906,8 +910,8 @@ again_no_block:
     add_to_parse_tree(current, node->nd_2nd, newlines, locals);
     break;
 
-  case NODE_POSTEXE:            // END { ... }
-    // Nothing to do here... we are in an iter block
+  case NODE_POSTEXE:            /* END { ... } */
+    /* Nothing to do here... we are in an iter block */
     break;
 
   case NODE_CFUNC:
@@ -916,28 +920,28 @@ again_no_block:
     rb_ary_push(current, INT2NUM(node->nd_argc));
     break;
 
-#{if_version :<, "1.9", "#if 0"}
+#if RUBY_VERSION_CODE >= 190
   case NODE_ERRINFO:
   case NODE_VALUES:
   case NODE_PRELUDE:
   case NODE_LAMBDA:
     puts("no worky in 1.9 yet");
     break;
-#{if_version :<, "1.9", "#endif"}
+#endif
 
-  // Nodes we found but have yet to decypher
-  // I think these are all runtime only... not positive but...
-  case NODE_MEMO:               // enum.c zip
+  /* Nodes we found but have yet to decypher */
+  /* I think these are all runtime only... not positive but... */
+  case NODE_MEMO:               /* enum.c zip */
   case NODE_CREF:
-  // #defines:
-  // case NODE_LMASK:
-  // case NODE_LSHIFT:
+  /* #defines: */
+  /* case NODE_LMASK: */
+  /* case NODE_LSHIFT: */
   default:
     rb_warn("Unhandled node #%d type '%s'", nd_type(node), rb_id2name(SYM2ID(rb_ary_entry(node_names, nd_type(node)))));
     if (RNODE(node)->u1.node != NULL) rb_warning("unhandled u1 value");
     if (RNODE(node)->u2.node != NULL) rb_warning("unhandled u2 value");
     if (RNODE(node)->u3.node != NULL) rb_warning("unhandled u3 value");
-    if (RTEST(ruby_debug)) fprintf(stderr, "u1 = %p u2 = %p u3 = %p\\n", node->nd_1st, node->nd_2nd, node->nd_3rd);
+    if (RTEST(ruby_debug)) fprintf(stderr, "u1 = %p u2 = %p u3 = %p\\n", (void*)node->nd_1st, (void*)node->nd_2nd, (void*)node->nd_3rd);
     rb_ary_push(current, INT2FIX(-99));
     rb_ary_push(current, INT2FIX(nd_type(node)));
     break;
@@ -963,14 +967,14 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE newlines, VALU
   VALUE result = rb_ary_new();
   VALUE version = rb_const_get_at(rb_cObject,rb_intern("RUBY_VERSION"));
 
-  (void) self; // quell warnings
+  (void) self; /* quell warnings */
 
   if (strcmp(StringValuePtr(version), #{RUBY_VERSION.inspect})) {
     rb_fatal("bad version, %s != #{RUBY_VERSION}\\n", StringValuePtr(version));
   }
 
   id = rb_to_id(method);
-  if (RTEST(is_cls_meth)) { // singleton method
+  if (RTEST(is_cls_meth)) { /* singleton method */
     klass = CLASS_OF(klass);
   }
   if (st_lookup(RCLASS(klass)->m_tbl, id, &n)) {
@@ -1000,7 +1004,7 @@ static VALUE parse_tree_for_str(VALUE source, VALUE filename, VALUE line,
   NODE *node = NULL;
   int critical;
 
-  (void) self; // quell warnings
+  (void) self; /* quell warnings */
 
   tmp = rb_check_string_type(filename);
   if (NIL_P(tmp)) {
