@@ -180,3 +180,11 @@ module UnifiedRuby
     rewrite_fcall(exp)
   end
 end
+
+##
+# Quick and easy SexpProcessor that unified the sexp structure.
+
+class Unifier < SexpProcessor
+  include UnifiedRuby
+end
+
