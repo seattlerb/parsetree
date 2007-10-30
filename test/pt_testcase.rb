@@ -1041,6 +1041,14 @@ end",
                       [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]],
     },
 
+    "proc_zero_args" => {
+      "Ruby" => "proc { || (x + 1) }",
+      "ParseTree" => [:iter,
+                      [:fcall, :proc],
+                      0,
+                      [:call, [:vcall, :x], :+, [:array, [:lit, 1]]]],
+    },
+
     "proc_no_args" => {
       "Ruby" => "proc { (x + 1) }",
       "ParseTree" => [:iter,

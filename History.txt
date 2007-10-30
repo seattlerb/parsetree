@@ -1,3 +1,10 @@
+=== 2.0.3 / 2007-10-30
+
+* 2 minor enhancements:
+
+  * Added Unifier (a SexpProcessor) to unified_ruby.rb.
+  * Added ability to tell proc {} (nil arg slot) from proc {||} (0 arg slot)
+
 === 2.0.2 / 2007-09-20
 
 * 2 minor enhancements:
