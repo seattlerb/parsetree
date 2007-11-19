@@ -319,7 +319,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "call_command" => {
-      "Ruby"        => "1.b c",
+      "Ruby"        => "1.b(c)",
       "ParseTree"   => [:call, [:lit, 1], :b, [:array, [:vcall, :c]]],
     },
 
@@ -498,31 +498,37 @@ class ParseTreeTestCase < Test::Unit::TestCase
     "conditional_post_unless_not"  => {
       "Ruby"        => "a unless not b",
       "ParseTree"   => [:if, [:vcall, :b], [:vcall, :a], nil],
+      "Ruby2Ruby"   => "a if b"
     },
 
     "conditional_post_if_not"  => {
       "Ruby"        => "a if not b",
       "ParseTree"   => [:if, [:vcall, :b], nil, [:vcall, :a]],
+      "Ruby2Ruby"   => "a unless b"
     },
 
     "conditional_pre_if"  => {
       "Ruby"        => "if b then a end",
       "ParseTree"   => [:if, [:vcall, :b], [:vcall, :a], nil],
+      "Ruby2Ruby"   => "a if b"
     },
 
     "conditional_pre_unless"  => {
       "Ruby"        => "unless b then a end",
       "ParseTree"   => [:if, [:vcall, :b], nil, [:vcall, :a]],
+      "Ruby2Ruby"   => "a unless b"
     },
 
     "conditional_pre_unless_not"  => {
       "Ruby"        => "unless not b then a end",
       "ParseTree"   => [:if, [:vcall, :b], [:vcall, :a], nil],
+      "Ruby2Ruby"   => "a if b"
     },
 
     "conditional_pre_if_not"  => {
       "Ruby"        => "if not b then a end",
       "ParseTree"   => [:if, [:vcall, :b], nil, [:vcall, :a]],
+      "Ruby2Ruby"   => "a unless b"
     },
 
     "const"  => {
@@ -569,6 +575,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:dasgn_curr, :n],
                          [:lasgn, :t,
                           [:call, [:lvar, :t], :+, [:array, [:dvar, :n]]]]]],
+      "Ruby2Ruby"   => "t = 0\nns.each { |n| t = (t + n) }\n",
     },
 
     "dasgn_curr" => {
