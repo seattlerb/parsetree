@@ -147,9 +147,44 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:call, [:lvar, :y], :+, [:array, [:lit, 2]]]]],
     },
 
-    "block_pass"  => {
+    "block_pass_fcall_0"  => {
       "Ruby"        => "a(&b)",
       "ParseTree"   => [:block_pass, [:vcall, :b], [:fcall, :a]],
+    },
+
+    "block_pass_fcall_1"  => {
+      "Ruby"        => "a(4, &b)",
+      "ParseTree"   => [:block_pass,
+                        [:vcall, :b],
+                        [:fcall, :a, [:array, [:lit, 4]]]],
+    },
+
+    "block_pass_fcall_n"  => {
+      "Ruby"        => "a(1, 2, 3, &b)",
+      "ParseTree"   => [:block_pass,
+                        [:vcall, :b],
+                        [:fcall, :a,
+                         [:array, [:lit, 1], [:lit, 2], [:lit, 3]]]],
+    },
+
+    "block_pass_call_0"  => {
+      "Ruby"        => "a.b(&c)",
+      "ParseTree"   => [:block_pass, [:vcall, :c], [:call, [:vcall, :a], :b]],
+    },
+
+    "block_pass_call_1"  => {
+      "Ruby"        => "a.b(4, &c)",
+      "ParseTree"   => [:block_pass,
+                        [:vcall, :c],
+                        [:call, [:vcall, :a], :b, [:array, [:lit, 4]]]],
+    },
+
+    "block_pass_call_n"  => {
+      "Ruby"        => "a.b(1, 2, 3, &c)",
+      "ParseTree"   => [:block_pass,
+                        [:vcall, :c],
+                        [:call, [:vcall, :a], :b,
+                         [:array, [:lit, 1], [:lit, 2], [:lit, 3]]]],
     },
 
     "block_pass_args_and_splat" => {
@@ -467,7 +502,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:defined, [:gvar, :$x]],
     },
 
-    "defn_args" => {
+    "defn_args_mand_opt_splat_block" => {
       "Ruby"      => "def x(a, b = 42, \*c, &d)\n  p(a, b, c, d)\nend",
       "ParseTree" => [:defn, :x,
                       [:scope,
@@ -478,6 +513,31 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:fcall, :p,
                          [:array, [:lvar, :a], [:lvar, :b],
                           [:lvar, :c], [:lvar, :d]]]]]]
+    },
+
+    "defn_args_mand_opt_block" => {
+      "Ruby"      => "def x(a, b = 42, &d)\n  p(a, b, d)\nend",
+      "ParseTree" => [:defn, :x,
+                      [:scope,
+                       [:block,
+                        [:args, :a, :b,
+                         [:block, [:lasgn, :b, [:lit, 42]]]],
+                         [:block_arg, :d],
+                        [:fcall, :p,
+                         [:array, [:lvar, :a], [:lvar, :b],
+                          [:lvar, :d]]]]]]
+    },
+
+    "defn_args_opt_block" => {
+      "Ruby"      => "def x(b = 42, &d)\n  p(b, d)\nend",
+      "ParseTree" => [:defn, :x,
+                      [:scope,
+                       [:block,
+                        [:args, :b,
+                         [:block, [:lasgn, :b, [:lit, 42]]]],
+                         [:block_arg, :d],
+                        [:fcall, :p,
+                         [:array, [:lvar, :b], [:lvar, :d]]]]]]
     },
 
     "defn_empty" => {
@@ -589,6 +649,29 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:str, "y"]]],
     },
 
+    "dstr_2" => {
+      "Ruby"        => "argl = 1\n\"x#\{(\"%.2f\" % 3.14159)}y\"\n",
+      "ParseTree"   =>   [:block,
+                          [:lasgn, :argl, [:lit, 1]],
+                          [:dstr,
+                           "x",
+                           [:call, [:str, "%.2f"], :%, [:array, [:lit, 3.14159]]],
+                           [:str, "y"]]],
+    },
+
+    "dstr_3" => {
+      "Ruby"        => "max = 2\nargl = 1\n\"x#\{(\"%.#\{max}f\" % 3.14159)}y\"\n",
+      "ParseTree"   =>   [:block,
+                          [:lasgn, :max, [:lit, 2]],
+                          [:lasgn, :argl, [:lit, 1]],
+                          [:dstr,
+                           "x",
+                           [:call,
+                            [:dstr, "%.", [:lvar, :max], [:str, "f"]],
+                            :%, [:array, [:lit, 3.14159]]],
+                           [:str, "y"]]],
+    },
+
     "dsym"  => {
       "Ruby"        => ":\"x#\{(1 + 1)}y\"",
       "ParseTree"   => [:dsym, "x",
@@ -647,6 +730,11 @@ end",
     "fcall"  => {
       "Ruby"        => "p(4)",
       "ParseTree"   => [:fcall, :p, [:array, [:lit, 4]]],
+    },
+
+    "fcall_keyword"  => {
+      "Ruby"        => "nil if block_given?",
+      "ParseTree"   => [:if, [:fcall, :block_given?], [:nil], nil]
     },
 
     "flip2"  => {
@@ -986,6 +1074,11 @@ end",
                          [:array, [:lit, 2]], "&&".intern, [:lit, 11]], # s->e
                         [:op_asgn1, [:lvar, :b],
                          [:array, [:lit, 3]], :+, [:lit, 12]]],
+    },
+
+    "op_asgn1_ivar" => {
+      "Ruby"        => "@v ||= {  }",
+      "ParseTree"   => [:op_asgn_or, [:ivar, :@v], [:iasgn, :@v, [:hash]]],
     },
 
     "op_asgn2" => {

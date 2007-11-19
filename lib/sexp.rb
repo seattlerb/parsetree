@@ -1,4 +1,3 @@
-require 'parse_tree'
 
 $TESTING ||= false # unless defined $TESTING
 
@@ -26,6 +25,7 @@ class Sexp < Array # ZenTest FULL
   # of +klass+ until a method definition is found.
 
   def self.for(klass, method = nil, walk_ancestors = false)
+    require 'parse_tree'
     sexp = if walk_ancestors and method then
              klass.ancestors.each do |klass|
                sexp = ParseTree.translate klass, method
