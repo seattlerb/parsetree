@@ -273,8 +273,36 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "call_arglist"  => {
-      "Ruby"        => "puts(42)",
-      "ParseTree"   => [:fcall, :puts, [:array, [:lit, 42]]],
+      "Ruby"        => "o.puts(42)",
+      "ParseTree"   => [:call, [:vcall, :o], :puts, [:array, [:lit, 42]]],
+    },
+
+    "call_arglist_hash"  => {
+      "Ruby"        => "o.m(:a => 1, :b => 2)",
+      "ParseTree"   => [:call,
+                        [:vcall, :o], :m,
+                        [:array,
+                         [:hash, [:lit, :a], [:lit, 1], [:lit, :b], [:lit, 2]]]],
+    },
+
+    "call_arglist_norm_hash"  => {
+      "Ruby"        => "o.m(42, :a => 1, :b => 2)",
+      "ParseTree"   => [:call,
+                        [:vcall, :o], :m,
+                        [:array,
+                         [:lit, 42],
+                         [:hash, [:lit, :a], [:lit, 1], [:lit, :b], [:lit, 2]]]],
+    },
+
+    "call_arglist_norm_hash_splat"  => {
+      "Ruby"        => "o.m(42, :a => 1, :b => 2, *c)",
+      "ParseTree"   => [:call,
+                        [:vcall, :o], :m,
+                        [:argscat,
+                         [:array,
+                          [:lit, 42],
+                          [:hash, [:lit, :a], [:lit, 1], [:lit, :b], [:lit, 2]]],
+                         [:vcall, :c]]],
     },
 
     "call_expr" => {
@@ -289,6 +317,12 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "Ruby"        => "a[42]",
       "ParseTree"   => [:call, [:vcall, :a], :[], [:array, [:lit, 42]]],
     },
+
+    "call_command" => {
+      "Ruby"        => "1.b c",
+      "ParseTree"   => [:call, [:lit, 1], :b, [:array, [:vcall, :c]]],
+    },
+
 
     "case" => {
       "Ruby"        => "var = 2\nresult = \"\"\ncase var\nwhen 1 then\n  puts(\"something\")\n  result = \"red\"\nwhen 2, 3 then\n  result = \"yellow\"\nwhen 4 then\n  # do nothing\nelse\n  result = \"green\"\nend\ncase result\nwhen \"red\" then\n  var = 1\nwhen \"yellow\" then\n  var = 2\nwhen \"green\" then\n  var = 3\nelse\n  # do nothing\nend\n",
@@ -451,6 +485,46 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"  => [:if, [:true], nil, [:if, [:false], [:return], nil]],
     },
 
+    "conditional_post_if"  => {
+      "Ruby"        => "a if b",
+      "ParseTree"   => [:if, [:vcall, :b], [:vcall, :a], nil],
+    },
+
+    "conditional_post_unless"  => {
+      "Ruby"        => "a unless b",
+      "ParseTree"   => [:if, [:vcall, :b], nil, [:vcall, :a]],
+    },
+
+    "conditional_post_unless_not"  => {
+      "Ruby"        => "a unless not b",
+      "ParseTree"   => [:if, [:vcall, :b], [:vcall, :a], nil],
+    },
+
+    "conditional_post_if_not"  => {
+      "Ruby"        => "a if not b",
+      "ParseTree"   => [:if, [:vcall, :b], nil, [:vcall, :a]],
+    },
+
+    "conditional_pre_if"  => {
+      "Ruby"        => "if b then a end",
+      "ParseTree"   => [:if, [:vcall, :b], [:vcall, :a], nil],
+    },
+
+    "conditional_pre_unless"  => {
+      "Ruby"        => "unless b then a end",
+      "ParseTree"   => [:if, [:vcall, :b], nil, [:vcall, :a]],
+    },
+
+    "conditional_pre_unless_not"  => {
+      "Ruby"        => "unless not b then a end",
+      "ParseTree"   => [:if, [:vcall, :b], [:vcall, :a], nil],
+    },
+
+    "conditional_pre_if_not"  => {
+      "Ruby"        => "if not b then a end",
+      "ParseTree"   => [:if, [:vcall, :b], nil, [:vcall, :a]],
+    },
+
     "const"  => {
       "Ruby"        => "X",
       "ParseTree"   => [:const, :X],
@@ -484,6 +558,17 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:dasgn_curr, :y],
                          [:dasgn, :x,
                           [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]],
+    },
+
+    "dasgn_mixed" => {
+      "Ruby"        => "t = 0\nns.each { |n| t += n }\n",
+      "ParseTree"   => [:block,
+                        [:lasgn, :t, [:lit, 0]],
+                        [:iter,
+                         [:call, [:vcall, :ns], :each],
+                         [:dasgn_curr, :n],
+                         [:lasgn, :t,
+                          [:call, [:lvar, :t], :+, [:array, [:dvar, :n]]]]]],
     },
 
     "dasgn_curr" => {
@@ -727,14 +812,39 @@ end",
       "Ruby2Ruby" => "def an_alias(x)\n  (x + 1)\nend"
     },
 
-    "fcall"  => {
-      "Ruby"        => "p(4)",
-      "ParseTree"   => [:fcall, :p, [:array, [:lit, 4]]],
+    "fcall_arglist"  => {
+      "Ruby"        => "m(42)",
+      "ParseTree"   => [:fcall, :m, [:array, [:lit, 42]]],
+    },
+
+    "fcall_arglist_hash"  => {
+      "Ruby"        => "m(:a => 1, :b => 2)",
+      "ParseTree"   => [:fcall, :m,
+                        [:array,
+                         [:hash, [:lit, :a], [:lit, 1], [:lit, :b], [:lit, 2]]]],
+    },
+
+    "fcall_arglist_norm_hash"  => {
+      "Ruby"        => "m(42, :a => 1, :b => 2)",
+      "ParseTree"   => [:fcall, :m,
+                        [:array,
+                         [:lit, 42],
+                         [:hash, [:lit, :a], [:lit, 1], [:lit, :b], [:lit, 2]]]],
+    },
+
+    "fcall_arglist_norm_hash_splat"  => {
+      "Ruby"        => "m(42, :a => 1, :b => 2, *c)",
+      "ParseTree"   => [:fcall, :m,
+                        [:argscat,
+                         [:array,
+                          [:lit, 42],
+                          [:hash, [:lit, :a], [:lit, 1], [:lit, :b], [:lit, 2]]],
+                         [:vcall, :c]]],
     },
 
     "fcall_keyword"  => {
-      "Ruby"        => "nil if block_given?",
-      "ParseTree"   => [:if, [:fcall, :block_given?], [:nil], nil]
+      "Ruby"        => "42 if block_given?",
+      "ParseTree"   => [:if, [:fcall, :block_given?], [:lit, 42], nil],
     },
 
     "flip2"  => {
