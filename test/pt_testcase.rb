@@ -892,7 +892,9 @@ end",
 
     "for"  => {
       "Ruby"        => "for o in ary\n  puts(o)\nend\n",
-      "ParseTree"   => [:for, [:vcall, :ary], [:lasgn, :o],
+      "ParseTree"   => [:for,
+                        [:vcall, :ary],
+                        [:lasgn, :o],
                         [:fcall, :puts, [:array, [:lvar, :o]]]],
     },
 
@@ -1017,6 +1019,44 @@ end",
                           [:array, [:call, [:dvar, :x], :to_s]]],
                          [:fcall, :puts,
                           [:array, [:call, [:dvar, :y], :to_s]]]]]]],
+    },
+
+    "iteration7" => {
+      "Ruby"        => "a { |b, c| p(c) }",
+      "ParseTree"   => [:iter,
+                        [:fcall, :a],
+                        [:masgn,
+                         [:array, [:dasgn_curr, :b], [:dasgn_curr, :c]]],
+                        [:fcall, :p, [:array, [:dvar, :c]]]],
+    },
+
+    "iteration8" => {
+      "Ruby"        => "a { |b, c, *d| p(c) }",
+      "ParseTree"   => [:iter,
+                        [:fcall, :a],
+                        [:masgn,
+                         [:array, [:dasgn_curr, :b], [:dasgn_curr, :c]],
+                         [:dasgn_curr, :d]],
+                        [:fcall, :p, [:array, [:dvar, :c]]]],
+    },
+
+    "iteration9" => {
+      "Ruby"        => "a { |b, c, *| p(c) }",
+      "ParseTree"   => [:iter,
+                        [:fcall, :a],
+                        [:masgn,
+                         [:array, [:dasgn_curr, :b], [:dasgn_curr, :c]],
+                         [:splat]],
+                        [:fcall, :p, [:array, [:dvar, :c]]]],
+    },
+
+    "iteration9" => {
+      "Ruby"        => "a { |*| p(c) }",
+      "ParseTree"   => [:iter,
+                        [:fcall, :a],
+                        [:masgn,
+                         [:splat]],
+                        [:fcall, :p, [:array, [:vcall, :c]]]],
     },
 
     "ivar" => {
@@ -1169,6 +1209,14 @@ end",
                         [:fcall, :loop],
                         nil,
                         [:if, [:false], [:next], nil]],
+    },
+
+    "next_arg"  => {
+      "Ruby"        => "loop { next 42 if false }",
+      "ParseTree"   => [:iter,
+                        [:fcall, :loop],
+                        nil,
+                        [:if, [:false], [:next, [:lit, 42]], nil]],
     },
 
     "not"  => {

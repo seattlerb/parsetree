@@ -288,7 +288,7 @@ class ParseTree
       static VALUE wrap_into_node(const char * name, VALUE val) {
         VALUE n = rb_ary_new();
         rb_ary_push(n, ID2SYM(rb_intern(name)));
-        rb_ary_push(n, val);
+        if (val) rb_ary_push(n, val);
         return n;
       }
     }
@@ -652,8 +652,12 @@ again_no_block:
 
   case NODE_MASGN:
     add_to_parse_tree(current, node->nd_head, newlines, locals);
-    if (node->nd_args && node->nd_args != (NODE *)-1) {
-      add_to_parse_tree(current, node->nd_args, newlines, locals);
+    if (node->nd_args) {
+      if (node->nd_args != (NODE *)-1) {
+        add_to_parse_tree(current, node->nd_args, newlines, locals);
+      } else {
+        rb_ary_push(current, wrap_into_node("splat", 0));
+      }
     }
     add_to_parse_tree(current, node->nd_value, newlines, locals);
     break;
