@@ -130,6 +130,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:begin, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]],
     },
 
+    "begin_def"  => {
+      "Ruby"        => "def m\n  begin\n\n  end\nend",
+      "ParseTree"   => [:defn, :m, [:scope, [:block, [:args], [:nil]]]],
+    },
+
     "begin_rescue_ensure" => {
       "Ruby" => "begin\n    rescue\n      # do nothing\n  ensure\n    nil\nend",
       "ParseTree" => [:begin,
@@ -698,6 +703,17 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:call, [:lvar, :y], :+, [:array, [:lit, 1]]]]]],
     },
 
+    "defs_args_mand_opt_splat_block" => {
+      "Ruby"      => "def self.x(a, b = 42, \*c, &d)\n  (a + b)\nend",
+      "ParseTree" => [:defs, [:self], :x,
+                      [:scope,
+                       [:block,
+                        [:args, :a, :b, :"*c",
+                         [:block, [:lasgn, :b, [:lit, 42]]]],
+                        [:block_arg, :d],
+                        [:call, [:lvar, :a], :+, [:array, [:lvar, :b]]]]]],
+    },
+
     "dmethod" => {
       "Ruby"        => [Examples, :dmethod_added],
       "ParseTree"   => [:defn,
@@ -1117,6 +1133,23 @@ end",
       "ParseTree"   => [:str, "x"],
     },
 
+    "lit_str_heredoc" => {
+      "Ruby"        => "<<'EOM'\n  blah\nblah\nEOM\n",
+      "ParseTree"   => [:str, "  blah\nblah\n"],
+    },
+
+    "lit_str_heredoc_call" => {
+      "Ruby"        => "<<'EOM'.strip\n  blah\nblah\nEOM\n",
+      "ParseTree"   => [:call, [:str, "  blah\nblah\n"], :strip],
+    },
+
+    "lit_str_heredoc_expand" => {
+      "Ruby"        => "<<EOM\n  blah\n#\{1 + 1}blah\nEOM\n",
+      "ParseTree"   => [:dstr, "  blah\n",
+                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]],
+                        [:str, "blah\n"]],
+    },
+
     "lit_sym" => {
       "Ruby"        => ":x",
       "ParseTree"   => [:lit, :x],
@@ -1327,11 +1360,15 @@ end",
     },
 
     "rescue_block_body"  => {
-      "Ruby"        => "begin\n  blah\nrescue\n  42\nend",
+      "Ruby"        => "begin\n  a\nrescue => e\n  c\n  d\nend",
       "ParseTree"   => [:begin,
                         [:rescue,
-                         [:vcall, :blah],
-                         [:resbody, nil, [:lit, 42]]]],
+                         [:vcall, :a],
+                         [:resbody, nil,
+                          [:block,
+                           [:lasgn, :e, [:gvar, :$!]],
+                           [:vcall, :c],
+                           [:vcall, :d]]]]],
     },
 
     "rescue_block_nada"  => {
@@ -1357,6 +1394,15 @@ end",
     "sclass"  => {
       "Ruby"        => "class << self\n  42\nend",
       "ParseTree"   => [:sclass, [:self], [:scope, [:lit, 42]]],
+    },
+
+    "sclass_trailing_class" => {
+      "Ruby" => "class A\n  class << self\n    a\n  end\n\n  class B\n  end\nend",
+      "ParseTree" => [:class, :A, nil,
+                      [:scope,
+                       [:block,
+                        [:sclass, [:self], [:scope, [:vcall, :a]]],
+                        [:class, :B, nil, [:scope]]]]],
     },
 
     "splat"  => {
