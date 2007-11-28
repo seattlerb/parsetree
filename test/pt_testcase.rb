@@ -152,6 +152,25 @@ class ParseTreeTestCase < Test::Unit::TestCase
                            [:nil]]]
     },
 
+    "begin_rescue_twice" => { # testing block/begin processing really
+      "Ruby" => "begin\nrescue => mes\nend\n\nbegin\nrescue => mes\nend",
+      "ParseTree" => [:block,
+                      (if $VERBOSE then # HACK - "bug" in ruby is forcing this
+                         [:rescue,
+                          [:resbody, nil,
+                           [:lasgn, :mes, [:gvar, :$!]]]]
+                       else
+                         [:begin,
+                          [:rescue,
+                           [:resbody, nil,
+                            [:lasgn, :mes, [:gvar, :$!]]]]]
+                      end),
+                      [:begin,
+                       [:rescue,
+                        [:resbody, nil,
+                         [:lasgn, :mes, [:gvar, :$!]]]]]],
+    },
+
     "block_lasgn" => {
       "Ruby"        => "x = (y = 1\n(y + 2))",
       "ParseTree"   => [:lasgn, :x,
@@ -1264,6 +1283,21 @@ end",
                          [:array, [:lasgn, :a], [:lasgn, :b]],
                          [:lasgn, :c],
                          [:to_ary, [:vcall, :d]]],
+    },
+
+    "masgn_splat_no_name_trailing"  => {
+      "Ruby"        => "a, b, = c",
+      "ParseTree"   => [:masgn,
+                        [:array, [:lasgn, :a], [:lasgn, :b]],
+                        [:to_ary, [:vcall, :c]]],
+    },
+
+    "masgn_splat_no_name_to_ary"  => {
+      "Ruby"        => "a, b, * = c",
+      "ParseTree"   => [:masgn,
+                        [:array, [:lasgn, :a], [:lasgn, :b]],
+                        [:splat],
+                        [:to_ary, [:vcall, :c]]],
     },
 
     "match"  => {
