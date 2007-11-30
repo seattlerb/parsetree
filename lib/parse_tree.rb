@@ -160,11 +160,12 @@ class ParseTree
   #
   #   [[sexps] ... ]
 
-  def parse_tree_for_string(source, filename = nil, line = nil,
-                            newlines = false)
-    filename ||= '(string)'
-    line ||= 1
-    return parse_tree_for_str(source, filename, line, newlines)
+  def parse_tree_for_string(source, filename = '(string)', line = 1, nl = false)
+    return parse_tree_for_str0(source, filename, line, nl)
+  end
+
+  def parse_tree_for_str0(*__1args2__) # :nodoc:
+    parse_tree_for_str(*__1args2__)    # just helps clean up the binding
   end
 
   if RUBY_VERSION < "1.8.4" then

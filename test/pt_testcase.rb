@@ -702,6 +702,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:defn, :empty, [:scope, [:block, [:args], [:nil]]]],
     },
 
+    "defn_empty_args" => {
+      "Ruby"        => "def empty(*)\n  # do nothing\nend",
+      "ParseTree"   => [:defn, :empty, [:scope, [:block, [:args, :*], [:nil]]]],
+    },
+
     "defn_is_something" => {
       "Ruby"        => "def something?\n  # do nothing\nend",
       "ParseTree"   => [:defn, :something?, [:scope, [:block, [:args], [:nil]]]],
@@ -752,6 +757,18 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:scope,
                          [:block, [:args],
                           [:lasgn, :a, [:zarray]], [:return, [:lvar, :a]]]]],
+    },
+
+    "defs_empty" => {
+      "Ruby"        => "def self.empty\n  # do nothing\nend",
+      "ParseTree"   => [:defs, [:self], :empty,
+                        [:scope, [:args]]],
+    },
+
+    "defs_empty_args" => {
+      "Ruby"        => "def self.empty(*)\n  # do nothing\nend",
+      "ParseTree"   => [:defs, [:self], :empty,
+                        [:scope, [:args, :*]]],
     },
 
     "defs" => {
@@ -923,6 +940,13 @@ end",
                           [:lit, 42],
                           [:hash, [:lit, :a], [:lit, 1], [:lit, :b], [:lit, 2]]],
                          [:vcall, :c]]],
+    },
+
+    "fcall_block"  => {
+      "Ruby"        => "a :b do\n  :c\nend",
+      "ParseTree"   => [:iter,
+                        [:fcall, :a, [:array, [:lit, :b]]], nil,
+                        [:lit, :c]],
     },
 
     "fcall_keyword"  => {
@@ -1592,6 +1616,19 @@ end",
       "Ruby2Ruby"   => "while true do\n  (1 + 1)\nend",
     },
 
+    "until_pre_mod"  => {
+      "Ruby"        => "(1 + 1) until false",
+      "ParseTree"   => [:until, [:false],
+                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
+    },
+
+    "until_pre_not_mod"  => {
+      "Ruby"        => "(1 + 1) until not true",
+      "ParseTree"   => [:while, [:true],
+                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
+      "Ruby2Ruby"   => "while true do\n  (1 + 1)\nend",
+    },
+
     "valias"  => {
       "Ruby"        => "alias $y $x",
       "ParseTree"   => [:valias, :$y, :$x],
@@ -1626,6 +1663,19 @@ end",
       "ParseTree"   => [:until, [:true],
                         [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
       "Ruby2Ruby"   => "until true do\n  (1 + 1)\nend",
+    },
+
+    "while_pre_mod"  => {
+      "Ruby"        => "(1 + 1) while false",
+      "ParseTree"   => [:while, [:false],
+                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
+    },
+
+    "while_pre_not_mod"  => {
+      "Ruby"        => "(1 + 1) while not true",
+      "ParseTree"   => [:until, [:true],
+                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
+      "Ruby2Ruby"   => "while true do\n  (1 + 1)\nend",
     },
 
     "while_pre_nil" => {
@@ -1764,5 +1814,5 @@ end",
     end
   end
 
-  undef_method :default_test
+  undef_method :default_test rescue nil
 end
