@@ -83,13 +83,19 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:and, [:vcall, :a], [:vcall, :b]],
     },
 
-    "argscat"  => {
+    "argscat_svalue"  => {
       "Ruby"        => "a = b, c, *d",
       "ParseTree"   => [:lasgn, :a,
                         [:svalue,
                          [:argscat,
                           [:array, [:vcall, :b], [:vcall, :c]],
                           [:vcall, :d]]]],
+    },
+
+    "argscat_inside"  => {
+      "Ruby"        => "a = [b, *c]",
+      "ParseTree"   => [:lasgn, :a,
+                        [:argscat, [:array, [:vcall, :b]], [:vcall, :c]]],
     },
 
     "argspush"  => {
@@ -177,6 +183,34 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:block,
                          [:lasgn, :y, [:lit, 1]],
                          [:call, [:lvar, :y], :+, [:array, [:lit, 2]]]]],
+    },
+
+    "block_arg_wtf" => {
+      "Ruby"        => "a b do
+  if b
+    true
+  else
+    c = false
+    d do |x|
+      c = true
+    end
+    c
+  end
+end",
+      "ParseTree"   => [:iter,
+                        [:fcall, :a, [:array, [:vcall, :b]]],
+                        nil,
+                        [:block,
+                         [:if,
+                          [:vcall, :b],
+                          [:true],
+                          [:block,
+                           [:dasgn_curr, :c, [:false]],
+                           [:iter,
+                            [:fcall, :d],
+                            [:dasgn_curr, :x],
+                            [:dasgn, :c, [:true]]],
+                           [:dvar, :c]]]]],
     },
 
     "block_pass_fcall_0"  => {
@@ -315,6 +349,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:vcall, :o], :m,
                         [:array,
                          [:hash, [:lit, :a], [:lit, 1], [:lit, :b], [:lit, 2]]]],
+    },
+
+    "call_index_no_args" => {
+      "Ruby"        => "a[]",
+      "ParseTree" => [:call, [:vcall, :a], :[]],
     },
 
     "call_arglist_norm_hash"  => {
@@ -1240,6 +1279,36 @@ end",
     "lit_sym" => {
       "Ruby"        => ":x",
       "ParseTree"   => [:lit, :x],
+    },
+
+    "lvar_def_boundary" => {
+      "Ruby"        => "b = 42
+def a
+  c do
+    begin
+      # do nothing
+    rescue RuntimeError => b
+      puts b
+    end
+  end
+end",
+      "ParseTree"   => [:block,
+ [:lasgn, :b, [:lit, 42]],
+ [:defn,
+  :a,
+  [:scope,
+   [:block,
+    [:args],
+    [:iter,
+     [:fcall, :c],
+     nil,
+     [:begin,
+      [:rescue,
+       [:resbody,
+        [:array, [:const, :RuntimeError]],
+        [:block,
+         [:dasgn_curr, :b, [:gvar, :$!]],
+         [:fcall, :puts, [:array, [:dvar, :b]]]]]]]]]]]],
     },
 
     "masgn"  => {
