@@ -1262,6 +1262,12 @@ end",
       "Ruby2Ruby"   => '"  blah\nblah\n"',
     },
 
+    "lit_str_heredoc_indent" => {
+      "Ruby"        => "<<-EOM\n  blah\nblah\n\n  EOM\n",
+      "ParseTree"   => [:str, "  blah\nblah\n\n"],
+      "Ruby2Ruby"   => '"  blah\nblah\n\n"',
+    },
+
     "lit_str_heredoc_call" => {
       "Ruby"        => "<<'EOM'.strip\n  blah\nblah\nEOM\n",
       "ParseTree"   => [:call, [:str, "  blah\nblah\n"], :strip],
