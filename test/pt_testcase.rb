@@ -856,20 +856,20 @@ end",
     "dregx"  => {
       "Ruby"        => "/x#\{(1 + 1)}y/",
       "ParseTree"   => [:dregx, "x",
-                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], [:str, "y"]],
+                        [:evstr, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]], [:str, "y"]],
     },
 
     "dregx_once"  => {
       "Ruby"        => "/x#\{(1 + 1)}y/o",
       "ParseTree"   => [:dregx_once, "x",
-                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], [:str, "y"]],
+                        [:evstr, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]], [:str, "y"]],
     },
 
     "dstr" => {
       "Ruby"        => "argl = 1\n\"x#\{argl}y\"\n",
       "ParseTree"   => [:block,
                         [:lasgn, :argl, [:lit, 1]],
-                        [:dstr, "x", [:lvar, :argl],
+                        [:dstr, "x", [:evstr, [:lvar, :argl]],
                          [:str, "y"]]],
     },
 
@@ -879,7 +879,7 @@ end",
                           [:lasgn, :argl, [:lit, 1]],
                           [:dstr,
                            "x",
-                           [:call, [:str, "%.2f"], :%, [:array, [:lit, 3.14159]]],
+                           [:evstr, [:call, [:str, "%.2f"], :%, [:array, [:lit, 3.14159]]]],
                            [:str, "y"]]],
     },
 
@@ -890,23 +890,23 @@ end",
                           [:lasgn, :argl, [:lit, 1]],
                           [:dstr,
                            "x",
-                           [:call,
+                           [:evstr, [:call,
                             [:dstr, "%.", [:lvar, :max], [:str, "f"]],
-                            :%, [:array, [:lit, 3.14159]]],
+                            :%, [:array, [:lit, 3.14159]]]],
                            [:str, "y"]]],
     },
 
     "dsym"  => {
       "Ruby"        => ":\"x#\{(1 + 1)}y\"",
       "ParseTree"   => [:dsym, "x",
-                        [:call, [:lit, 1], :+, [:array, [:lit, 1]]], [:str, "y"]],
+                        [:evstr, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]], [:str, "y"]],
     },
 
     "dxstr" => {
       "Ruby"        => "t = 5\n`touch #\{t}`\n",
       "ParseTree"   => [:block,
                         [:lasgn, :t, [:lit, 5]],
-                        [:dxstr, 'touch ', [:lvar, :t]]],
+                        [:dxstr, 'touch ', [:evstr, [:lvar, :t]]]],
     },
 
     "ensure" => {
