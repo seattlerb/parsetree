@@ -151,12 +151,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "begin_rescue_ensure" => {
-      "Ruby" => "begin
-rescue
-  # do nothing
-ensure
-  nil
-end",
+      "Ruby" => "begin\nrescue\n  # do nothing\nensure\n  nil\nend",
       "ParseTree" => [:begin,
                        [:ensure,
                          [:rescue,
@@ -165,15 +160,7 @@ end",
     },
 
     "begin_rescue_twice" => { # testing block/begin processing really
-      "Ruby" => "begin
-rescue => mes
-  # do nothing
-end
-begin
-rescue => mes
-  # do nothing
-end
-",
+      "Ruby" => "begin\nrescue => mes\n  # do nothing\nend\nbegin\nrescue => mes\n  # do nothing\nend\n",
       "ParseTree" => [:block,
                       (if $VERBOSE then # HACK - "bug" in ruby is forcing this
                          [:rescue,
@@ -199,16 +186,27 @@ end
                          [:call, [:lvar, :y], :+, [:array, [:lit, 2]]]]],
     },
 
+
+    "block_mystery_block"  => {
+      "Ruby"        => "a(b) do\n  if b then\n    true\n  else\n    c = false\n    d { |x| c = true }\n    c\n  \n  end\nend",
+      "ParseTree"   => [:iter,
+                        [:fcall, :a, [:array, [:vcall, :b]]],
+                        nil,
+                        [:block,
+                         [:if,
+                          [:vcall, :b],
+                          [:true],
+                          [:block,
+                           [:dasgn_curr, :c, [:false]],
+                           [:iter,
+                            [:fcall, :d],
+                            [:dasgn_curr, :x],
+                            [:dasgn, :c, [:true]]],
+                           [:dvar, :c]]]]],
+    },
+
     "block_arg_wtf" => { # FIX: I don't like that extra return
-      "Ruby"        => "a(b) do
-  if b then
-    true
-  else
-    c = false
-    d { |x| c = true }
-    c
-  
-  end
+      "Ruby"        => "a(b) do\n  if b then\n    true\n  else\n    c = false\n    d { |x| c = true }\n    c\n  \n  end
 end",
       "ParseTree"   => [:iter,
                         [:fcall, :a, [:array, [:vcall, :b]]],
@@ -640,6 +638,11 @@ end",
                          [:block, [:args], [:cvasgn, :@@blah, [:lit, 1]]]]]
     },
 
+    "cvasgn_cls_method" => {
+      "Ruby"        => "def self.quiet_mode=(boolean)\n  @@quiet_mode = boolean\nend",
+      "ParseTree"   => [:defs, [:self], :quiet_mode=, [:scope, [:block, [:args, :boolean], [:cvasgn, :@@quiet_mode, [:lvar, :boolean]]]]],
+    },
+
     "cvdecl"  => {
       "Ruby"        => "class X\n  @@blah = 1\nend",
       "ParseTree"   => [:class, :X, nil,
@@ -770,6 +773,28 @@ end",
     "defn_is_something" => {
       "Ruby"        => "def something?\n  # do nothing\nend",
       "ParseTree"   => [:defn, :something?, [:scope, [:block, [:args], [:nil]]]],
+    },
+
+    "defn_lvar_boundary"  => { # FIX: add do nothing comment to block
+      "Ruby"        => "mes = 42\ndef instantiate_all\n  Thread.new do\n    begin\n    rescue RuntimeError => mes\n      puts(mes)\n    end\n  end
+end
+",
+      "ParseTree"   => [:block,
+                        [:lasgn, :mes, [:lit, 42]],
+                        [:defn, :instantiate_all,
+                         [:scope,
+                          [:block,
+                           [:args],
+                           [:iter,
+                            [:call, [:const, :Thread], :new],
+                            nil,
+                            [:begin,
+                             [:rescue,
+                              [:resbody,
+                               [:array, [:const, :RuntimeError]],
+                               [:block,
+                                [:dasgn_curr, :mes, [:gvar, :$!]],
+                                [:fcall, :puts, [:array, [:dvar, :mes]]]]]]]]]]]],
     },
 
     "defn_optargs" => {
@@ -929,6 +954,13 @@ end",
                             [:dstr, "%.", [:evstr, [:lvar, :max]], [:str, "f"]],
                             :%, [:array, [:lit, 3.14159]]]],
                            [:str, "y"]]],
+    },
+
+    "dstr_nest"  => {
+      "Ruby"        => "%Q[before [#\{nest}] after]",
+      "ParseTree"   => [:dstr, "before [",
+                        [:evstr, [:vcall, :nest]], [:str, "] after"]],
+      "Ruby2Ruby"   => "\"before [#\{nest}] after\"",
     },
 
     "dsym"  => {
@@ -1354,33 +1386,25 @@ end",
     },
 
     "lvar_def_boundary" => { # HACK: put # do nothing back under begin
-      "Ruby"        => "b = 42
-def a
-  c do
-    begin
-    rescue RuntimeError => b
-      puts(b)
-    end
-  end
-end
+      "Ruby"        => "b = 42\ndef a\n  c do\n    begin\n    rescue RuntimeError => b\n      puts(b)\n    end\n  end\nend
 ",
       "ParseTree"   => [:block,
- [:lasgn, :b, [:lit, 42]],
- [:defn,
-  :a,
-  [:scope,
-   [:block,
-    [:args],
-    [:iter,
-     [:fcall, :c],
-     nil,
-     [:begin,
-      [:rescue,
-       [:resbody,
-        [:array, [:const, :RuntimeError]],
-        [:block,
-         [:dasgn_curr, :b, [:gvar, :$!]],
-         [:fcall, :puts, [:array, [:dvar, :b]]]]]]]]]]]],
+                        [:lasgn, :b, [:lit, 42]],
+                        [:defn,
+                         :a,
+                         [:scope,
+                          [:block,
+                           [:args],
+                           [:iter,
+                            [:fcall, :c],
+                            nil,
+                            [:begin,
+                             [:rescue,
+                              [:resbody,
+                               [:array, [:const, :RuntimeError]],
+                               [:block,
+                                [:dasgn_curr, :b, [:gvar, :$!]],
+                                [:fcall, :puts, [:array, [:dvar, :b]]]]]]]]]]]],
     },
 
     "masgn"  => {
@@ -1582,6 +1606,11 @@ end
                          [:lit, 42]]],
     },
 
+    "op_asgn2_self"  => {
+      "Ruby"        => "self.Bag ||= Bag.new",
+      "ParseTree"   => [:op_asgn2, [:self], :"Bag=", :"||", [:call, [:const, :Bag], :new]],
+    },
+
     "op_asgn_and" => {
       "Ruby"        => "a = 0\na &&= 2\n",
       "ParseTree"   => [:block,
@@ -1602,10 +1631,18 @@ end
     },
 
     "or_big"  => {
-"Ruby"        => "((a or b) or (c and d))",
+      "Ruby"        => "((a or b) or (c and d))",
       "ParseTree"   => [:or,
                         [:or,  [:vcall, :a], [:vcall, :b]],
                         [:and, [:vcall, :c], [:vcall, :d]]],
+    },
+
+    "or_big2"  => {
+      "Ruby"        => "((a || b) || (c && d))",
+      "ParseTree"   => [:or,
+                        [:or,  [:vcall, :a], [:vcall, :b]],
+                        [:and, [:vcall, :c], [:vcall, :d]]],
+      "Ruby2Ruby"   => "((a or b) or (c and d))",
     },
 
     "postexe"  => {
@@ -1733,6 +1770,14 @@ end
       "Ruby"        => "super(a, &b)",
       "ParseTree"   => [:block_pass,
                         [:vcall, :b], [:super, [:array, [:vcall, :a]]]],
+    },
+
+    "super_block_splat"  => {
+      "Ruby"        => "super(a, *b)",
+      "ParseTree"   => [:super,
+                        [:argscat,
+                         [:array, [:vcall, :a]],
+                         [:vcall, :b]]],
     },
 
     "super_multi"  => {
@@ -1901,35 +1946,6 @@ end
     },
   }
 
-#   def test_audit_nodes
-#     # TODO: audit @@testcases.keys against node list - do two way audit, rename everything
-#     nodes = ParseTree::NODE_NAMES.map { |s| s.to_s }.sort
-#     tested = @@testcases.keys.map { |s| s.to_s }.sort
-#     if processor.respond_to? :unsupported then
-#       nodes -= processor.unsupported
-#     else
-#       SexpProcessor.new.unsupported
-#       # HACK
-#       nodes -= [:alloca, :argspush, :cfunc, :cref, :evstr, :ifunc, :last, :memo, :newline, :opt_n, :method].map { |s| s.to_s }
-#     end
-
-#     untested = nodes-tested
-
-#     puts
-#     p :untested_nodes => untested, :extra_nodes => tested-nodes
-
-#     untested.each do |node|
-#       puts %(
-#     "#{node}"  => {
-#       "Ruby"        => "XXX",
-#       "ParseTree"   => [],
-#     },
-# )
-#     end
-
-#     flunk
-#   end
-
   def self.previous(key, extra=0)
     idx = @@testcase_order.index(key)-1-extra
     case key
@@ -1938,18 +1954,6 @@ end
     end
     @@testcase_order[idx]
   end
-
-#   # lets us used unprocessed :self outside of tests, called when subclassed
-#   def self.clone_same
-#     @@testcases.each do |node, data|
-#       data.each do |key, val|
-#         if val == :same then
-#           prev_key = self.previous(key)
-#           data[key] = data[prev_key].deep_clone
-#         end
-#       end
-#     end
-#   end
 
   def self.inherited(c)
     output_name = c.name.to_s.sub(/^Test/, '')
