@@ -738,7 +738,7 @@ again_no_block:
             add_to_parse_tree(self, current, list->nd_head, locals);
             break;
           case NODE_EVSTR:
-            add_to_parse_tree(self, current, list->nd_head->nd_body, locals);
+            add_to_parse_tree(self, current, list->nd_head, locals);
             break;
           default:
             add_to_parse_tree(self, current, list->nd_head, locals);
