@@ -8,7 +8,21 @@ require 'sexp'
 $u ||= false
 $n ||= false
 $s ||= false
+$r ||= false
+$h ||= false
 $n = $n.intern if $n
+
+if $h then
+  puts "usage: #{File.basename $0} [options] [file...]"
+  puts "options:"
+  puts "-h      : display usage"
+  puts "-n=node : only display matching nodes"
+  puts "-r      : raw arrays, no sexps"
+  puts "-s      : structural sexps, strip all content and show bare tree"
+  puts "-u      : unified sexps"
+
+  exit 1
+end
 
 ARGV.push "-" if ARGV.empty?
 
@@ -27,7 +41,8 @@ unifier = Unifier.new if $u
 ARGV.each do |file|
   ruby = file == "-" ? $stdin.read : File.read(file)
 
-  sexp = Sexp.from_array parse_tree.parse_tree_for_string(ruby, file).first
+  sexp = parse_tree.parse_tree_for_string(ruby, file).first
+  sexp = Sexp.from_array sexp unless $r
   sexp = unifier.process(sexp) if $u
   sexp = sexp.structure if $s
 

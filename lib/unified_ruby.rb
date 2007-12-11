@@ -105,11 +105,17 @@ module UnifiedRuby
   end
 
   def rewrite_defs(exp)
-    # move args up
-    args = exp.scope.block.args(true) rescue nil
-    exp.insert 3, args if args
+    receiver = exp.delete_at 1
 
-    exp
+    # TODO: I think this would be better as rewrite_scope, but that breaks others
+    exp = s(exp.shift, exp.shift,
+            s(:scope,
+              s(:block, exp.scope.args))) if exp.scope.args
+
+    result = rewrite_defn(exp)
+    result.insert 1, receiver
+
+    result
   end
 
   def rewrite_dmethod(exp)

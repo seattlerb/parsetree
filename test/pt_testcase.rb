@@ -96,6 +96,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "Ruby"        => "a = [b, *c]",
       "ParseTree"   => [:lasgn, :a,
                         [:argscat, [:array, [:vcall, :b]], [:vcall, :c]]],
+      "Ruby2Ruby"   => "a = b, *c",
     },
 
     "argspush"  => {
@@ -150,7 +151,12 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "begin_rescue_ensure" => {
-      "Ruby" => "begin\n    rescue\n      # do nothing\n  ensure\n    nil\nend",
+      "Ruby" => "begin
+rescue
+  # do nothing
+ensure
+  nil
+end",
       "ParseTree" => [:begin,
                        [:ensure,
                          [:rescue,
@@ -159,7 +165,15 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "begin_rescue_twice" => { # testing block/begin processing really
-      "Ruby" => "begin\nrescue => mes\nend\n\nbegin\nrescue => mes\nend",
+      "Ruby" => "begin
+rescue => mes
+  # do nothing
+end
+begin
+rescue => mes
+  # do nothing
+end
+",
       "ParseTree" => [:block,
                       (if $VERBOSE then # HACK - "bug" in ruby is forcing this
                          [:rescue,
@@ -185,16 +199,15 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:call, [:lvar, :y], :+, [:array, [:lit, 2]]]]],
     },
 
-    "block_arg_wtf" => {
-      "Ruby"        => "a b do
-  if b
+    "block_arg_wtf" => { # FIX: I don't like that extra return
+      "Ruby"        => "a(b) do
+  if b then
     true
   else
     c = false
-    d do |x|
-      c = true
-    end
+    d { |x| c = true }
     c
+  
   end
 end",
       "ParseTree"   => [:iter,
@@ -264,6 +277,14 @@ end",
                          [:lvar, :block],
                          [:fcall, :other,
                           [:argscat, [:array, [:lit, 42]], [:lvar, :args]]]]]]],
+    },
+
+    "block_pass_thingy" => {
+      "Ruby"      => "r.read_body(dest, &block)",
+      "ParseTree" => [:block_pass,
+                      [:vcall, :block],
+                      [:call, [:vcall, :r], :read_body,
+                       [:array, [:vcall, :dest]]]],
     },
 
     "block_pass_omgwtf" => {
@@ -767,7 +788,7 @@ end",
     },
 
     "defn_rescue" => {
-      "Ruby" => "def eql?(resource)\n  (self.uuid == resource.uuid) rescue false\nend",
+      "Ruby" => "def eql?(resource)\n  (self.uuid == resource.uuid)\nrescue\n  false\nend",
       "ParseTree" => [:defn, :eql?,
                       [:scope,
                        [:block,
@@ -778,6 +799,7 @@ end",
                           :==,
                           [:array, [:call, [:lvar, :resource], :uuid]]],
                          [:resbody, nil, [:false]]]]]],
+      "Ruby2Ruby" => "def eql?(resource)\n  (self.uuid == resource.uuid) rescue false\nend",
     },
 
     "defn_splat_no_name" => {
@@ -871,6 +893,19 @@ end",
                         [:lasgn, :argl, [:lit, 1]],
                         [:dstr, "x", [:evstr, [:lvar, :argl]],
                          [:str, "y"]]],
+    },
+
+    "dstr_str_lit_start" => {
+      "Ruby"        => '"#{"blah"}#{__FILE__}:#{__LINE__}: warning: #{$!.message} (#{$!.class})"',
+      "ParseTree"   => [:dstr,
+                        "blah(string):",
+                        [:lit, 1],
+                        [:str, ": warning: "],
+                        [:call, [:gvar, :$!], :message],
+                        [:str, " ("],
+                        [:call, [:gvar, :$!], :class],
+                        [:str, ")"]],
+      "Ruby2Ruby"   => '"blah(string):#{1}: warning: #{$!.message} (#{$!.class})"',
     },
 
     "dstr_2" => {
@@ -982,7 +1017,7 @@ end",
     },
 
     "fcall_block"  => {
-      "Ruby"        => "a :b do\n  :c\nend",
+      "Ruby"        => "a(:b) { :c }",
       "ParseTree"   => [:iter,
                         [:fcall, :a, [:array, [:lit, :b]]], nil,
                         [:lit, :c]],
@@ -1198,6 +1233,22 @@ end",
                         [:fcall, :p, [:array, [:vcall, :c]]]],
     },
 
+    "iteration_double_var" => {
+      "Ruby"        => "a do |x|
+  b do |x| 
+    puts x
+  end
+end",
+      "ParseTree"   => [:iter,
+                        [:fcall, :a],
+                        [:dasgn_curr, :x],
+                        [:iter,
+                         [:fcall, :b],
+                         [:dasgn, :x],
+                         [:fcall, :puts, [:array, [:dvar, :x]]]]],
+      "Ruby2Ruby"   => "a { |x| b { |x| puts(x) } }",
+    },
+
     "ivar" => {
       "Ruby"        => [Examples, :reader],
       "ParseTree"   => [:defn, :reader, [:ivar, :@reader]],
@@ -1274,6 +1325,21 @@ end",
       "Ruby2Ruby"   => '"  blah\nblah\n".strip',
     },
 
+    "lit_str_heredoc_double" => {
+      "Ruby"       => "a += <<-BEGIN + b + <<-END\n  first\nBEGIN\n  second\nEND",
+      "ParseTree"  => [:lasgn, :a,
+                       [:call,
+                        [:lvar, :a],
+                        :+,
+                        [:array,
+                         [:call,
+                          [:call, [:str, "  first\n"], :+,
+                           [:array, [:vcall, :b]]],
+                          :+,
+                          [:array, [:str, "  second\n"]]]]]],
+      "Ruby2Ruby"   => "a = (a + ((\"  first\\n\" + b) + \"  second\\n\"))",
+    },
+
     "lit_str_heredoc_expand" => {
       "Ruby"        => "<<EOM\n  blah\n#\{1 + 1}blah\nEOM\n",
       "ParseTree"   => [:dstr, "  blah\n",
@@ -1287,17 +1353,17 @@ end",
       "ParseTree"   => [:lit, :x],
     },
 
-    "lvar_def_boundary" => {
+    "lvar_def_boundary" => { # HACK: put # do nothing back under begin
       "Ruby"        => "b = 42
 def a
   c do
     begin
-      # do nothing
     rescue RuntimeError => b
-      puts b
+      puts(b)
     end
   end
-end",
+end
+",
       "ParseTree"   => [:block,
  [:lasgn, :b, [:lit, 42]],
  [:defn,
@@ -1389,6 +1455,7 @@ end",
       "ParseTree"   => [:masgn,
                         [:array, [:lasgn, :a], [:lasgn, :b]],
                         [:to_ary, [:vcall, :c]]],
+      "Ruby2Ruby"   => "a, b = c", # TODO: check this is right
     },
 
     "masgn_splat_no_name_to_ary"  => {
@@ -1459,9 +1526,39 @@ end",
                          [:array, [:lit, 3]], :+, [:lit, 12]]],
     },
 
-    "op_asgn1_ivar" => {
+    "op_asgn_or_ivar" => {
       "Ruby"        => "@v ||= {  }",
       "ParseTree"   => [:op_asgn_or, [:ivar, :@v], [:iasgn, :@v, [:hash]]],
+    },
+
+    "op_asgn_or_ivar2" => { # eww... stupid rubygems
+      "Ruby"        => "@fetcher ||= new(Gem.configuration[:http_proxy])",
+      "ParseTree"   => [:op_asgn_or,
+                        [:ivar, :@fetcher],
+                        [:iasgn,
+                         :@fetcher,
+                         [:fcall,
+                          :new,
+                          [:array,
+                           [:call,
+                            [:call, [:const, :Gem], :configuration],
+                            :[],
+                            [:array, [:lit, :http_proxy]]]]]]],
+    },
+
+    "op_asgn_and_ivar2" => { # eww... stupid rubygems
+      "Ruby"        => "@fetcher &&= new(Gem.configuration[:http_proxy])",
+      "ParseTree"   => [:op_asgn_and,
+                        [:ivar, :@fetcher],
+                        [:iasgn,
+                         :@fetcher,
+                         [:fcall,
+                          :new,
+                          [:array,
+                           [:call,
+                            [:call, [:const, :Gem], :configuration],
+                            :[],
+                            [:array, [:lit, :http_proxy]]]]]]],
     },
 
     "op_asgn2" => {
@@ -1502,6 +1599,13 @@ end",
     "or"  => {
       "Ruby"        => "(a or b)",
       "ParseTree"   => [:or, [:vcall, :a], [:vcall, :b]],
+    },
+
+    "or_big"  => {
+"Ruby"        => "((a or b) or (c and d))",
+      "ParseTree"   => [:or,
+                        [:or,  [:vcall, :a], [:vcall, :b]],
+                        [:and, [:vcall, :c], [:vcall, :d]]],
     },
 
     "postexe"  => {
@@ -1625,6 +1729,12 @@ end",
                           [:super, [:array, [:lit, 4]]]]]],
     },
 
+    "super_block_pass"  => {
+      "Ruby"        => "super(a, &b)",
+      "ParseTree"   => [:block_pass,
+                        [:vcall, :b], [:super, [:array, [:vcall, :a]]]],
+    },
+
     "super_multi"  => {
       "Ruby"        => "def x\n  super(4, 2, 1)\nend",
       "ParseTree"   => [:defn, :x,
@@ -1695,6 +1805,7 @@ end",
       "Ruby"        => "(1 + 1) until false",
       "ParseTree"   => [:until, [:false],
                         [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
+      "Ruby2Ruby"   => "until false do\n  (1 + 1)\nend",
     },
 
     "until_pre_not_mod"  => {
@@ -1744,13 +1855,14 @@ end",
       "Ruby"        => "(1 + 1) while false",
       "ParseTree"   => [:while, [:false],
                         [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
+      "Ruby2Ruby"   => "while false do\n  (1 + 1)\nend", # FIX can be one liner
     },
 
     "while_pre_not_mod"  => {
       "Ruby"        => "(1 + 1) while not true",
       "ParseTree"   => [:until, [:true],
                         [:call, [:lit, 1], :+, [:array, [:lit, 1]]], true],
-      "Ruby2Ruby"   => "while true do\n  (1 + 1)\nend",
+      "Ruby2Ruby"   => "until true do\n  (1 + 1)\nend", # FIX
     },
 
     "while_pre_nil" => {

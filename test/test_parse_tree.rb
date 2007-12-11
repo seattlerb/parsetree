@@ -68,22 +68,23 @@ class TestParseTree < ParseTreeTestCase
   end
 
   def test_parse_tree_for_string
-    actual   = @processor.parse_tree_for_string '1 + nil', '(string)', 1, false
+    actual   = @processor.parse_tree_for_string '1 + nil', '(string)', 1
     expected = [[:call, [:lit, 1], :+, [:array, [:nil]]]]
 
     assert_equal expected, actual
   end
 
   def test_parse_tree_for_string_with_newlines
-    actual   = @processor.parse_tree_for_string "1 +\n nil", 'test.rb', 5, true
-    expected = [[:newline, 6, "test.rb"],
-                [:call, [:lit, 1], :+, [:array, [:nil]]]]
+    @processor = ParseTree.new(true)
+    actual   = @processor.parse_tree_for_string "1 +\n nil", 'test.rb', 5
+    expected = [[:newline, 6, "test.rb", 
+                 [:call, [:lit, 1], :+, [:array, [:nil]]]]]
 
     assert_equal expected, actual
   end
 
   def test_parse_tree_for_str
-    actual   = @processor.parse_tree_for_str '1 + nil', '(string)', 1, false
+    actual   = @processor.parse_tree_for_str '1 + nil', '(string)', 1
     expected = [[:call, [:lit, 1], :+, [:array, [:nil]]]]
 
     assert_equal expected, actual

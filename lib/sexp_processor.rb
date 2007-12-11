@@ -143,7 +143,6 @@ class SexpProcessor
     @expected = Sexp
     @require_empty = true
     @exceptions = {}
-    @process_level = 0
 
     # we do this on an instance basis so we can subclass it for
     # different processors.
@@ -170,14 +169,18 @@ class SexpProcessor
   end
 
   def rewrite(exp)
+    type = exp.first
+
+    self.context.unshift type # FIX: first one doubles up because process already unshifted -- look at moving initial rewrite up above
     exp.map! { |sub| Array === sub ? rewrite(sub) : sub }
 
-    type = exp.first
     begin
       meth = @rewriters[type]
       exp  = self.send(meth, exp) if meth
       old_type, type = type, exp.first
     end until old_type == type
+
+    self.context.shift
 
     exp
   end
@@ -189,8 +192,6 @@ class SexpProcessor
 
   def process(exp)
     return nil if exp.nil?
-
-    @process_level += 1
 
     unless @unsupported_checked then
       m = public_methods.grep(/^process_/) { |o| o.sub(/^process_/, '').intern }
@@ -207,7 +208,7 @@ class SexpProcessor
     raise "type should be a Symbol, not: #{exp.first.inspect}" unless
       Symbol === type
 
-    @context.unshift type
+    self.context.unshift type
 
     if @debug.has_key? type then
       str = exp.inspect
@@ -220,7 +221,7 @@ class SexpProcessor
 
     raise UnsupportedNodeError, "'#{type}' is not a supported node type" if @unsupported.include? type
 
-    exp = self.rewrite(exp) if @process_level == 1
+    exp = self.rewrite(exp) if self.context.size == 1
 
     if @debug.has_key? type then
       str = exp.inspect
@@ -276,9 +277,7 @@ class SexpProcessor
       end
     end
 
-    @process_level -= 1
-
-    @context.shift
+    self.context.shift
     result
   end
 
@@ -291,7 +290,7 @@ class SexpProcessor
 
   def assert_type(list, typ)
     raise SexpTypeError, "Expected type #{typ.inspect} in #{list.inspect}" if
-      list.first != typ
+      not Array === list or list.first != typ
   end
 
   def error_handler(type, exp=nil) # :nodoc:
