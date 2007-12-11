@@ -137,7 +137,7 @@ class SexpProcessor
     @warn_on_default = true
     @auto_shift_type = false
     @strict = false
-    @unsupported = [:alloca, :cfunc, :cref, :evstr, :ifunc, :last, :memo, :newline, :opt_n, :method] # internal nodes that you can't get to
+    @unsupported = [:alloca, :cfunc, :cref, :ifunc, :last, :memo, :newline, :opt_n, :method] # internal nodes that you can't get to
     @unsupported_checked = false
     @debug = {}
     @expected = Sexp
