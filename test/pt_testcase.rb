@@ -160,18 +160,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "begin_rescue_twice" => { # testing block/begin processing really
-      "Ruby" => "begin\nrescue => mes\n  # do nothing\nend\nbegin\nrescue => mes\n  # do nothing\nend\n",
+      "Ruby" => "begin\nrescue => mes\n  # do nothing\nend\nbegin\nrescue => mes\n  # do nothing\nend",
       "ParseTree" => [:block,
-                      (if $VERBOSE then # HACK - "bug" in ruby is forcing this
-                         [:rescue,
-                          [:resbody, nil,
-                           [:lasgn, :mes, [:gvar, :$!]]]]
-                       else
-                         [:begin,
-                          [:rescue,
-                           [:resbody, nil,
-                            [:lasgn, :mes, [:gvar, :$!]]]]]
-                      end),
+                      [:rescue,
+                       [:resbody, nil,
+                        [:lasgn, :mes, [:gvar, :$!]]]],
                       [:begin,
                        [:rescue,
                         [:resbody, nil,
