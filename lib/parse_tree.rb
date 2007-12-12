@@ -158,7 +158,10 @@ class ParseTree
   #   [[sexps] ... ]
 
   def parse_tree_for_string(source, filename = '(string)', line = 1)
+    old_verbose, $VERBOSE = $VERBOSE, true
     return parse_tree_for_str0(source, filename, line)
+  ensure
+    $VERBOSE = old_verbose
   end
 
   def parse_tree_for_str0(*__1args2__) # :nodoc:
