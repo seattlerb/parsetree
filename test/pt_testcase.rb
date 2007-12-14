@@ -4,6 +4,9 @@ require 'test/unit/testcase'
 require 'sexp_processor' # for deep_clone
 require 'unique'
 
+# key:
+# wwtt = what were they thinking?
+
 class Examples
   attr_reader :reader
   attr_writer :writer
@@ -112,6 +115,13 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:array, [:lit, 1], [:lit, :b], [:str, "c"]],
     },
 
+    "array_pct_W"  => {
+      "Ruby"        => "%W[--remove #\{@gem_repo}]",
+      "ParseTree"   => [:array,
+                        [:str, "--remove"],
+                        [:dstr, "", [:evstr, [:ivar, :@gem_repo]]]],
+    },
+
     "attrasgn" => {
       "Ruby"        => "y = 0\n42.method = y\n",
       "ParseTree"   => [:block,
@@ -179,6 +189,66 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:call, [:lvar, :y], :+, [:array, [:lit, 2]]]]],
     },
 
+    "block_before"  => {
+      "Ruby"        => "def b
+  nil
+
+  begin
+    nil
+  rescue
+    nil
+  end
+end",
+      "ParseTree"   => [:defn,
+                        :b,
+                        [:scope,
+                         [:block,
+                          [:args],
+                          [:nil],
+                          [:begin,
+                           [:rescue, [:nil], [:resbody, nil, [:nil]]]]]]],
+    },
+
+    "block_after"  => {
+      "Ruby"        => "def c
+  begin
+    nil
+  rescue
+    nil
+  end
+
+  nil
+end",
+      "ParseTree"   => [:defn,
+                        :c,
+                        [:scope,
+                         [:block,
+                          [:args],
+                          [:rescue, [:nil], [:resbody, nil, [:nil]]],
+                          [:nil]]]],
+    },
+
+    "block_before_after"  => {
+      "Ruby"        => "def a
+  nil
+
+  begin
+    nil
+  rescue
+    nil
+  end
+
+  nil
+end",
+      "ParseTree"   => [:defn,
+                        :a,
+                        [:scope,
+                         [:block,
+                          [:args],
+                          [:nil],
+                          [:rescue, [:nil], [:resbody, nil, [:nil]]],
+                          [:nil]]]],
+    },
 
     "block_mystery_block"  => {
       "Ruby"        => "a(b) do\n  if b then\n    true\n  else\n    c = false\n    d { |x| c = true }\n    c\n  \n  end\nend",
@@ -473,6 +543,17 @@ end",
                       [:lit, :c]],
     },
 
+    "case_splat" => {
+      "Ruby" => "case a\nwhen :b, *c then\n  d\nelse\n  e\nend\n",
+      "ParseTree" => [:case, [:vcall, :a],
+                      [:when,
+                       [:array,
+                        [:lit, :b],
+                        [:when, [:vcall, :c], nil]],
+                       [:vcall, :d]],
+                      [:vcall, :e]],
+    },
+
     "cdecl"  => {
       "Ruby"        => "X = 42",
       "ParseTree"   => [:cdecl, :X, [:lit, 42]],
@@ -763,7 +844,7 @@ end",
       "ParseTree"   => [:defn, :empty, [:scope, [:block, [:args, :*], [:nil]]]],
     },
 
-    "defn_is_something" => {
+    "defn_something_eh" => {
       "Ruby"        => "def something?\n  # do nothing\nend",
       "ParseTree"   => [:defn, :something?, [:scope, [:block, [:args], [:nil]]]],
     },
@@ -926,6 +1007,117 @@ end
       "Ruby2Ruby"   => '"blah(string):#{1}: warning: #{$!.message} (#{$!.class})"',
     },
 
+    "dstr_concat"  => {
+      "Ruby"        => '"#{22}aa" "cd#{44}" "55" "#{66}"',
+      "ParseTree"   => [:dstr,
+                        "",
+                        [:evstr, [:lit, 22]],
+                        [:str, "aa"],
+                        [:str, "cd"],
+                        [:evstr, [:lit, 44]],
+                        [:str, "55"],
+                        [:evstr, [:lit, 66]]],
+    },
+
+    "structure_remove_begin_1"  => {
+      "Ruby"        => "a << begin
+       b
+     rescue
+       c
+     end",
+      "ParseTree"   => [:call, [:vcall, :a], :<<,
+                        [:array, [:rescue, [:vcall, :b],
+                                  [:resbody, nil, [:vcall, :c]]]]],
+    },
+
+    "stucture_remove_begin_2"  => {
+      "Ruby"        => "
+a = if c
+      begin # stays - because b is used inside
+        b
+      rescue
+        nil
+      end
+    end
+a
+",
+      "ParseTree"   => [:block,
+                        [:lasgn,
+                         :a,
+                         [:if, [:vcall, :c],
+                          [:rescue, [:vcall, :b], [:resbody, nil, [:nil]]],
+                          nil]],
+                        [:lvar, :a]],
+    },
+
+
+    "masgn_splat_to_ary"  => {
+      "Ruby"        => "a, b, *c = d.e 'f'",
+      "ParseTree"   => [:masgn,
+                        [:array, [:lasgn, :a], [:lasgn, :b]],
+                        [:lasgn, :c],
+                        [:to_ary,
+                         [:call, [:vcall, :d], :e, [:array, [:str, 'f']]]]],
+    },
+
+    "iter_dasgn_curr_dasgn_madness"  => {
+      "Ruby"        => "as.each do |a|\n  b += a.b false\nend",
+      "ParseTree"   => [:iter,
+                        [:call, [:vcall, :as], :each],
+                        [:dasgn_curr, :a],
+                        [:dasgn_curr,
+                         :b,
+                         [:call,
+                          [:dvar, :b],
+                          :+,
+                          [:array,
+                           [:call, [:dvar, :a], :b, [:array, [:false]]]]]]],
+    },
+
+    "lit_regexp_i_wwtt"  => {
+      "Ruby"        => 'str.split(//i)',
+      "ParseTree"   => [:call, [:vcall, :str], :split, [:array, [:lit, //i]]],
+    },
+    
+    "structure_unused_literal_wwtt"  => {
+      "Ruby"        => '"prevent the above from infecting rdoc"
+
+module Graffle
+end',
+      "ParseTree"   => [:module, :Graffle, [:scope]],
+    },
+
+    "structure_extra_block_for_dvar_scoping"  => {
+      "Ruby"        => 'a.b do |c, d|
+  unless e.f c
+    g = false
+    d.h do |x, i|
+      g = true
+    end
+  end
+end',
+      "ParseTree"   => [:iter,
+[:call, [:vcall, :a], :b],
+[:masgn, [:array, [:dasgn_curr, :c], [:dasgn_curr, :d]]],
+[:block,
+ [:if,
+  [:call, [:vcall, :e], :f, [:array, [:dvar, :c]]],
+  nil,
+  [:block,
+   [:dasgn_curr, :g, [:false]],
+   [:iter,
+    [:call, [:dvar, :d], :h],
+    [:masgn, [:array, [:dasgn_curr, :x], [:dasgn_curr, :i]]],
+    [:dasgn, :g, [:true]]]]]]],
+    },
+
+    "iter_masgn"  => {
+      "Ruby"        => "define_method method do |*args|\nend",
+      "ParseTree"   => [:iter,
+[:fcall, :define_method, [:array, [:vcall, :method]]],
+[:masgn, [:dasgn_curr, :args]]],
+    },
+
     "dstr_2" => {
       "Ruby"        => "argl = 1\n\"x#\{(\"%.2f\" % 3.14159)}y\"\n",
       "ParseTree"   =>   [:block,
@@ -970,16 +1162,7 @@ end
     },
 
     "ensure" => {
-      "Ruby"        => "begin
-  (1 + 1)
-rescue SyntaxError => e1
-  2
-rescue Exception => e2
-  3
-else
-  4
-ensure
-  5
+      "Ruby"        => "begin\n  (1 + 1)\nrescue SyntaxError => e1\n  2\nrescue Exception => e2\n  3\nelse\n  4\nensure\n  5
 end",
       "ParseTree"   => [:begin,
                         [:ensure,
@@ -1097,6 +1280,13 @@ end",
                         [:fcall, :puts, [:array, [:lvar, :o]]]],
     },
 
+    "for_no_body"  => {
+      "Ruby"        => "    for i in 0..max do\n      # do nothing\n    end\n",
+      "ParseTree"   => [:for,
+                        [:dot2, [:lit, 0], [:vcall, :max]],
+                        [:lasgn, :i]],
+    },
+
     "gasgn"  => {
       "Ruby"        => "$x = 42",
       "ParseTree"   => [:gasgn, :$x, [:lit, 42]],
@@ -1110,6 +1300,16 @@ end",
     "gvar"  => {
       "Ruby"        => "$x",
       "ParseTree"   => [:gvar, :$x],
+    },
+
+    "gvar_underscore"  => {
+      "Ruby"        => "$_",
+      "ParseTree"   => [:gvar, :$_],
+    },
+
+    "gvar_underscore_blah"  => {
+      "Ruby"        => "$__blah",
+      "ParseTree"   => [:gvar, :$__blah],
     },
 
     "hash"  => {
@@ -1259,11 +1459,7 @@ end",
     },
 
     "iteration_double_var" => {
-      "Ruby"        => "a do |x|
-  b do |x| 
-    puts x
-  end
-end",
+      "Ruby"        => "a do |x|\n  b do |x| \n    puts x\n  end\nend",
       "ParseTree"   => [:iter,
                         [:fcall, :a],
                         [:dasgn_curr, :x],
@@ -1312,6 +1508,18 @@ end",
       "ParseTree"   => [:lit, 1],
     },
 
+    "lit_long_negative" => {
+      "Ruby"        => "-1",
+      "ParseTree"   => [:lit, -1],
+    },
+
+    "call_unary_neg" => {
+      "Ruby"        => "-2**31",
+      "ParseTree"   => [:call,
+                        [:call, [:lit, 2], :**, [:array, [:lit, 31]]],
+                        :-@],
+    },
+
     "lit_range2" => {
       "Ruby"        => "(1..10)",
       "ParseTree"   => [:lit, 1..10],
@@ -1327,30 +1535,60 @@ end",
       "ParseTree"   => [:lit, /x/],
     },
 
-    "lit_str" => {
-      "Ruby"        => "\"x\"",
+    "lit_regexp_once" => {
+      "Ruby"        => "/x/o",
+      "ParseTree"   => [:lit, /x/],
+    },
+
+    "lit_regexp_n" => {
+      "Ruby"        => "/x/n",
+      "ParseTree"   => [:lit, /x/n],
+    },
+
+    "dregx_n" => {
+      "Ruby"        => '/#{1}/n',
+      "ParseTree"   => [:dregx, '', [:evstr, [:lit, 1]], 16], # TODO: use consts
+    },
+
+    "dregx_interp" => {
+      "Ruby"        => "/#\{@rakefile}/",
+      "ParseTree"   => [:dregx, '', [:evstr, [:ivar, :@rakefile]]],
+    },
+
+    "dregx_once_n_interp" => {
+      "Ruby"        => "/#\{IAC}#\{SB}/no",
+      "ParseTree"   => [:dregx_once, '', [:evstr, [:const, :IAC]], [:evstr, [:const, :SB]], 16],
+    },
+
+    "str" => {
+      "Ruby"        => '"x"',
       "ParseTree"   => [:str, "x"],
     },
 
-    "lit_str_heredoc" => {
+    "str_interp_file" => {
+      "Ruby"        => '"file = #{__FILE__}"',
+      "ParseTree"   => [:str, "file = (string)"],
+    },
+
+    "str_heredoc" => {
       "Ruby"        => "<<'EOM'\n  blah\nblah\nEOM\n",
       "ParseTree"   => [:str, "  blah\nblah\n"],
       "Ruby2Ruby"   => '"  blah\nblah\n"',
     },
 
-    "lit_str_heredoc_indent" => {
+    "str_heredoc_indent" => {
       "Ruby"        => "<<-EOM\n  blah\nblah\n\n  EOM\n",
       "ParseTree"   => [:str, "  blah\nblah\n\n"],
       "Ruby2Ruby"   => '"  blah\nblah\n\n"',
     },
 
-    "lit_str_heredoc_call" => {
+    "str_heredoc_call" => {
       "Ruby"        => "<<'EOM'.strip\n  blah\nblah\nEOM\n",
       "ParseTree"   => [:call, [:str, "  blah\nblah\n"], :strip],
       "Ruby2Ruby"   => '"  blah\nblah\n".strip',
     },
 
-    "lit_str_heredoc_double" => {
+    "str_heredoc_double" => {
       "Ruby"       => "a += <<-BEGIN + b + <<-END\n  first\nBEGIN\n  second\nEND",
       "ParseTree"  => [:lasgn, :a,
                        [:call,
@@ -1365,7 +1603,16 @@ end",
       "Ruby2Ruby"   => "a = (a + ((\"  first\\n\" + b) + \"  second\\n\"))",
     },
 
-    "lit_str_heredoc_expand" => {
+    "str_heredoc_windoze_sucks" => {
+      "Ruby"        => '
+<<-EOF
+    def test_#{action}_valid_feed
+  EOF
+',
+      "ParseTree"   => [:dstr, '    def test_', [:evstr, [:vcall, :action]], [:str, "_valid_feed\n"]],
+    },
+
+    "str_heredoc_expand" => {
       "Ruby"        => "<<EOM\n  blah\n#\{1 + 1}blah\nEOM\n",
       "ParseTree"   => [:dstr, "  blah\n",
                         [:evstr, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]],
@@ -1373,9 +1620,25 @@ end",
       "Ruby2Ruby"   => '"  blah\n#{(1 + 1)}blah\n"',
     },
 
+    "str_concat_space" => {
+      "Ruby"        => '"before" " after"',
+      "ParseTree"   => [:str, "before after"],
+    },
+
+    "str_concat_newline" => {
+      "Ruby"        => '"before" \\
+  " after"',
+      "ParseTree"   => [:str, "before after"],
+    },
+
     "lit_sym" => {
       "Ruby"        => ":x",
       "ParseTree"   => [:lit, :x],
+    },
+
+    "lit_sym_splat" => {
+      "Ruby"        => ":\"*args\"",
+      "ParseTree"   => [:lit, :"*args"],
     },
 
     "lvar_def_boundary" => { # HACK: put # do nothing back under begin
@@ -1414,8 +1677,100 @@ end",
                         [:lasgn, :c],
                         [:argscat,
                          [:array, [:lit, 1], [:lit, 2]],
-                         [:array, [:lit, 3], [:lit, 4]]]]
+                         [:array, [:lit, 3], [:lit, 4]]]],
     },
+
+      "case_nested_no_"  => {
+      "Ruby"        => "case a
+when b then
+  case
+  when d && e
+    f
+  end
+end",
+      "ParseTree"   => [:case,
+                        [:vcall, :a],
+                        [:when, [:array, [:vcall, :b]],
+                         [:when, [:array, [:and, [:vcall, :d], [:vcall, :e]]],
+                          [:vcall, :f]]],
+                        nil],
+    },
+
+    "dstr_the_revenge"  => {
+      "Ruby"        => '"before #{from} middle #{to} (#{__FILE__}:#{__LINE__})"',
+      "ParseTree"   => [:dstr,
+                        "before ",
+                        [:evstr, [:vcall, :from]],
+                        [:str, " middle "],
+                        [:evstr, [:vcall, :to]],
+                        [:str, " ("],
+                        [:str, "(string)"],
+                        [:str, ":"],
+                        [:evstr, [:lit, 1]],
+                        [:str, ")"]],
+    },
+
+    "undef_block"  => {
+      "Ruby"        => "puts
+undef :desc, :next_description",
+      "ParseTree"   => [:block,
+                        [:vcall, :puts],
+                        [:block,
+                         [:undef, [:lit, :desc]],
+                         [:undef, [:lit, :next_description]]]],
+    },
+
+    "heredoc_yet_again"  => {
+      "Ruby"        => "<<-EOF
+s1 '#\{RUBY_PLATFORM}' s2
+#\{__FILE__}
+        EOF
+",
+      "ParseTree"   => [:dstr, "s1 '",
+                        [:evstr, [:const, :RUBY_PLATFORM]],
+                        [:str, "' s2\n"],
+                        [:str, "(string)"],
+                        [:str, "\n"]],
+    },
+
+    "flip2_method"  => {
+      "Ruby"        => "if 1..2.a?(b) then
+  nil
+end",
+      "ParseTree"   => [:if,
+                        [:flip2,
+                         [:lit, 1],
+                         [:call, [:lit, 2], :a?, [:array, [:vcall, :b]]]],
+                        [:nil],
+                        nil],
+    },
+
+#     "something"  => {
+#       "Ruby"        => "
+# *a = *1
+# *a = *[]
+# *a = *[1]
+# *a = *[*[]]
+# *a = *[*[1]]
+# *a = *[*[1,2]]
+# a,b,*c = nil
+# a,b,*c = 1
+# a,b,*c = []
+# a,b,*c = [1]
+# a,b,*c = [nil]
+# a,b,*c = [[]]
+# a,b,*c = [*[]]
+# a,b,*c = [*[1]]
+# a,b,*c = [*[1,2]]
+# a,b,*c = *nil
+# a,b,*c = *1
+# a,b,*c = *[]
+# a,b,*c = *[1]
+# a,b,*c = *[nil]
+# ",
+#       "ParseTree"   => [:nil],
+#     },
+
 
     "masgn_attrasgn"  => {
       "Ruby"        => "a, b.c = d, e",
@@ -1546,6 +1901,20 @@ end",
     "op_asgn_or_ivar" => {
       "Ruby"        => "@v ||= {  }",
       "ParseTree"   => [:op_asgn_or, [:ivar, :@v], [:iasgn, :@v, [:hash]]],
+    },
+
+    "op_asgn_or_block"  => {
+      "Ruby"        => "a ||= begin
+        b
+      rescue
+        c
+      end",
+      "ParseTree"   => [:op_asgn_or,
+                        [:lvar, :a],
+                        [:lasgn, :a,
+                         [:rescue,
+                          [:vcall, :b],
+                          [:resbody, nil, [:vcall, :c]]]]],
     },
 
     "op_asgn_or_ivar2" => { # eww... stupid rubygems

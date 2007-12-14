@@ -750,6 +750,13 @@ again_no_block:
         }
         list = list->nd_next;
       }
+      switch (nd_type(node)) {
+      case NODE_DREGX:
+      case NODE_DREGX_ONCE:
+        if (node->nd_cflag) {
+          rb_ary_push(current, INT2FIX(node->nd_cflag));
+        }
+      }
     }
     break;
 
@@ -853,6 +860,9 @@ again_no_block:
   case NODE_STR:              /* u1 */
   case NODE_LIT:
     rb_ary_push(current, node->nd_lit);
+    if (node->nd_cflag) {
+      rb_ary_push(current, INT2FIX(node->nd_cflag));
+    }
     break;
 
   case NODE_MATCH:            /* u1 -> [:lit, u1] */
