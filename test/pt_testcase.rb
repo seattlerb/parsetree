@@ -2160,20 +2160,70 @@ end',
       "ParseTree"   => [:undef, [:lit, :x]],
     },
 
-    "undef_block"  => {
-      "Ruby"        => "puts
-undef :desc, :next_description",
+    "undef_2"  => {
+      "Ruby"        => "undef :x, :y",
       "ParseTree"   => [:block,
-                        [:vcall, :puts],
-                        [:block,
-                         [:undef, [:lit, :desc]],
-                         [:undef, [:lit, :next_description]]]],
+[:undef, [:lit, :x]],
+[:undef, [:lit, :y]]]
+    },
+
+    "undef_3"  => {
+      "Ruby"        => "undef :x, :y, :z",
+      "ParseTree"   => [:block,
+[:undef, [:lit, :x]],
+[:undef, [:lit, :y]],
+[:undef, [:lit, :z]]]
+    },
+
+    "undef_block_1"  => {
+      "Ruby"        => "f1; undef :x",
+      "ParseTree"   => [:block,
+                        [:vcall, :f1],
+                        [:undef, [:lit, :x]]],
     },
 
     "undef_block_2"  => {
-      "Ruby"        => "
-f1; undef :a, :b, :c; f2
-",
+      "Ruby"        => "f1; undef :x, :y",
+      "ParseTree"   => [:block,
+                        [:vcall, :f1],
+                        [:block,
+[:undef, [:lit, :x]],
+[:undef, [:lit, :y]],
+]],
+    },
+
+    "undef_block_2"  => {
+      "Ruby"        => "f1; undef :x, :y",
+      "ParseTree"   => [:block,
+                        [:vcall, :f1],
+                        [:block,
+[:undef, [:lit, :x]],
+[:undef, [:lit, :y]],
+]],
+    },
+
+    "undef_block_3"  => {
+      "Ruby"        => "f1; undef :x, :y, :z",
+      "ParseTree"   => [:block,
+                        [:vcall, :f1],
+                        [:block,
+[:undef, [:lit, :x]],
+[:undef, [:lit, :y]],
+[:undef, [:lit, :z]],
+]],
+    },
+
+    "undef_block_3_post"  => {
+      "Ruby"        => "undef :x, :y, :z; f2",
+      "ParseTree"   => [:block,
+[:undef, [:lit, :x]],
+[:undef, [:lit, :y]],
+[:undef, [:lit, :z]],
+                        [:vcall, :f2]],
+    },
+
+    "undef_block_wtf"  => {
+      "Ruby"        => "f1; undef :a, :b, :c; f2",
       "ParseTree"   => [:block,
                         [:vcall, :f1],
                         [:block,
@@ -2182,15 +2232,6 @@ f1; undef :a, :b, :c; f2
                           [:undef, [:lit, :b]],
                           [:undef, [:lit, :c]]]],
                         [:vcall, :f2]],
-    },
-
-    "undef_multi"  => {
-      "Ruby"        => "undef :x, :y, :z",
-      "ParseTree"   => [:block,
-                        [:undef, [:lit, :x]],
-                        [:undef, [:lit, :y]],
-                        [:undef, [:lit, :z]]],
-      "Ruby2Ruby"   => "undef :x\nundef :y\nundef :z\n",
     },
 
     "until_post"  => {
