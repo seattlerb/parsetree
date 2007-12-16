@@ -1030,10 +1030,10 @@ end
                                   [:resbody, nil, [:vcall, :c]]]]],
     },
 
-    "stucture_remove_begin_2"  => {
+    "structure_remove_begin_2"  => {
       "Ruby"        => "
 a = if c
-      begin # stays - because b is used inside
+      begin
         b
       rescue
         nil
@@ -1718,6 +1718,20 @@ undef :desc, :next_description",
                         [:block,
                          [:undef, [:lit, :desc]],
                          [:undef, [:lit, :next_description]]]],
+    },
+
+    "undef_block_2"  => {
+      "Ruby"        => "
+f1; undef :a, :b, :c; f2
+",
+      "ParseTree"   => [:block,
+                        [:vcall, :f1],
+                        [:block,
+                         [:block,
+                          [:undef, [:lit, :a]],
+                          [:undef, [:lit, :b]],
+                          [:undef, [:lit, :c]]]],
+                        [:vcall, :f2]],
     },
 
     "heredoc_yet_again"  => {
