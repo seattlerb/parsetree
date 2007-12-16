@@ -283,6 +283,8 @@ class ParseTree
     builder.prefix %{
         #define nd_3rd   u3.node
         static unsigned case_level = 0;
+        static unsigned when_level = 0;
+        static unsigned inside_case_args = 0;
     }
 
     builder.prefix %{
@@ -444,17 +446,24 @@ again_no_block:
     break;
 
   case NODE_WHEN:
-    if (!case_level) { /* when without case, ie, no expr in case */
+    when_level++;
+    if (!inside_case_args && case_level < when_level) { /* when without case, ie, no expr in case */
+      when_level--; if (when_level < 0) when_level = 0;
       rb_ary_pop(ary); /* reset what current is pointing at */
       node = NEW_CASE(0, node);
       goto again;
     }
+    inside_case_args++;
     add_to_parse_tree(self, current, node->nd_head, locals); /* args */
+    inside_case_args--;
+
     if (node->nd_body) {
       add_to_parse_tree(self, current, node->nd_body, locals); /* body */
     } else {
       rb_ary_push(current, Qnil);
     }
+
+    when_level--; if (when_level < 0) when_level = 0;
     break;
 
   case NODE_WHILE:

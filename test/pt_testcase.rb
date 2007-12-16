@@ -181,25 +181,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
                          [:lasgn, :mes, [:gvar, :$!]]]]]],
     },
 
-    "block_arg_wtf" => { # FIX: I don't like that extra return
-      "Ruby"        => "a(b) do\n  if b then\n    true\n  else\n    c = false\n    d { |x| c = true }\n    c\n  \n  end
-end",
-      "ParseTree"   => [:iter,
-                        [:fcall, :a, [:array, [:vcall, :b]]],
-                        nil,
-                        [:block,
-                         [:if,
-                          [:vcall, :b],
-                          [:true],
-                          [:block,
-                           [:dasgn_curr, :c, [:false]],
-                           [:iter,
-                            [:fcall, :d],
-                            [:dasgn_curr, :x],
-                            [:dasgn, :c, [:true]]],
-                           [:dvar, :c]]]]],
-    },
-
     "block_lasgn" => {
       "Ruby"        => "x = (y = 1\n(y + 2))",
       "ParseTree"   => [:lasgn, :x,
@@ -208,8 +189,17 @@ end",
                          [:call, [:lvar, :y], :+, [:array, [:lit, 2]]]]],
     },
 
-    "block_mystery_block"  => {
-      "Ruby"        => "a(b) do\n  if b then\n    true\n  else\n    c = false\n    d { |x| c = true }\n    c\n  \n  end\nend",
+    "block_mystery_block"  => { # FIX: I don't like that extra return
+      "Ruby"        => "a(b) do
+  if b then
+    true
+  else
+    c = false
+    d { |x| c = true }
+    c
+  
+  end
+end",
       "ParseTree"   => [:iter,
                         [:fcall, :a, [:array, [:vcall, :b]]],
                         nil,
@@ -538,14 +528,39 @@ end",
                        [:lasgn, :result, [:lit, 7]]]]
     },
 
+    "case_nested_inner_no_expr"  => {
+      "Ruby"        => "case a
+when b then
+  case
+  when d && e
+    f
+  end
+end",
+      "ParseTree"   => [:case, [:vcall, :a],
+                        [:when, [:array, [:vcall, :b]],
+                         [:case, nil,
+                          [:when, [:array, [:and, [:vcall, :d], [:vcall, :e]]],
+                           [:vcall, :f]],
+                          nil]],
+                        nil],
+    },
+
     "case_no_expr" => { # TODO: nested
-      "Ruby" => "case\nwhen 1 then\n  :a\nwhen 2 then\n  :b\nelse\n  :c\nend",
+      "Ruby" => "case
+when a == 1 then
+  :a
+when a == 2 then
+  :b
+else
+  :c
+end",
       "ParseTree" => [:case, nil,
                       [:when,
-                       [:array, [:lit, 1]],
+                       [:array, [:call, [:vcall, :a], :==, [:array, [:lit, 1]]]],
                        [:lit, :a]],
                       [:when,
-                       [:array, [:lit, 2]], [:lit, :b]],
+                       [:array, [:call, [:vcall, :a], :==, [:array, [:lit, 2]]]],
+                       [:lit, :b]],
                       [:lit, :c]],
     },
 
@@ -1574,22 +1589,6 @@ end",
                          [:array, [:lit, 3], [:lit, 4]]]],
     },
 
-      "case_nested_no_"  => {
-      "Ruby"        => "case a
-when b then
-  case
-  when d && e
-    f
-  end
-end",
-      "ParseTree"   => [:case,
-                        [:vcall, :a],
-                        [:when, [:array, [:vcall, :b]],
-                         [:when, [:array, [:and, [:vcall, :d], [:vcall, :e]]],
-                          [:vcall, :f]]],
-                        nil],
-    },
-
 #     "something"  => {
 #       "Ruby"        => "
 # *a = *1
@@ -2053,19 +2052,19 @@ end",
   end
 end',
       "ParseTree"   => [:iter,
-[:call, [:vcall, :a], :b],
-[:masgn, [:array, [:dasgn_curr, :c], [:dasgn_curr, :d]]],
-[:block,
- [:if,
-  [:call, [:vcall, :e], :f, [:array, [:dvar, :c]]],
-  nil,
-  [:block,
-   [:dasgn_curr, :g, [:false]],
-   [:iter,
-    [:call, [:dvar, :d], :h],
-    [:masgn, [:array, [:dasgn_curr, :x], [:dasgn_curr, :i]]],
-    [:dasgn, :g, [:true]]]]]]],
-    },
+                        [:call, [:vcall, :a], :b],
+                        [:masgn, [:array, [:dasgn_curr, :c], [:dasgn_curr, :d]]],
+                        [:block,
+                         [:if,
+                          [:call, [:vcall, :e], :f, [:array, [:dvar, :c]]],
+                          nil,
+                          [:block,
+                           [:dasgn_curr, :g, [:false]],
+                           [:iter,
+                            [:call, [:dvar, :d], :h],
+                            [:masgn, [:array, [:dasgn_curr, :x], [:dasgn_curr, :i]]],
+                            [:dasgn, :g, [:true]]]]]]],
+      },
 
     "structure_remove_begin_1"  => {
       "Ruby"        => "a << begin
