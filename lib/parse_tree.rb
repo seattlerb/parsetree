@@ -334,7 +334,6 @@ class ParseTree
   builder.prefix %Q@
 void add_to_parse_tree(VALUE self, VALUE ary, NODE * n, ID * locals) {
   NODE * volatile node = n;
-  NODE * volatile contnode = NULL;
   VALUE old_ary = Qnil;
   VALUE current;
   VALUE node_name;
@@ -370,21 +369,12 @@ again_no_block:
     switch (nd_type(node)) {
 
     case NODE_BLOCK:
-      if (contnode) {
-        add_to_parse_tree(self, current, node, locals);
-        break;
+      {
+        while (node) {
+          add_to_parse_tree(self, current, node->nd_head, locals);
+          node = node->nd_next;
+        }
       }
-      contnode = node->nd_next;
-
-      /* FIX: this will break the moment there is a block w/in a block */
-      old_ary = ary;
-      ary = current;
-      node = node->nd_head;
-      if (nd_type(node) == NODE_DASGN_CURR
-          && (!node->nd_value || nd_type(node->nd_value) == NODE_DASGN_CURR)) {
-        goto finish;
-      }
-      goto again;
       break;
 
     case NODE_FBODY:
@@ -974,16 +964,6 @@ again_no_block:
     rb_ary_push(current, INT2FIX(-99));
     rb_ary_push(current, INT2FIX(nd_type(node)));
     break;
-  }
-
-  finish:
-  if (contnode) {
-      node = contnode;
-      contnode = NULL;
-      current = ary;
-      ary = old_ary;
-      old_ary = Qnil;
-      goto again_no_block;
   }
 }
 @ # end of add_to_parse_tree block
