@@ -745,16 +745,100 @@ end",
                         [:scope, [:cvdecl, :@@blah, [:lit, 1]]]],
     },
 
-    "dasgn"  => {
-      "Ruby"        => "a.each { |x| b.each { |y| x = (x + 1) } }",
+    "dasgn_0"  => {
+      "Ruby"        => "
+a.each do |x|
+  if true then
+    b.each { |y| x = (x + 1) }
+  end
+end
+",
       "ParseTree"   => [:iter,
                         [:call, [:vcall, :a], :each],
                         [:dasgn_curr, :x],
-                        [:iter,
-                         [:call, [:vcall, :b], :each],
-                         [:dasgn_curr, :y],
-                         [:dasgn, :x,
-                          [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]]],
+                        [:if, [:true],
+                         [:iter,
+                          [:call, [:vcall, :b], :each],
+                          [:dasgn_curr, :y],
+                          [:dasgn, :x,
+                           [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]],
+                         nil]],
+    },
+
+    "dasgn_1"  => { # without mystery block / dasgn_curr
+      "Ruby"        => "
+a.each do |x|
+  if true then
+    b.each { |y| c = (c + 1) }
+  end
+end
+",
+      "ParseTree"   => [:iter,
+                        [:call, [:vcall, :a], :each],
+                        [:dasgn_curr, :x],
+                        [:if, [:true],
+                         [:iter,
+                          [:call, [:vcall, :b], :each],
+                          [:dasgn_curr, :y],
+                          [:dasgn_curr, :c,
+                           [:call, [:dvar, :c], :+, [:array, [:lit, 1]]]]],
+                         nil]],
+    },
+
+    "dasgn_2"  => { # WITH mystery block / dasgn_curr
+      "Ruby"        => "
+a.each do |x|
+  if true then
+    c = 0
+    b.each { |y| c = (c + 1) }
+  end
+end
+",
+      "ParseTree"   => [:iter,
+                        [:call, [:vcall, :a], :each],
+                        [:dasgn_curr, :x],
+                        [:block,
+                         [:dasgn_curr, :c],
+                         [:if, [:true],
+                          [:block,
+                           [:dasgn_curr, :c, [:lit, 0]],
+                           [:iter,
+                            [:call, [:vcall, :b], :each],
+                            [:dasgn_curr, :y],
+                            [:dasgn, :c,
+                             [:call, [:dvar, :c], :+, [:array, [:lit, 1]]]]]],
+                          nil]]],
+    },
+
+    "dasgn_icky"  => { # WITH mystery block / dasgn_curr
+      "Ruby"        => "
+a do
+  v = nil                       # dasgn_curr
+  assert_block(full_message) do
+    begin
+      yield
+    rescue Exception => v       # dasgn
+      break
+    end
+  end
+end
+",
+      "ParseTree"   => [:iter,
+                        [:fcall, :a],
+                        nil,
+                        [:block,
+                         [:dasgn_curr, :v],
+                         [:dasgn_curr, :v, [:nil]],
+                         [:iter,
+                          [:fcall, :assert_block,
+                           [:array, [:vcall, :full_message]]],
+                          nil,
+                          [:begin,
+                           [:rescue,
+                            [:yield],
+                            [:resbody,
+                             [:array, [:const, :Exception]],
+                             [:block, [:dasgn, :v, [:gvar, :$!]], [:break]]]]]]]],
     },
 
     "dasgn_curr" => {
