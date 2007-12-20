@@ -5,17 +5,19 @@ begin require 'rubygems' rescue LoadError end
 require 'parse_tree'
 require 'sexp'
 
-$u ||= false
-$n ||= false
-$s ||= false
-$r ||= false
+$a ||= false
 $h ||= false
+$n ||= false
+$r ||= false
+$s ||= false
+$u ||= false
 $n = $n.intern if $n
 
 if $h then
   puts "usage: #{File.basename $0} [options] [file...]"
   puts "options:"
   puts "-h      : display usage"
+  puts "-a      : all nodes, including newline"
   puts "-n=node : only display matching nodes"
   puts "-r      : raw arrays, no sexps"
   puts "-s      : structural sexps, strip all content and show bare tree"
@@ -35,7 +37,7 @@ if $u then
   end
 end
 
-parse_tree = ParseTree.new
+parse_tree = ParseTree.new($a)
 unifier = Unifier.new if $u
 
 ARGV.each do |file|
