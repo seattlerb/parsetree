@@ -46,9 +46,3 @@ task :sort do
     sh 'rm -f x y'
   end
 end
-
-# require 'rcov/rcovtask'
-# Rcov::RcovTask.new do |t|
-#   t.test_files = FileList['test/test*.rb']
-#   # t.verbose = true     # uncomment to see the executed command
-# end

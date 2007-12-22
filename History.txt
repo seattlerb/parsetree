@@ -1,9 +1,29 @@
-=== 2.0.3 / 2007-10-30
+=== 2.1.0 / 2007-10-30
 
-* 2 minor enhancements:
+* 13 minor enhancements:
 
-  * Added Unifier (a SexpProcessor) to unified_ruby.rb.
+  * Added (partial) regexp flag support, currently numerical. ugh.
+  * Added -a flag to parse_tree_show to turn on newline (all) nodes.
+  * Added -r to parse_tree_show for raw arrays instead of sexps.
+  * Added Unifier (SexpProcessor) class to unified_ruby.rb.
+  * Added a ton of tests while working on ruby_parser.
   * Added ability to tell proc {} (nil arg slot) from proc {||} (0 arg slot)
+  * Added context tracking to rewriting phase... slightly broken.
+  * Added evstr support. (I hate evan)
+  * Added usage for parse_tree_show.
+  * Changed verbose to be true all the time in parse_tree_for_string.
+  * Removed process_level from SexpProcessor... just look at context size instead.
+  * Revamped ParseTree. No more passing around newline. Pass around self instead.
+  * I'm starting to dislike ruby's AST. It is REALLY inconsistent.
+
+* 6 bug fix:
+
+  * SexpProcessor#assert_type now a bit safer with bad values.
+  * Uncovered a bug in ruby (AST changes when -v used), added handler code.
+  * Fixed NODE_BLOCK and massively simplified in the process.
+  * Fixed rewrite_defs to deal with non-block asts.
+  * Fixed test/unit hack so it does not die under miniunit.
+  * Found a bug in PT where parse_tree_for_string had some shadowed variables.
 
 === 2.0.2 / 2007-09-20
 
