@@ -1077,17 +1077,13 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "dstr_heredoc_yet_again"  => {
-      "Ruby"        => "<<-EOF
-s1 '#\{RUBY_PLATFORM}' s2
-#\{__FILE__}
-        EOF
-",
+      "Ruby"        => "<<-EOF\ns1 '#\{RUBY_PLATFORM}' s2\n#\{__FILE__}\n        EOF\n",
       "ParseTree"   => [:dstr, "s1 '",
                         [:evstr, [:const, :RUBY_PLATFORM]],
                         [:str, "' s2\n"],
                         [:str, "(string)"],
                         [:str, "\n"]],
-      "Ruby2Ruby"   => "\"s1 '#\{RUBY_PLATFORM}' s2\n(string)\n\""
+      "Ruby2Ruby"   => "\"s1 '#\{RUBY_PLATFORM}' s2\\n(string)\\n\""
     },
 
     "dstr_nest"  => {
@@ -1977,13 +1973,13 @@ end",
     "str_heredoc" => {
       "Ruby"        => "<<'EOM'\n  blah\nblah\nEOM\n",
       "ParseTree"   => [:str, "  blah\nblah\n"],
-      "Ruby2Ruby"   => '"  blah\nblah\n"',
+      "Ruby2Ruby"   => "\"  blah\\nblah\\n\"",
     },
 
     "str_heredoc_call" => {
       "Ruby"        => "<<'EOM'.strip\n  blah\nblah\nEOM\n",
       "ParseTree"   => [:call, [:str, "  blah\nblah\n"], :strip],
-      "Ruby2Ruby"   => '"  blah\nblah\n".strip',
+      "Ruby2Ruby"   => "\"  blah\\nblah\\n\".strip",
     },
 
     "str_heredoc_double" => {
@@ -2006,13 +2002,13 @@ end",
       "ParseTree"   => [:dstr, "  blah\n",
                         [:evstr, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]],
                         [:str, "blah\n"]],
-      "Ruby2Ruby"   => "\"  blah\n#\{(1 + 1)}blah\n\"",
+      "Ruby2Ruby"   => "\"  blah\\n#\{(1 + 1)}blah\\n\"",
     },
 
     "str_heredoc_indent" => {
       "Ruby"        => "<<-EOM\n  blah\nblah\n\n  EOM\n",
       "ParseTree"   => [:str, "  blah\nblah\n\n"],
-      "Ruby2Ruby"   => '"  blah\nblah\n\n"',
+      "Ruby2Ruby"   => "\"  blah\\nblah\\n\\n\"",
     },
 
     "dstr_heredoc_windoze_sucks" => {
@@ -2021,13 +2017,14 @@ end",
                         'def test_',
                         [:evstr, [:vcall, :action]],
                         [:str, "_valid_feed\n"]],
-      "Ruby2Ruby"   => "\"def test_#\{action}_valid_feed\n\"",
+      "Ruby2Ruby"   => "\"def test_#\{action}_valid_feed\\n\"",
     },
 
     "str_interp_file" => {
-      "Ruby"        => '"file = #{__FILE__}"',
-      "ParseTree"   => [:str, "file = (string)"],
-      "Ruby2Ruby"   => '"file = (string)"',
+      "Ruby"        => '"file = #{__FILE__}
+"',
+      "ParseTree"   => [:str, "file = (string)\n"],
+      "Ruby2Ruby"   => '"file = (string)\\n"',
     },
 
     "structure_extra_block_for_dvar_scoping"  => {
