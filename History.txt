@@ -1,4 +1,10 @@
-=== 2.1.0 / 2007-10-30
+=== 2.1.1 / 2007-12-22
+
+* 1 bug fix:
+
+  * _sigh_ apparently I've been running w/o all my anal compiler flags on.
+
+=== 2.1.0 / 2007-12-21
 
 * 13 minor enhancements:
 

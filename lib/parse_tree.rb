@@ -41,7 +41,7 @@ end
 
 class ParseTree
 
-  VERSION = '2.1.0'
+  VERSION = '2.1.1'
 
   ##
   # Front end translation method.
@@ -334,7 +334,6 @@ class ParseTree
   builder.prefix %Q@
 void add_to_parse_tree(VALUE self, VALUE ary, NODE * n, ID * locals) {
   NODE * volatile node = n;
-  VALUE old_ary = Qnil;
   VALUE current;
   VALUE node_name;
   static VALUE node_names = Qnil;
@@ -364,9 +363,7 @@ again:
   rb_ary_push(ary, current);
   rb_ary_push(current, node_name);
 
-again_no_block:
-
-    switch (nd_type(node)) {
+  switch (nd_type(node)) {
 
     case NODE_BLOCK:
       {
@@ -438,7 +435,7 @@ again_no_block:
   case NODE_WHEN:
     when_level++;
     if (!inside_case_args && case_level < when_level) { /* when without case, ie, no expr in case */
-      when_level--; if (when_level < 0) when_level = 0;
+      if (when_level > 0) when_level--;
       rb_ary_pop(ary); /* reset what current is pointing at */
       node = NEW_CASE(0, node);
       goto again;
@@ -453,7 +450,7 @@ again_no_block:
       rb_ary_push(current, Qnil);
     }
 
-    when_level--; if (when_level < 0) when_level = 0;
+    if (when_level > 0) when_level--;
     break;
 
   case NODE_WHILE:
@@ -1011,7 +1008,6 @@ static VALUE parse_tree_for_str(VALUE source, VALUE filename, VALUE line) {
   VALUE result = rb_ary_new();
   NODE *node = NULL;
   int critical;
-  int newlines = RTEST(rb_iv_get(self, "@include_newlines"));
 
   tmp = rb_check_string_type(filename);
   if (NIL_P(tmp)) {
