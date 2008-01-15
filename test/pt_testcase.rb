@@ -145,8 +145,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "Ruby"        => "[$&, $`, $', $+]",
       "ParseTree"   => [:array,
                         [:back_ref, :&],
-                        [:back_ref, "`".intern], # symbol was fucking up emacs
-                        [:back_ref, "'".intern], # s->e
+                        [:back_ref, :"`"],
+                        [:back_ref, :"'"],
                         [:back_ref, :+]],
     },
 
@@ -214,7 +214,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree" => [:defn, :blah,
                       [:scope,
                        [:block,
-                        [:args, "*args".intern],
+                        [:args, :"*args"],
                         [:block_arg, :block],
                         [:block_pass,
                          [:lvar, :block],
@@ -278,7 +278,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree" => [:defn, :blah,
                       [:scope,
                        [:block,
-                        [:args, "*args".intern],
+                        [:args, :"*args"],
                         [:block_arg, :block],
                         [:block_pass,
                          [:lvar, :block],
@@ -295,8 +295,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
     "block_stmt_after"  => {
       "Ruby"        => "def f\n  begin\n    b\n  rescue\n    c\n  end\n\n  d\nend",
-      "ParseTree"   => [:defn,
-                        :f,
+      "ParseTree"   => [:defn, :f,
                         [:scope,
                          [:block,
                           [:args],
@@ -307,8 +306,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
     "block_stmt_before"  => {
       "Ruby"        => "def f\n  a\n  begin\n    b\n  rescue\n    c\n  end\nend",
-      "ParseTree"   => [:defn,
-                        :f,
+      "ParseTree"   => [:defn, :f,
                         [:scope,
                          [:block,
                           [:args],
@@ -320,8 +318,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
     "block_stmt_both"  => {
       "Ruby"        => "def f\n  a\n  begin\n    b\n  rescue\n    c\n  end\n  d\nend",
-      "ParseTree"   => [:defn,
-                        :f,
+      "ParseTree"   => [:defn, :f,
                         [:scope,
                          [:block,
                           [:args],
@@ -333,8 +330,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
     "bmethod"  => {
       "Ruby"        => [Examples, :unsplatted],
-      "ParseTree"   => [:defn,
-                        :unsplatted,
+      "ParseTree"   => [:defn, :unsplatted,
                         [:bmethod,
                          [:dasgn_curr, :x],
                          [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]]],
@@ -343,11 +339,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
     "bmethod_noargs"  => {
       "Ruby"        => [Examples, :bmethod_noargs],
-      "ParseTree"   => [:defn,
-                        :bmethod_noargs,
+      "ParseTree"   => [:defn, :bmethod_noargs,
                         [:bmethod,
                          nil,
-                         [:call, [:vcall, :x], "+".intern, [:array, [:lit, 1]]]]],
+                         [:call, [:vcall, :x], :"+", [:array, [:lit, 1]]]]],
       "Ruby2Ruby"   => "def bmethod_noargs\n  (x + 1)\nend"
     },
 
@@ -544,8 +539,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:scope,
                          [:block,
                           [:fcall, :puts, [:array, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]]],
-                          [:defn,
-                           :blah,
+                          [:defn, :blah,
                            [:scope,
                             [:block,
                              [:args],
@@ -822,7 +816,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree" => [:defn, :x,
                       [:scope,
                        [:block,
-                        [:args, :a, :b, "*c".intern, # s->e
+                        [:args, :a, :b, :"*c",
                          [:block, [:lasgn, :b, [:lit, 42]]]],
                         [:block_arg, :d],
                         [:fcall, :p,
@@ -900,7 +894,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree" => [:defn, :x,
                       [:scope,
                        [:block,
-                        [:args, :a, "*args".intern],
+                        [:args, :a, :"*args"],
                         [:fcall, :p,
                          [:array, [:lvar, :a], [:lvar, :args]]]]]],
     },
@@ -935,7 +929,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree" => [:defn, :x,
                       [:scope,
                        [:block,
-                        [:args, :a, "*".intern],
+                        [:args, :a, :"*"],
                         [:fcall, :p,
                          [:array, [:lvar, :a]]]]]],
     },
@@ -982,8 +976,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
     "dmethod" => {
       "Ruby"        => [Examples, :dmethod_added],
-      "ParseTree"   => [:defn,
-                        :dmethod_added,
+      "ParseTree"   => [:defn, :dmethod_added,
                         [:dmethod,
                          :a_method,
                          [:scope,
@@ -1391,13 +1384,13 @@ end",
       "ParseTree"   => [:block,
                         [:lasgn, :argl, [:lit, 10]],
                         [:while,
-                         [:call, [:lvar, :argl], ">=".intern, [:array, [:lit, 1]]],
+                         [:call, [:lvar, :argl], :">=", [:array, [:lit, 1]]],
                          [:block,
                           [:fcall, :puts, [:array, [:str, "hello"]]],
                           [:lasgn,
                            :argl,
                            [:call, [:lvar, :argl],
-                            "-".intern, [:array, [:lit, 1]]]]], true]],
+                            :"-", [:array, [:lit, 1]]]]], true]],
     },
 
     "iteration6" => {
@@ -1583,8 +1576,7 @@ end",
       "Ruby"        => "b = 42\ndef a\n  c do\n    begin\n    rescue RuntimeError => b\n      puts(b)\n    end\n  end\nend\n",
       "ParseTree"   => [:block,
                         [:lasgn, :b, [:lit, 42]],
-                        [:defn,
-                         :a,
+                        [:defn, :a,
                          [:scope,
                           [:block,
                            [:args],
@@ -1627,7 +1619,7 @@ end",
     "masgn_iasgn"  => {
       "Ruby"        => "a, @b = c, d",
       "ParseTree"   => [:masgn,
-                        [:array, [:lasgn, :a], [:iasgn, "@b".intern]],
+                        [:array, [:lasgn, :a], [:iasgn, :"@b"]],
                         [:array,  [:vcall, :c], [:vcall, :d]]],
     },
 
@@ -1745,9 +1737,9 @@ end",
       "ParseTree"   => [:block,
                         [:lasgn, :b, [:zarray]],
                         [:op_asgn1, [:lvar, :b],
-                         [:array, [:lit, 1]], "||".intern, [:lit, 10]], # s->e
+                         [:array, [:lit, 1]], :"||", [:lit, 10]],
                         [:op_asgn1, [:lvar, :b],
-                         [:array, [:lit, 2]], "&&".intern, [:lit, 11]], # s->e
+                         [:array, [:lit, 2]], :"&&", [:lit, 11]],
                         [:op_asgn1, [:lvar, :b],
                          [:array, [:lit, 3]], :+, [:lit, 12]]],
     },
@@ -1761,15 +1753,15 @@ end",
                         [:lasgn, :c,
                          [:call, [:lvar, :s], :new, [:array, [:nil]]]],
 
-                        [:op_asgn2, [:lvar, :c], :var=, "||".intern, # s->e
+                        [:op_asgn2, [:lvar, :c], :var=, :"||",
                          [:lit, 20]],
-                        [:op_asgn2, [:lvar, :c], :var=, "&&".intern, # s->e
+                        [:op_asgn2, [:lvar, :c], :var=, :"&&",
                          [:lit, 21]],
                         [:op_asgn2, [:lvar, :c], :var=, :+, [:lit, 22]],
 
                         [:op_asgn2,
                          [:call,
-                          [:call, [:lvar, :c], :d], :e], :f=, "||".intern,
+                          [:call, [:lvar, :c], :d], :e], :f=, :"||",
                          [:lit, 42]]],
     },
 
@@ -2349,7 +2341,7 @@ end",
       next if [:skip, :unsupported].include? data[input_name]
       next if data[output_name] == :skip
 
-      c.send(:define_method, "test_#{node}".intern) do
+      c.send(:define_method, :"test_#{node}") do
         flunk "Processor is nil" if processor.nil?
         assert data.has_key?(input_name), "Unknown input data"
         unless data.has_key?(output_name) then
