@@ -746,6 +746,17 @@ class ParseTreeTestCase < Test::Unit::TestCase
                           nil]]],
     },
 
+    "dasgn_curr" => {
+      "Ruby"        => "data.each do |x, y|\n  a = 1\n  b = a\n  b = a = x\nend",
+      "ParseTree"   => [:iter,
+                        [:call, [:vcall, :data], :each],
+                        [:masgn, [:array, [:dasgn_curr, :x], [:dasgn_curr, :y]]],
+                        [:block,
+                         [:dasgn_curr, :a, [:lit, 1]],
+                         [:dasgn_curr, :b, [:dvar, :a]],
+                         [:dasgn_curr, :b, [:dasgn_curr, :a, [:dvar, :x]]]]],
+    },
+
     "dasgn_icky"  => { # WITH mystery block / dasgn_curr
       "Ruby"        => "a do\n  v = nil\n  assert_block(full_message) do\n    begin\n      yield\n    rescue Exception => v\n      break\n    end\n  end\nend",
       "ParseTree"   => [:iter,
@@ -764,17 +775,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
                             [:resbody,
                              [:array, [:const, :Exception]],
                              [:block, [:dasgn, :v, [:gvar, :$!]], [:break]]]]]]]],
-    },
-
-    "dasgn_curr" => {
-      "Ruby"        => "data.each do |x, y|\n  a = 1\n  b = a\n  b = a = x\nend",
-      "ParseTree"   => [:iter,
-                        [:call, [:vcall, :data], :each],
-                        [:masgn, [:array, [:dasgn_curr, :x], [:dasgn_curr, :y]]],
-                        [:block,
-                         [:dasgn_curr, :a, [:lit, 1]],
-                         [:dasgn_curr, :b, [:dvar, :a]],
-                         [:dasgn_curr, :b, [:dasgn_curr, :a, [:dvar, :x]]]]],
     },
 
     "dasgn_mixed" => {
@@ -1074,6 +1074,23 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         [:str, "55"],
                         [:evstr, [:lit, 66]]],
       "Ruby2Ruby"   => '"#{22}aacd#{44}55#{66}"',
+    },
+
+    "dstr_heredoc_expand" => {
+      "Ruby"        => "<<EOM\n  blah\n#\{1 + 1}blah\nEOM\n",
+      "ParseTree"   => [:dstr, "  blah\n",
+                        [:evstr, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]],
+                        [:str, "blah\n"]],
+      "Ruby2Ruby"   => "\"  blah\\n#\{(1 + 1)}blah\\n\"",
+    },
+
+    "dstr_heredoc_windoze_sucks" => {
+      "Ruby"        => "<<-EOF\r\ndef test_#\{action}_valid_feed\r\n  EOF\r\n",
+      "ParseTree"   => [:dstr,
+                        'def test_',
+                        [:evstr, [:vcall, :action]],
+                        [:str, "_valid_feed\n"]],
+      "Ruby2Ruby"   => "\"def test_#\{action}_valid_feed\\n\"",
     },
 
     "dstr_heredoc_yet_again"  => {
@@ -1846,7 +1863,15 @@ end",
       "ParseTree"   => [:iter, [:postexe], nil, [:lit, 1]],
     },
 
-    "proc_args" => {
+    "proc_args_0" => {
+      "Ruby" => "proc { || (x + 1) }",
+      "ParseTree" => [:iter,
+                      [:fcall, :proc],
+                      0,
+                      [:call, [:vcall, :x], :+, [:array, [:lit, 1]]]],
+    },
+
+    "proc_args_1" => {
       "Ruby" => "proc { |x| (x + 1) }",
       "ParseTree" => [:iter,
                       [:fcall, :proc],
@@ -1854,19 +1879,19 @@ end",
                       [:call, [:dvar, :x], :+, [:array, [:lit, 1]]]],
     },
 
-    "proc_no_args" => {
+    "proc_args_2" => {
+      "Ruby" => "proc { |x, y| (x + y) }",
+      "ParseTree" => [:iter,
+                      [:fcall, :proc],
+                      [:masgn, [:array, [:dasgn_curr, :x], [:dasgn_curr, :y]]],
+                      [:call, [:dvar, :x], :+, [:array, [:dvar, :y]]]],
+    },
+
+    "proc_args_no" => {
       "Ruby" => "proc { (x + 1) }",
       "ParseTree" => [:iter,
                       [:fcall, :proc],
                       nil,
-                      [:call, [:vcall, :x], :+, [:array, [:lit, 1]]]],
-    },
-
-    "proc_zero_args" => {
-      "Ruby" => "proc { || (x + 1) }",
-      "ParseTree" => [:iter,
-                      [:fcall, :proc],
-                      0,
                       [:call, [:vcall, :x], :+, [:array, [:lit, 1]]]],
     },
 
@@ -1997,27 +2022,10 @@ end",
       "Ruby2Ruby"   => "a = (a + ((\"  first\\n\" + b) + \"  second\\n\"))",
     },
 
-    "dstr_heredoc_expand" => {
-      "Ruby"        => "<<EOM\n  blah\n#\{1 + 1}blah\nEOM\n",
-      "ParseTree"   => [:dstr, "  blah\n",
-                        [:evstr, [:call, [:lit, 1], :+, [:array, [:lit, 1]]]],
-                        [:str, "blah\n"]],
-      "Ruby2Ruby"   => "\"  blah\\n#\{(1 + 1)}blah\\n\"",
-    },
-
     "str_heredoc_indent" => {
       "Ruby"        => "<<-EOM\n  blah\nblah\n\n  EOM\n",
       "ParseTree"   => [:str, "  blah\nblah\n\n"],
       "Ruby2Ruby"   => "\"  blah\\nblah\\n\\n\"",
-    },
-
-    "dstr_heredoc_windoze_sucks" => {
-      "Ruby"        => "<<-EOF\r\ndef test_#\{action}_valid_feed\r\n  EOF\r\n",
-      "ParseTree"   => [:dstr,
-                        'def test_',
-                        [:evstr, [:vcall, :action]],
-                        [:str, "_valid_feed\n"]],
-      "Ruby2Ruby"   => "\"def test_#\{action}_valid_feed\\n\"",
     },
 
     "str_interp_file" => {
