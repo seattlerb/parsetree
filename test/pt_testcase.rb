@@ -1850,6 +1850,19 @@ end",
       "Ruby2Ruby"   => "((a or b) or (c and d))",
     },
 
+    "parse_floats_as_args" => {
+      "Ruby"        => "def x(a=0.0,b=0.0)\n  a+b\nend",
+      "ParseTree"   => [:defn, :x,
+                        [:scope,
+                         [:block,
+                          [:args, :a, :b,
+                           [:block,
+                            [:lasgn, :a, [:lit, 0.0]],
+                            [:lasgn, :b, [:lit, 0.0]]]],
+                          [:call, [:lvar, :a], :+, [:array, [:lvar, :b]]]]]],
+      "Ruby2Ruby"   => "def x(a = 0.0, b = 0.0)\n  (a + b)\nend",
+    },
+
     "postexe"  => {
       "Ruby"        => "END { 1 }",
       "ParseTree"   => [:iter, [:postexe], nil, [:lit, 1]],
@@ -1988,19 +2001,19 @@ end",
     },
 
     "str_heredoc" => {
-      "Ruby"        => "<<'EOM'\n  blah\nblah\nEOM\n",
+      "Ruby"        => "<<'EOM'\n  blah\nblah\nEOM",
       "ParseTree"   => [:str, "  blah\nblah\n"],
       "Ruby2Ruby"   => "\"  blah\\nblah\\n\"",
     },
 
     "str_heredoc_call" => {
-      "Ruby"        => "<<'EOM'.strip\n  blah\nblah\nEOM\n",
+      "Ruby"        => "<<'EOM'.strip\n  blah\nblah\nEOM",
       "ParseTree"   => [:call, [:str, "  blah\nblah\n"], :strip],
       "Ruby2Ruby"   => "\"  blah\\nblah\\n\".strip",
     },
 
     "str_heredoc_double" => {
-      "Ruby"       => "a += <<-BEGIN + b + <<-END\n  first\nBEGIN\n  second\nEND",
+      "Ruby"       => "a += <<-H1 + b + <<-H2\n  first\nH1\n  second\nH2",
       "ParseTree"  => [:lasgn, :a,
                        [:call,
                         [:lvar, :a],
@@ -2015,7 +2028,7 @@ end",
     },
 
     "str_heredoc_indent" => {
-      "Ruby"        => "<<-EOM\n  blah\nblah\n\n  EOM\n",
+      "Ruby"        => "<<-EOM\n  blah\nblah\n\n  EOM",
       "ParseTree"   => [:str, "  blah\nblah\n\n"],
       "Ruby2Ruby"   => "\"  blah\\nblah\\n\\n\"",
     },

@@ -31,17 +31,6 @@ class TestUnifiedRuby < Test::Unit::TestCase
     assert_equal @expect, @sp.process(@insert)
   end
 
-  def test_argscat
-    @insert = s(:argscat,
-                s(:array, s(:lvar, :container), s(:lvar, :point)),
-                s(:lvar, :args))
-    @expect = s(:argscat,
-                s(:arglist, s(:lvar, :container), s(:lvar, :point)),
-                s(:lvar, :args))
-
-    doit
-  end
-
   def test_call_args
     @insert = s(:call, s(:lit, 42), :y, s(:array, s(:lit, 24)))
     @expect = s(:call, s(:lit, 42), :y, s(:arglist, s(:lit, 24)))
@@ -74,6 +63,15 @@ class TestUnifiedRuby < Test::Unit::TestCase
 
     doit
   end
+
+  # [:proc, [:masgn, [:array, [:dasgn_curr, :x], [:dasgn_curr, :y]]]]
+
+  # proc { |x,y| x + y }
+  # =
+  # s(:iter,
+  #  s(:fcall, :proc),
+  #  s(:masgn, s(:array, s(:dasgn_curr, :x), s(:dasgn_curr, :y))),
+  #  s(:call, s(:dvar, :x), :+, s(:array, s(:dvar, :y))))
 
   def test_rewrite_bmethod_noargs
     @insert = s(:bmethod,

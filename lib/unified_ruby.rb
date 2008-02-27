@@ -2,12 +2,6 @@
 $TESTING ||= false
 
 module UnifiedRuby
-  def rewrite_argscat(exp)
-    raise "unknown type #{exp.inspect}" unless exp[1][0] == :array
-    exp[1][0] = :arglist
-    exp
-  end
-
   def rewrite_bmethod(exp)
     exp[0] = :scope
 
@@ -84,7 +78,6 @@ module UnifiedRuby
   # to:
   #
   #   s(:defn, :reader, s(:args), s(:ivar, :@name))
-  #
   #
 
   def rewrite_defn(exp)

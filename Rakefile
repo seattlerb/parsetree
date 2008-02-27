@@ -6,15 +6,14 @@ require 'hoe'
 $: << "../../RubyInline/dev/lib"
 require './lib/parse_tree.rb'
 
-Hoe.new("ParseTree", ParseTree::VERSION) do |p|
-  p.rubyforge_name = "parsetree"
-  p.summary = "Extract and enumerate ruby parse trees."
-  p.summary = p.paragraphs_of("README.txt", 2).join("\n\n")
-  p.description = p.paragraphs_of("README.txt", 2..6, 8).join("\n\n")
-  p.changes = p.paragraphs_of("History.txt", 0..2).join("\n\n")
-  p.clean_globs << File.expand_path("~/.ruby_inline")
-  p.extra_deps << ['RubyInline', '>= 3.6.0']
-  p.spec_extras[:require_paths] = proc { |paths| paths << 'xtest' }
+Hoe.new("ParseTree", ParseTree::VERSION) do |pt|
+  pt.rubyforge_name = "parsetree"
+
+  pt.developer('Ryan Davis', 'ryand-ruby@zenspider.com')
+
+  pt.clean_globs << File.expand_path("~/.ruby_inline")
+  pt.extra_deps << ['RubyInline', '>= 3.6.0']
+  pt.spec_extras[:require_paths] = proc { |paths| paths << 'test' }
 end
 
 Hoe::RUBY_FLAGS.sub! /-I/, '-I../../RubyInline/dev/lib:test:'
