@@ -1009,7 +1009,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
     "dregx_n" => {
       "Ruby"        => '/#{1}/n',
-      "ParseTree"   => [:dregx, '', [:evstr, [:lit, 1]], 16], # TODO: use consts
+      "ParseTree"   => [:dregx, '', [:evstr, [:lit, 1]], /x/n.options],
       "Ruby2Ruby"   => "/#\{1}/", # HACK - need to support regexp flags
     },
 
@@ -1021,7 +1021,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
     "dregx_once_n_interp" => {
       "Ruby"        => "/#\{IAC}#\{SB}/no",
-      "ParseTree"   => [:dregx_once, '', [:evstr, [:const, :IAC]], [:evstr, [:const, :SB]], 16],
+      "ParseTree"   => [:dregx_once, '', [:evstr, [:const, :IAC]], [:evstr, [:const, :SB]], /x/n.options],
       "Ruby2Ruby"   => "/#\{IAC}#\{SB}/o", # HACK
     },
 
@@ -1550,7 +1550,7 @@ end",
       "Ruby"        => 'str.split(//i)',
       "ParseTree"   => [:call, [:vcall, :str], :split, [:array, [:lit, //i]]],
     },
-    
+
     "lit_regexp_n" => {
       "Ruby"        => "/x/n",
       "ParseTree"   => [:lit, /x/n],
@@ -2360,7 +2360,8 @@ end",
         unless data.has_key?(output_name) then
           $stderr.puts "add_test(#{node.inspect}, :same)"
         end
-        assert data.has_key?(output_name), "Missing test data: #{self.class} #{node}"
+        assert(data.has_key?(output_name),
+               "Missing test data: #{self.class} #{node}")
         input = data[input_name].deep_clone
 
         expected = if data[output_name] == :same then
@@ -2378,14 +2379,17 @@ end",
           extra_expected = []
           extra_input = []
 
-          _, expected, extra_expected = *expected if Array === expected and expected.first == :defx
-          _, input, extra_input = *input if Array === input and input.first == :defx
+          _, expected, extra_expected = *expected if
+            Array === expected and expected.first == :defx
+          _, input, extra_input = *input if
+            Array === input and input.first == :defx
 
           debug = input.deep_clone
-          $-w = nil if node == "match"
-          assert_equal expected, processor.process(input), "failed on input: #{debug.inspect}"
-          $-w = true if node == "match"
-          extra_input.each do |input| processor.process(input) end
+          assert_equal(expected, processor.process(input),
+                       "failed on input: #{debug.inspect}")
+          extra_input.each do |extra|
+            processor.process(extra)
+          end
           extra = processor.extra_methods rescue []
           assert_equal extra_expected, extra
         end
