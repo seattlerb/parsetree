@@ -27,8 +27,8 @@ class Sexp < Array # ZenTest FULL
   def self.for(klass, method = nil, walk_ancestors = false)
     require 'parse_tree'
     sexp = if walk_ancestors and method then
-             klass.ancestors.each do |klass|
-               sexp = ParseTree.translate klass, method
+             klass.ancestors.each do |kls|
+               sexp = ParseTree.translate kls, method
                break sexp unless sexp == [nil]
              end
            else
@@ -99,6 +99,10 @@ class Sexp < Array # ZenTest FULL
   def array_type?
     type = self.first
     @@array_types.include? type
+  end
+
+  def compact # :nodoc:
+    self.delete_if { |o| o.nil? }
   end
 
   ##
