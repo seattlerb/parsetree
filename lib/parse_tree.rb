@@ -144,10 +144,13 @@ class ParseTree
   #
   #   [:defn, :name, :body]
 
-  def parse_tree_for_method(klass, method, is_cls_meth=false)
+  def parse_tree_for_method(klass, method, is_cls_meth=false, verbose = true)
     $stderr.puts "** parse_tree_for_method(#{klass}, #{method}):" if $DEBUG
+    old_verbose, $VERBOSE = $VERBOSE, verbose
     r = parse_tree_for_meth(klass, method.to_sym, is_cls_meth)
     r
+  ensure
+    $VERBOSE = old_verbose
   end
 
   ##
@@ -157,8 +160,9 @@ class ParseTree
   #
   #   [[sexps] ... ]
 
-  def parse_tree_for_string(source, filename = '(string)', line = 1)
-    old_verbose, $VERBOSE = $VERBOSE, true
+  def parse_tree_for_string(source,
+                            filename = '(string)', line = 1, verbose = true)
+    old_verbose, $VERBOSE = $VERBOSE, verbose
     return parse_tree_for_str0(source, filename, line)
   ensure
     $VERBOSE = old_verbose

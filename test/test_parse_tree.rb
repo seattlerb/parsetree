@@ -18,14 +18,24 @@ class SomethingWithInitialize
   def protected_meth; end
 end
 
+$verbose_methods = {
+  "test_begin_rescue_twice" => true,
+  "test_block_stmt_after" => true,
+  "test_block_stmt_both" => true,
+}
+
 class ParseTree
-  def process(input) # makes it play with with ParseTreeTestCase (FIX?)
+  def process(input, verbose = nil) # TODO: remove
+
+    test_method = caller[0][/\`(.*)\'/, 1]
+    verbose = $verbose_methods[test_method]
+
     # um. kinda stupid, but cleaner
     case input
     when Array then
       ParseTree.translate(*input)
     else
-      ParseTree.translate(input)
+      self.parse_tree_for_string(input, '(string)', 1, verbose).first
     end
   end
 end
@@ -77,7 +87,7 @@ class TestParseTree < ParseTreeTestCase
   def test_parse_tree_for_string_with_newlines
     @processor = ParseTree.new(true)
     actual   = @processor.parse_tree_for_string "1 +\n nil", 'test.rb', 5
-    expected = [[:newline, 6, "test.rb", 
+    expected = [[:newline, 6, "test.rb",
                  [:call, [:lit, 1], :+, [:array, [:nil]]]]]
 
     assert_equal expected, actual
@@ -171,7 +181,6 @@ class TestParseTree < ParseTreeTestCase
                 :unknown_args,
                 [:array, [:lit, 4], [:str, "known"]]]]]]]]
 
-
   @@attrasgn = [:defn,
     :attrasgn,
     [:scope,
@@ -188,7 +197,7 @@ class TestParseTree < ParseTreeTestCase
   Something.instance_methods(false).sort.each do |meth|
     if class_variables.include?("@@#{meth}") then
       @@__all << eval("@@#{meth}")
-      eval "def test_#{meth}; assert_equal @@#{meth}, @processor.parse_tree_for_method(Something, :#{meth}); end"
+      eval "def test_#{meth}; assert_equal @@#{meth}, @processor.parse_tree_for_method(Something, :#{meth}, false, false); end"
     else
       eval "def test_#{meth}; flunk \"You haven't added @@#{meth} yet\"; end"
     end
@@ -207,7 +216,7 @@ class TestParseTree < ParseTreeTestCase
   def test_missing
     assert_equal(@@missing,
                  @processor.parse_tree_for_method(Something, :missing),
-                 "Must return -3 for missing methods")
+                 "Must return #{@@missing.inspect} for missing methods")
   end
 
   def test_whole_class
