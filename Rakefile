@@ -14,6 +14,8 @@ Hoe.new("ParseTree", ParseTree::VERSION) do |pt|
   pt.clean_globs << File.expand_path("~/.ruby_inline")
   pt.extra_deps << ['RubyInline', '>= 3.6.0']
   pt.spec_extras[:require_paths] = proc { |paths| paths << 'test' }
+
+  pt.multiruby_skip << "1.9" << "rubinius"
 end
 
 Hoe::RUBY_FLAGS.sub! /-I/, '-I../../RubyInline/dev/lib:test:'
