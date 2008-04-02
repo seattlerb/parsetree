@@ -256,6 +256,11 @@ class ParseTree
     builder.include '"st.h"'
     builder.include '"env.h"'
 
+    if RUBY_VERSION < "1.8.6" then
+      builder.prefix '#define RARRAY_PTR(s) (RARRAY(s)->ptr)'
+      builder.prefix '#define RARRAY_LEN(s) (RARRAY(s)->len)'
+    end
+
     if ENV['ANAL'] or ENV['DOMAIN'] =~ /zenspider/ then
       builder.add_compile_flags "-Wall"
       builder.add_compile_flags "-W"
@@ -341,6 +346,7 @@ void add_to_parse_tree(VALUE self, VALUE ary, NODE * n, ID * locals) {
   VALUE current;
   VALUE node_name;
   static VALUE node_names = Qnil;
+  static int masgn_level = 0;
 
   if (NIL_P(node_names)) {
     node_names = rb_const_get_at(rb_path2class("ParseTree"),rb_intern("NODE_NAMES"));
@@ -374,6 +380,11 @@ again:
         while (node) {
           add_to_parse_tree(self, current, node->nd_head, locals);
           node = node->nd_next;
+        }
+        if (!masgn_level && RARRAY_LEN(current) == 2) {
+          rb_ary_pop(ary);
+          rb_ary_push(ary, rb_ary_pop(current));
+          return;
         }
       }
       break;
@@ -476,6 +487,7 @@ again:
   case NODE_ITER:
   case NODE_FOR:
     add_to_parse_tree(self, current, node->nd_iter, locals);
+    masgn_level++;
     if (node->nd_var != (NODE *)1
         && node->nd_var != (NODE *)2
         && node->nd_var != NULL) {
@@ -489,6 +501,7 @@ again:
         rb_ary_push(current, INT2FIX(0));
       }
     }
+    masgn_level--;
     add_to_parse_tree(self, current, node->nd_body, locals);
     break;
 
@@ -575,10 +588,11 @@ again:
       if (data->var == 0 || data->var == (NODE *)1 || data->var == (NODE *)2) {
         rb_ary_push(current, Qnil);
       } else {
+        masgn_level++;
         add_to_parse_tree(self, current, data->var, locals);
+        masgn_level--;
       }
       add_to_parse_tree(self, current, data->body, locals);
-      break;
     }
     break;
 
@@ -649,6 +663,7 @@ again:
     break;
 
   case NODE_MASGN:
+    masgn_level++;
     add_to_parse_tree(self, current, node->nd_head, locals);
     if (node->nd_args) {
       if (node->nd_args != (NODE *)-1) {
@@ -658,18 +673,34 @@ again:
       }
     }
     add_to_parse_tree(self, current, node->nd_value, locals);
+    masgn_level--;
     break;
 
   case NODE_LASGN:
   case NODE_IASGN:
   case NODE_DASGN:
-  case NODE_DASGN_CURR:
   case NODE_CDECL:
   case NODE_CVASGN:
   case NODE_CVDECL:
   case NODE_GASGN:
     rb_ary_push(current, ID2SYM(node->nd_vid));
     add_to_parse_tree(self, current, node->nd_value, locals);
+    break;
+
+  case NODE_DASGN_CURR:
+    rb_ary_push(current, ID2SYM(node->nd_vid));
+    if (node->nd_value) {
+      add_to_parse_tree(self, current, node->nd_value, locals);
+      if (!masgn_level && RARRAY_LEN(current) == 2) {
+        rb_ary_pop(ary);
+        return;
+      }
+    } else {
+      if (!masgn_level) {
+        rb_ary_pop(ary);
+        return;
+      }
+    }
     break;
 
   case NODE_VALIAS:           /* u1 u2 (alias $global $global2) */
@@ -798,6 +829,7 @@ again:
     }
 
     /* look for optional arguments */
+    masgn_level++;
     optnode = node->nd_opt;
     while (optnode) {
       rb_ary_push(current, ID2SYM(locals[i + 3]));
@@ -844,6 +876,7 @@ again:
     if (optnode) {
       add_to_parse_tree(self, current, node->nd_opt, locals);
     }
+    masgn_level--;
   }  break;
 
   case NODE_LVAR:
