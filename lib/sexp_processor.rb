@@ -194,7 +194,7 @@ class SexpProcessor
     return nil if exp.nil?
 
     unless @unsupported_checked then
-      m = public_methods.grep(/^process_/) { |o| o.sub(/^process_/, '').intern }
+      m = public_methods.grep(/^process_/) { |o| o.to_s.sub(/^process_/, '').intern }
       supported = m - (m - @unsupported)
 
       raise UnsupportedNodeError, "#{supported.inspect} shouldn't be in @unsupported" unless supported.empty?

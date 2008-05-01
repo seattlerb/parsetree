@@ -1,10 +1,11 @@
 #!/usr/local/bin/ruby -w
 
-abort "*** Sorry, ParseTree doesn't work with ruby #{RUBY_VERSION}" if
+raise LoadError, "ParseTree doesn't work with ruby #{RUBY_VERSION}" if
   RUBY_VERSION >= "1.9"
+raise LoadError, "ParseTree isn't needed with rubinius" if
+  defined? RUBY_ENGINE and RUBY_ENGINE == "rbx"
 
-begin require 'rubygems'; rescue LoadError; end
-
+require 'rubygems'
 require 'inline'
 
 class Module

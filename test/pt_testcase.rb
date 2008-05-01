@@ -200,7 +200,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "block_mystery_block"  => { # FIX: I don't like that extra return
-      "Ruby"        => "a(b) do\n  if b then\n    true\n  else\n    c = false\n    d { |x| c = true }\n    c\n  \n  end\nend",
+      "Ruby"        => "a(b) do\n  if b then\n    true\n  else\n    c = false\n    d { |x| c = true }\n    c\n  end\nend",
       "ParseTree"   => [:iter,
                         [:fcall, :a, [:array, [:vcall, :b]]],
                         nil,
@@ -740,7 +740,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "dasgn_2"  => { # WITH mystery block / dasgn_curr
-      "Ruby"        => "a.each do |x|\n  if true then\n    c = 0\n    b.each { |y| c = (c + 1) }\n  \n  end\nend", # FIX: hate that extra newline!
+      "Ruby"        => "a.each do |x|\n  if true then\n    c = 0\n    b.each { |y| c = (c + 1) }\n  end\nend", # FIX: hate that extra newline!
       "ParseTree"   => [:iter,
                         [:call, [:vcall, :a], :each],
                         [:dasgn_curr, :x],
@@ -1574,6 +1574,7 @@ end",
     "lit_regexp_n" => {
       "Ruby"        => "/x/n",
       "ParseTree"   => [:lit, /x/n],
+      "Ruby2Ruby"   => /x/n.inspect, # HACK differs on 1.9 - this is easiest
     },
 
     "lit_regexp_once" => {
@@ -2061,7 +2062,7 @@ end",
     },
 
     "structure_extra_block_for_dvar_scoping"  => {
-      "Ruby"        => "a.b do |c, d|\n  unless e.f(c) then\n    g = false\n    d.h { |x, i| g = true }\n  \n  end\nend", # FIX: don't like the extra return
+      "Ruby"        => "a.b do |c, d|\n  unless e.f(c) then\n    g = false\n    d.h { |x, i| g = true }\n  end\nend", # FIX: don't like the extra return
       "ParseTree"   => [:iter,
                         [:call, [:vcall, :a], :b],
                         [:masgn, [:array, [:dasgn_curr, :c], [:dasgn_curr, :d]]],

@@ -177,20 +177,6 @@ class TestUnifiedRuby < Test::Unit::TestCase
     doit
   end
 
-  def test_rewrite_fbody
-    @insert = s(:fbody,
-                s(:scope,
-                  s(:block,
-                    s(:args, :x),
-                    s(:call, s(:lvar, :x), :+, s(:array, s(:lit, 1))))))
-    @expect = s(:scope,
-                s(:block,
-                  s(:args, :x),
-                  s(:call, s(:lvar, :x), :+, s(:arglist, s(:lit, 1)))))
-
-    doit
-  end
-
   def test_rewrite_fcall
     @insert = s(:fcall,     :puts, s(:array, s(:lit, :blah)))
     @expect = s(:call, nil, :puts, s(:arglist, s(:lit, :blah)))

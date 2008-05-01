@@ -39,7 +39,7 @@ module UnifiedRuby
       when :argscat, :splat then
         # do nothing
       else
-        raise "unknown type in call #{args.first.inspect}"
+        raise "unknown type in call #{args.first.inspect} in #{exp.inspect}"
       end
       return exp
     end
@@ -83,7 +83,9 @@ module UnifiedRuby
   def rewrite_defn(exp)
     weirdo = exp.ivar || exp.attrset
 
-    # move args up
+    fbody = exp.fbody(true)
+    exp.push(fbody.scope) if fbody
+
     args = exp.scope.block.args(true) unless weirdo
     exp.insert 2, args if args
 
@@ -115,10 +117,6 @@ module UnifiedRuby
     exp.shift # type
     exp.shift # dmethod name
     exp.shift # scope / block / body
-  end
-
-  def rewrite_fbody(exp)
-    return *exp.sexp_body
   end
 
   def rewrite_fcall(exp)
