@@ -135,14 +135,14 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:attrasgn, [:vcall, :a], :[]=, [:array, [:lit, 42], [:lit, 24]]],
     },
 
-#     "attrasgn_index_equals_space" => {
-#       "Ruby"        => "a = []; a [42] = 24",
-#       "ParseTree"   => [:block,
-#                         [:lasgn, :a, [:zarray]],
-#                         [:attrasgn, [:lvar, :a], :[]=,
-#                          [:array, [:lit, 42], [:lit, 24]]]],
-#       "Ruby2Ruby"  => "a = []\na[42] = 24\n",
-#     },
+    "attrasgn_index_equals_space" => {
+      "Ruby"        => "a = []; a [42] = 24",
+      "ParseTree"   => [:block,
+                        [:lasgn, :a, [:zarray]],
+                        [:attrasgn, [:lvar, :a], :[]=,
+                         [:array, [:lit, 42], [:lit, 24]]]],
+      "Ruby2Ruby"  => "a = []\na[42] = 24\n",
+    },
 
     "attrset" => {
       "Ruby"        => [Examples, :writer=],
@@ -428,25 +428,25 @@ class ParseTreeTestCase < Test::Unit::TestCase
                         :zero?],
     },
 
-#     "call_index" => { # see attrasgn_index_equals and fcall_index_space
-#       "Ruby"        => "b = []; a[42]",
-#       "ParseTree"   => [:block,
-#                         [:lasgn, :b, [:zarray]],
-#                         [:call, [:vcall, :a], :[], [:array, [:lit, 42]]]],
-#     },
+    "call_index" => { # see attrasgn_index_equals and fcall_index_space
+      "Ruby"        => "b = []\na[42]\n",
+      "ParseTree"   => [:block,
+                        [:lasgn, :b, [:zarray]],
+                        [:call, [:vcall, :a], :[], [:array, [:lit, 42]]]],
+    },
 
     "call_index_no_args" => {
       "Ruby"        => "a[]",
       "ParseTree" => [:call, [:vcall, :a], :[]],
     },
 
-#     "call_index_space" => {
-#       "Ruby"        => "a = []; a [42]",
-#       "ParseTree"   => [:block,
-#                         [:lasgn, :a, [:zarray]],
-#                         [:call, [:lvar, :a], :[], [:array, [:lit, 42]]]],
-#       "Ruby2Ruby"  => "a = []\na[42]\n",
-#     },
+    "call_index_space" => {
+      "Ruby"        => "a = []; a [42]",
+      "ParseTree"   => [:block,
+                        [:lasgn, :a, [:zarray]],
+                        [:call, [:lvar, :a], :[], [:array, [:lit, 42]]]],
+      "Ruby2Ruby"  => "a = []\na[42]\n",
+    },
 
     "call_unary_neg" => {
       "Ruby"        => "-2**31",
@@ -561,6 +561,17 @@ class ParseTreeTestCase < Test::Unit::TestCase
                             [:block,
                              [:args],
                              [:fcall, :puts, [:array, [:str, "hello"]]]]]]]]],
+    },
+
+    "class_scoped" => {
+      "Ruby" => "class X::Y\n  c\nend",
+      "ParseTree" => [:class, [:colon2, [:const, :X], :Y], nil,
+                      [:scope, [:vcall, :c]]],
+    },
+
+    "class_scoped3" => {
+      "Ruby" => "class ::Y\n  c\nend",
+      "ParseTree" => [:class, [:colon3, :Y], nil, [:scope, [:vcall, :c]]],
     },
 
     "class_super_array"  => {
@@ -686,6 +697,21 @@ class ParseTreeTestCase < Test::Unit::TestCase
     "const"  => {
       "Ruby"        => "X",
       "ParseTree"   => [:const, :X],
+    },
+
+    "constX"  => {
+      "Ruby"        => "X = 1",
+      "ParseTree"   => [:cdecl, :X, [:lit, 1]],
+    },
+
+    "constY"  => {
+      "Ruby"        => "::X = 1",
+      "ParseTree"   => [:cdecl, [:colon3, :X], [:lit, 1]],
+    },
+
+    "constZ"  => {
+      "Ruby"        => "X::Y = 1",
+      "ParseTree"   => [:cdecl, [:colon2, [:const, :X], :Y], [:lit, 1]],
     },
 
     "cvar"  => {
@@ -1727,6 +1753,17 @@ end",
                          [:defn, :y, [:scope, [:block, [:args], [:nil]]]]]],
     },
 
+    "module_scoped" => {
+      "Ruby" => "module X::Y\n  c\nend",
+      "ParseTree" => [:module, [:colon2, [:const, :X], :Y],
+                      [:scope, [:vcall, :c]]],
+    },
+
+    "module_scoped3" => {
+      "Ruby" => "module ::Y\n  c\nend",
+      "ParseTree" => [:module, [:colon3, :Y], [:scope, [:vcall, :c]]],
+    },
+
     "next"  => {
       "Ruby"        => "loop { next if false }",
       "ParseTree"   => [:iter,
@@ -1762,6 +1799,18 @@ end",
                         [:op_asgn1, [:lvar, :b],
                          [:array, [:lit, 2]], :"&&", [:lit, 11]],
                         [:op_asgn1, [:lvar, :b],
+                         [:array, [:lit, 3]], :+, [:lit, 12]]],
+    },
+
+    "op_asgn1" => {
+      "Ruby"        => "@b = []\n@b[1] ||= 10\n@b[2] &&= 11\n@b[3] += 12\n",
+      "ParseTree"   => [:block,
+                        [:iasgn, :@b, [:zarray]],
+                        [:op_asgn1, [:ivar, :@b],
+                         [:array, [:lit, 1]], :"||", [:lit, 10]],
+                        [:op_asgn1, [:ivar, :@b],
+                         [:array, [:lit, 2]], :"&&", [:lit, 11]],
+                        [:op_asgn1, [:ivar, :@b],
                          [:array, [:lit, 3]], :+, [:lit, 12]]],
     },
 
@@ -2363,6 +2412,8 @@ end",
   end
 
   def self.inherited(c)
+    super
+
     output_name = c.name.to_s.sub(/^Test/, '')
     raise "Unknown class #{c} in @@testcase_order" unless
       @@testcase_order.include? output_name

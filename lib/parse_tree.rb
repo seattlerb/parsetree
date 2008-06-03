@@ -680,11 +680,20 @@ again:
   case NODE_LASGN:
   case NODE_IASGN:
   case NODE_DASGN:
-  case NODE_CDECL:
   case NODE_CVASGN:
   case NODE_CVDECL:
   case NODE_GASGN:
     rb_ary_push(current, ID2SYM(node->nd_vid));
+    add_to_parse_tree(self, current, node->nd_value, locals);
+    break;
+
+  case NODE_CDECL:
+    if (node->nd_vid) {
+      rb_ary_push(current, ID2SYM(node->nd_vid));
+    } else {
+      add_to_parse_tree(self, current, node->nd_else, locals);
+    }
+
     add_to_parse_tree(self, current, node->nd_value, locals);
     break;
 
@@ -804,7 +813,12 @@ again:
 
   case NODE_CLASS:
   case NODE_MODULE:
-    rb_ary_push(current, ID2SYM((ID)node->nd_cpath->nd_mid));
+    if (nd_type(node->nd_cpath) == NODE_COLON2 && ! node->nd_cpath->nd_vid) {
+      rb_ary_push(current, ID2SYM((ID)node->nd_cpath->nd_mid));
+    } else {
+      add_to_parse_tree(self, current, node->nd_cpath, locals);
+    }
+
     if (nd_type(node) == NODE_CLASS) {
       if (node->nd_super) {
         add_to_parse_tree(self, current, node->nd_super, locals);
