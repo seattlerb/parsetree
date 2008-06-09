@@ -445,6 +445,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
       "ParseTree"   => [:block,
                         [:lasgn, :a, [:zarray]],
                         [:call, [:lvar, :a], :[], [:array, [:lit, 42]]]],
+      "Ruby2Ruby"   => "a = []\na[42]\n",
     },
 
     "call_unary_neg" => {

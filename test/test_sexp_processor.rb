@@ -123,7 +123,7 @@ class TestSexpProcessor < Test::Unit::TestCase
     @processor = TestProcessor.new
     @processor.warn_on_default = false
 
-    assert_raises(SexpTypeError) do
+    assert_raises SexpTypeError do
       @processor.process([:broken, 1, 2, 3])
     end
   end
@@ -132,7 +132,7 @@ class TestSexpProcessor < Test::Unit::TestCase
     @processor = TestProcessor.new
     @processor.unsupported << :strip
 
-    assert_raises(UnsupportedNodeError) do
+    assert_raises UnsupportedNodeError do
       @processor.process([:whatever])
     end
   end
@@ -140,14 +140,14 @@ class TestSexpProcessor < Test::Unit::TestCase
   def test_unsupported_equal
     @processor.strict = true
     @processor.unsupported = [ :unsupported ]
-    assert_raises(UnsupportedNodeError) do
+    assert_raises UnsupportedNodeError do
       @processor.process([:unsupported, 42])
     end
   end
 
   def test_strict
     @processor.strict = true
-    assert_raise(UnknownNodeError) do
+    assert_raises UnknownNodeError do
       @processor.process([:blah, 1, 2, 3])
     end
   end
@@ -156,13 +156,11 @@ class TestSexpProcessor < Test::Unit::TestCase
   def test_require_empty_false
     @processor.require_empty = false
 
-    assert_nothing_raised do
-      @processor.process([:nonempty, 1, 2, 3])
-    end
+    @processor.process([:nonempty, 1, 2, 3])
   end
 
   def test_require_empty_true
-    assert_raise(NotEmptyError) do
+    assert_raises NotEmptyError do
       @processor.process([:nonempty, 1, 2, 3])
     end
   end
@@ -241,13 +239,11 @@ class TestSexpProcessor < Test::Unit::TestCase
   end
 
   def test_assert_type_hit
-    assert_nothing_raised do
-      @processor.assert_type([:blah, 1, 2, 3], :blah)
-    end
+    @processor.assert_type([:blah, 1, 2, 3], :blah)
   end
 
   def test_assert_type_miss
-    assert_raise(SexpTypeError) do
+    assert_raises SexpTypeError do
       @processor.assert_type([:thingy, 1, 2, 3], :blah)
     end
   end
@@ -274,7 +270,7 @@ class TestSexpProcessor < Test::Unit::TestCase
 
   def test_expected
     assert_equal Sexp, @processor.expected
-    assert_raises(SexpTypeError) do
+    assert_raises SexpTypeError do
       @processor.process([:expected])           # should raise
     end
 
@@ -284,7 +280,7 @@ class TestSexpProcessor < Test::Unit::TestCase
     assert_equal Hash, @processor.expected
     assert !(Hash === s()), "Hash === s() should not be true"
 
-    assert_raises(SexpTypeError) do
+    assert_raises SexpTypeError do
       @processor.process(s(:string, "string"))     # should raise
     end
 

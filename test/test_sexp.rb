@@ -10,6 +10,12 @@ require 'pp'
 
 class SexpTestCase < Test::Unit::TestCase
 
+  unless defined? Mini then
+    alias :refute_nil :assert_not_nil
+    alias :refute_equal :assert_not_equal
+    alias :assert_raises :assert_raise
+  end
+
   # KEY for regex tests
   # :a == no change
   # :b == will change (but sometimes ONLY once)
@@ -19,12 +25,12 @@ class SexpTestCase < Test::Unit::TestCase
 
   def util_equals(x, y)
     result = x == y
-    assert_not_nil result, "#{x.inspect} does not === #{y.inspect}"
+    refute_nil result, "#{x.inspect} does not === #{y.inspect}"
   end
 
   def util_equals3(x, y)
     result = x === y
-    assert_not_nil result, "#{x.inspect} does not === #{y.inspect}"
+    refute_nil result, "#{x.inspect} does not === #{y.inspect}"
   end
 
   def setup
@@ -96,8 +102,8 @@ class TestSexp < SexpTestCase # ZenTest FULL
 
   def test_equals2_array
     # can't use assert_equals because it uses array as receiver
-    assert_not_equal(@sexp, [1, 2, 3],
-                     "Sexp must not be equal to equivalent array")
+    refute_equal(@sexp, [1, 2, 3],
+                 "Sexp must not be equal to equivalent array")
     # both directions just in case
     # HACK - this seems to be a bug in ruby as far as I'm concerned
     # assert_not_equal([1, 2, 3], @sexp,
@@ -106,24 +112,13 @@ class TestSexp < SexpTestCase # ZenTest FULL
 
   def test_equals2_not_body
     sexp2 = s(1, 2, 5)
-    assert_not_equal(@sexp, sexp2)
+    refute_equal(@sexp, sexp2)
   end
 
   def test_equals2_sexp
     sexp2 = s(1, 2, 3)
-    if @sexp.class == Sexp then
-#    sexp3 = t(1, 2, 3, Type.str)
-#    case @sexp
-#    when TypedSexp
-#      assert_equal(@sexp, sexp3)
-#      assert_not_equal(@sexp, sexp2)
-#    when Sexp
-      assert_equal(@sexp, sexp2)
-#      assert_not_equal(@sexp, sexp3)
-    else
-      assert_not_equal(@sexp, sexp2)
-#    else
-#      flunk "unknown type"
+    unless @sexp.class == Sexp then
+      refute_equal(@sexp, sexp2)
     end
   end
 
@@ -169,8 +164,8 @@ class TestSexp < SexpTestCase # ZenTest FULL
 #   end
 
   def test_equalstilde_fancy
-    assert_nil     s(:b) =~ s(:a, s(:b), :c)
-    assert_not_nil s(:a, s(:b), :c) =~ s(:b)
+    assert_nil s(:b) =~ s(:a, s(:b), :c)
+    refute_nil s(:a, s(:b), :c) =~ s(:b)
   end
 
   def test_equalstilde_plain
@@ -256,7 +251,7 @@ class TestSexp < SexpTestCase # ZenTest FULL
     assert_equal(2, @sexp.shift)
     assert_equal(3, @sexp.shift)
 
-    assert_raise(RuntimeError) do
+    assert_raises(RuntimeError) do
       @sexp.shift
     end
   end
