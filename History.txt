@@ -1,3 +1,32 @@
+=== 2.2.0 / 2008-06-09
+
+* 18 minor enhancements:
+
+  * Added 1.9 and rubinius to multiruby skip list.
+  * Added 1.9 fixes for SexpProcessor.
+  * Added compatibility changes for regexp option values.
+  * Added custom compact since Array#compact is hostile to subclasses.
+  * Added some tests for wonky index edge cases. some commented out.
+  * Added test changes for 1.9 and r2r changes. Esp fixed regexp differences.
+  * Added tests for dasgn, proc arities, 
+  * Added/updated some tests for ruby_parser.
+  * Changed tests to default to nil for verbose.
+  * Fixed all assertions deprecated in miniunit.
+  * Raises LoadError if incompatible ruby, allows fallback to ruby_parser.
+  * Removed Unified's rewrite_fbody and moved up into defn... not sure about that.
+  * Removed argscat rewriter from unified_ruby.rb
+  * Renamed shadowed variable name.
+  * Reworked parse_tree_for_(method|string) to take optional verbose arg.
+  * Started removing ending newlines from pt_testcase.rb.
+  * Uncommented all commented out tests. ruby_parser must not be a pansy.
+  * Updated rakefile for new hoe abilities.
+
+* 3 bug fixes:
+
+  * Fixed 1.8.[45] wrt dasgn_curr declaration removal.
+  * Fixed pt_testcase bug.
+  * Fixes for colon2/3 in class/module/cdecls.
+
 === 2.1.1 / 2007-12-22
 
 * 1 bug fix:
