@@ -441,11 +441,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
     },
 
     "call_index_space" => {
-      "Ruby"        => "a = []; a [42]",
+      "Ruby"        => "a = []\na [42]\n",
       "ParseTree"   => [:block,
                         [:lasgn, :a, [:zarray]],
                         [:call, [:lvar, :a], :[], [:array, [:lit, 42]]]],
-      "Ruby2Ruby"  => "a = []\na[42]\n",
     },
 
     "call_unary_neg" => {
