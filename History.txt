@@ -7,6 +7,8 @@
   * Restructured ParseTreeTestCase to use new add_tests. Much much cleaner.
   * Switched all ParseTree tests to RawParseTree tests.
   * Added ParseTree tests.
+  * Removed dasgn, dasgn_curr, and dvar.
+  * Rewrote rewrite_resbody from scratch... MUUCH cleaner.
 
 === 2.2.0 / 2008-06-09
 

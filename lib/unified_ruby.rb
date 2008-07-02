@@ -13,12 +13,12 @@ module UnifiedRuby
     exp[0] = :scope
 
     args =
-      if exp.masgn and exp.masgn.dasgn_curr then
-        arg = exp.masgn(true).dasgn_curr(true).sexp_body
+      if exp.masgn and exp.masgn.lasgn then
+        arg = exp.masgn(true).lasgn(true).sexp_body
         raise "nope: #{arg.size}" unless arg.size == 1
         s(:args, :"*#{arg.last}")
       else
-        args = exp.dasgn_curr(true)
+        args = exp.lasgn(true)
         if args then
           s(:args, *args.sexp_body)
         else
@@ -55,6 +55,13 @@ module UnifiedRuby
 
     exp
   end
+
+  def rewrite_dasgn(exp)
+    exp[0] = :lasgn
+    exp
+  end
+
+  alias :rewrite_dasgn_curr :rewrite_dasgn
 
   ##
   # :defn is one of the most complex of all the ASTs in ruby. We do
@@ -126,6 +133,11 @@ module UnifiedRuby
     exp.shift # scope / block / body
   end
 
+  def rewrite_dvar(exp)
+    exp[0] = :lvar
+    exp
+  end
+
   def rewrite_fcall(exp)
     exp[0] = :call
     exp.insert 1, nil
@@ -134,49 +146,22 @@ module UnifiedRuby
     rewrite_call(exp)
   end
 
-  def rewrite_resbody(exp) # TODO: clean up and move to unified
-    result = s()
+  def rewrite_resbody(exp)
+    exp[1] ||= s(:array)        # no args
 
-    code = result
-    while exp and exp.first == :resbody do
-      code << exp.shift
-      list = exp.shift || s(:array)
-      body = exp.empty? ? nil : exp.shift
-      exp  = exp.empty? ? nil : exp.shift
-
-      # code may be nil, :lasgn, or :block
+    body = exp[2]
+    if body then
       case body.first
-      when nil then
-        # do nothing
       when :lasgn then
-        # TODO: check that it is assigning $!
-        list << body
-        body = nil
+        exp[1] << exp.delete_at(2)
       when :block then
-        # TODO: check that it is assigning $!
-        list << body.delete_at(1) if body[1].first == :lasgn
-      else
-        # do nothing (expression form)
-      end if body
-
-      code << list << body
-      if exp then
-        code = s()
-        result << code
+        exp[1] << body.delete_at(1) if body[1][0] == :lasgn
       end
     end
 
-    if $DEBUG or $TESTING then
-      structure = result.structure
-      raise "result structure wrong: #{structure[0..1].inspect}" unless
-        structure.flatten[0] == :resbody
-      raise "result structure wrong: #{structure[0..1].inspect}" unless
-        s(:array, :splat, :argscat).include? structure.flatten[1]
-      raise "result body wrong: #{structure[2].inspect}" unless
-        structure[2].nil? or not structure[2].empty?
-    end
+    exp << nil if exp.size == 2 # no body
 
-    result
+    exp
   end
 
   def rewrite_vcall(exp)
@@ -196,4 +181,3 @@ class Unifier < SexpProcessor
     @unsupported.delete :newline
   end
 end
-
