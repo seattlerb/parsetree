@@ -1,7 +1,14 @@
 
+require 'sexp_processor'
+
 $TESTING ||= false
 
 module UnifiedRuby
+  def process exp
+    exp = Sexp.from_array exp unless Sexp === exp or exp.nil?
+    super
+  end
+
   def rewrite_bmethod(exp)
     exp[0] = :scope
 
@@ -183,5 +190,10 @@ end
 
 class Unifier < SexpProcessor
   include UnifiedRuby
+
+  def initialize
+    super
+    @unsupported.delete :newline
+  end
 end
 

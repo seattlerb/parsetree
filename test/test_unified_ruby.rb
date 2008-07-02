@@ -7,12 +7,13 @@ require 'test/unit/testcase'
 require 'sexp'
 require 'sexp_processor'
 require 'unified_ruby'
+require 'pt_testcase'
 
 class TestUnifier < SexpProcessor
   include UnifiedRuby
 end
 
-# TODO:
+# (old) TODO:
 #
 # 1) DONE [vf]call => call
 # 2) DONE defn scope block args -> defn args scope block
@@ -21,237 +22,294 @@ end
 # 5) defs x -> defn self.x # ON HOLD
 # 6) ? :block_arg into args list?
 
-class TestUnifiedRuby < Test::Unit::TestCase
-  def setup
-    @sp = TestUnifier.new
-    @sp.require_empty = false
-  end
+# ParseTreeTestCase.testcase_order << "UnifiedRuby"
+# class TestUnifiedRuby < ParseTreeTestCase
+#   def setup
+#     super
+#     @processor = TestUnifier.new
+#   end
+# end
 
-  def doit
-    assert_equal @expect, @sp.process(@insert)
-  end
+#   add_test("alias", :skip)
+#   add_test("alias_ugh", :skip)
+#   add_test("and", :skip)
+#   add_test("argscat_inside", :skip)
+#   add_test("argscat_svalue", :skip)
+#   add_test("argspush", :skip)
+#   add_test("array", :skip)
+#   add_test("array_pct_W", :skip)
+#   add_test("attrasgn", :skip)
+#   add_test("attrasgn_index_equals", :skip)
+#   add_test("attrasgn_index_equals_space", :skip)
+#   add_test("attrset", :skip)
+#   add_test("back_ref", :skip)
+#   add_test("begin", :skip)
+#   add_test("begin_def", :skip)
+#   add_test("begin_rescue_ensure", :skip)
+#   add_test("begin_rescue_twice", :skip)
+#   add_test("block_lasgn", :skip)
+#   add_test("block_mystery_block", :skip)
+#   add_test("block_pass_args_and_splat", :skip)
+#   add_test("block_pass_call_0", :skip)
+#   add_test("block_pass_call_1", :skip)
+#   add_test("block_pass_call_n", :skip)
+#   add_test("block_pass_fcall_0", :skip)
+#   add_test("block_pass_fcall_1", :skip)
+#   add_test("block_pass_fcall_n", :skip)
+#   add_test("block_pass_omgwtf", :skip)
+#   add_test("block_pass_splat", :skip)
+#   add_test("block_pass_thingy", :skip)
+#   add_test("block_stmt_after", :skip)
+#   add_test("block_stmt_before", :skip)
+#   add_test("block_stmt_both", :skip)
+#   add_test("bmethod", :skip)
+#   add_test("bmethod_noargs", :skip)
+#   add_test("bmethod_splat", :skip)
+#   add_test("break", :skip)
+#   add_test("break_arg", :skip)
+#   add_test("call", :skip)
+#   add_test("call_arglist", :skip)
+#   add_test("call_arglist_hash", :skip)
+#   add_test("call_arglist_norm_hash", :skip)
+#   add_test("call_arglist_norm_hash_splat", :skip)
+#   add_test("call_command", :skip)
+#   add_test("call_expr", :skip)
+#   add_test("call_index", :skip)
+#   add_test("call_index_no_args", :skip)
+#   add_test("call_index_space", :skip)
+#   add_test("call_unary_neg", :skip)
+#   add_test("case", :skip)
+#   add_test("case_nested", :skip)
+#   add_test("case_nested_inner_no_expr", :skip)
+#   add_test("case_no_expr", :skip)
+#   add_test("case_splat", :skip)
+#   add_test("cdecl", :skip)
+#   add_test("class_plain", :skip)
+#   add_test("class_scoped", :skip)
+#   add_test("class_scoped3", :skip)
+#   add_test("class_super_array", :skip)
+#   add_test("class_super_expr", :skip)
+#   add_test("class_super_object", :skip)
+#   add_test("colon2", :skip)
+#   add_test("colon3", :skip)
+#   add_test("conditional1", :skip)
+#   add_test("conditional2", :skip)
+#   add_test("conditional3", :skip)
+#   add_test("conditional4", :skip)
+#   add_test("conditional5", :skip)
+#   add_test("conditional_post_if", :skip)
+#   add_test("conditional_post_if_not", :skip)
+#   add_test("conditional_post_unless", :skip)
+#   add_test("conditional_post_unless_not", :skip)
+#   add_test("conditional_pre_if", :skip)
+#   add_test("conditional_pre_if_not", :skip)
+#   add_test("conditional_pre_unless", :skip)
+#   add_test("conditional_pre_unless_not", :skip)
+#   add_test("const", :skip)
+#   add_test("constX", :skip)
+#   add_test("constY", :skip)
+#   add_test("constZ", :skip)
+#   add_test("cvar", :skip)
+#   add_test("cvasgn", :skip)
+#   add_test("cvasgn_cls_method", :skip)
+#   add_test("cvdecl", :skip)
+#   add_test("dasgn_0", :skip)
+#   add_test("dasgn_1", :skip)
+#   add_test("dasgn_2", :skip)
+#   add_test("dasgn_curr", :skip)
+#   add_test("dasgn_icky", :skip)
+#   add_test("dasgn_mixed", :skip)
+#   add_test("defined", :skip)
+#   add_test("defn_args_mand_opt_block", :skip)
+#   add_test("defn_args_mand_opt_splat", :skip)
+#   add_test("defn_args_mand_opt_splat_block", :skip)
+#   add_test("defn_args_mand_opt_splat_no_name", :skip)
+#   add_test("defn_args_opt_block", :skip)
+#   add_test("defn_args_opt_splat_no_name", :skip)
+#   add_test("defn_empty", :skip)
+#   add_test("defn_empty_args", :skip)
+#   add_test("defn_lvar_boundary", :skip)
+#   add_test("defn_optargs", :skip)
+#   add_test("defn_or", :skip)
+#   add_test("defn_rescue", :skip)
+#   add_test("defn_something_eh", :skip)
+#   add_test("defn_splat_no_name", :skip)
+#   add_test("defn_zarray", :skip)
+#   add_test("defs", :skip)
+#   add_test("defs_args_mand_opt_splat_block", :skip)
+#   add_test("defs_empty", :skip)
+#   add_test("defs_empty_args", :skip)
+#   add_test("dmethod", :skip)
+#   add_test("dot2", :skip)
+#   add_test("dot3", :skip)
+#   add_test("dregx", :skip)
+#   add_test("dregx_interp", :skip)
+#   add_test("dregx_n", :skip)
+#   add_test("dregx_once", :skip)
+#   add_test("dregx_once_n_interp", :skip)
+#   add_test("dstr", :skip)
+#   add_test("dstr_2", :skip)
+#   add_test("dstr_3", :skip)
+#   add_test("dstr_concat", :skip)
+#   add_test("dstr_heredoc_expand", :skip)
+#   add_test("dstr_heredoc_windoze_sucks", :skip)
+#   add_test("dstr_heredoc_yet_again", :skip)
+#   add_test("dstr_nest", :skip)
+#   add_test("dstr_str_lit_start", :skip)
+#   add_test("dstr_the_revenge", :skip)
+#   add_test("dsym", :skip)
+#   add_test("dxstr", :skip)
+#   add_test("ensure", :skip)
+#   add_test("false", :skip)
+#   add_test("fbody", :skip)
+#   add_test("fcall_arglist", :skip)
+#   add_test("fcall_arglist_hash", :skip)
+#   add_test("fcall_arglist_norm_hash", :skip)
+#   add_test("fcall_arglist_norm_hash_splat", :skip)
+#   add_test("fcall_block", :skip)
+#   add_test("fcall_index_space", :skip)
+#   add_test("fcall_keyword", :skip)
+#   add_test("flip2", :skip)
+#   add_test("flip2_method", :skip)
+#   add_test("flip3", :skip)
+#   add_test("for", :skip)
+#   add_test("for_no_body", :skip)
+#   add_test("gasgn", :skip)
+#   add_test("global", :skip)
+#   add_test("gvar", :skip)
+#   add_test("gvar_underscore", :skip)
+#   add_test("gvar_underscore_blah", :skip)
+#   add_test("hash", :skip)
+#   add_test("hash_rescue", :skip)
+#   add_test("iasgn", :skip)
+#   add_test("if_block_condition", :skip)
+#   add_test("if_lasgn_short", :skip)
+#   add_test("iteration1", :skip)
+#   add_test("iteration2", :skip)
+#   add_test("iteration3", :skip)
+#   add_test("iteration4", :skip)
+#   add_test("iteration5", :skip)
+#   add_test("iteration6", :skip)
+#   add_test("iteration7", :skip)
+#   add_test("iteration8", :skip)
+#   add_test("iteration9", :skip)
+#   add_test("iteration_dasgn_curr_dasgn_madness", :skip)
+#   add_test("iteration_double_var", :skip)
+#   add_test("iteration_masgn", :skip)
+#   add_test("ivar", :skip)
+#   add_test("lasgn_array", :skip)
+#   add_test("lasgn_call", :skip)
+#   add_test("lit_bool_false", :skip)
+#   add_test("lit_bool_true", :skip)
+#   add_test("lit_float", :skip)
+#   add_test("lit_long", :skip)
+#   add_test("lit_long_negative", :skip)
+#   add_test("lit_range2", :skip)
+#   add_test("lit_range3", :skip)
+#   add_test("lit_regexp", :skip)
+#   add_test("lit_regexp_i_wwtt", :skip)
+#   add_test("lit_regexp_n", :skip)
+#   add_test("lit_regexp_once", :skip)
+#   add_test("lit_sym", :skip)
+#   add_test("lit_sym_splat", :skip)
+#   add_test("lvar_def_boundary", :skip)
+#   add_test("masgn", :skip)
+#   add_test("masgn_argscat", :skip)
+#   add_test("masgn_attrasgn", :skip)
+#   add_test("masgn_iasgn", :skip)
+#   add_test("masgn_masgn", :skip)
+#   add_test("masgn_splat", :skip)
+#   add_test("masgn_splat_no_name_to_ary", :skip)
+#   add_test("masgn_splat_no_name_trailing", :skip)
+#   add_test("masgn_splat_to_ary", :skip)
+#   add_test("masgn_splat_to_ary2", :skip)
+#   add_test("match", :skip)
+#   add_test("match2", :skip)
+#   add_test("match3", :skip)
+#   add_test("module", :skip)
+#   add_test("module_scoped", :skip)
+#   add_test("module_scoped3", :skip)
+#   add_test("next", :skip)
+#   add_test("next_arg", :skip)
+#   add_test("not", :skip)
+#   add_test("nth_ref", :skip)
+#   add_test("op_asgn1", :skip)
+#   add_test("op_asgn2", :skip)
+#   add_test("op_asgn2_self", :skip)
+#   add_test("op_asgn_and", :skip)
+#   add_test("op_asgn_and_ivar2", :skip)
+#   add_test("op_asgn_or", :skip)
+#   add_test("op_asgn_or_block", :skip)
+#   add_test("op_asgn_or_ivar", :skip)
+#   add_test("op_asgn_or_ivar2", :skip)
+#   add_test("or", :skip)
+#   add_test("or_big", :skip)
+#   add_test("or_big2", :skip)
+#   add_test("parse_floats_as_args", :skip)
+#   add_test("postexe", :skip)
+#   add_test("proc_args_0", :skip)
+#   add_test("proc_args_1", :skip)
+#   add_test("proc_args_2", :skip)
+#   add_test("proc_args_no", :skip)
+#   add_test("redo", :skip)
+#   add_test("rescue", :skip)
+#   add_test("rescue_block_body", :skip)
+#   add_test("rescue_block_nada", :skip)
+#   add_test("rescue_exceptions", :skip)
+#   add_test("retry", :skip)
+#   add_test("return_0", :skip)
+#   add_test("return_1", :skip)
+#   add_test("return_n", :skip)
+#   add_test("sclass", :skip)
+#   add_test("sclass_trailing_class", :skip)
+#   add_test("splat", :skip)
+#   add_test("str", :skip)
+#   add_test("str_concat_newline", :skip)
+#   add_test("str_concat_space", :skip)
+#   add_test("str_heredoc", :skip)
+#   add_test("str_heredoc_call", :skip)
+#   add_test("str_heredoc_double", :skip)
+#   add_test("str_heredoc_indent", :skip)
+#   add_test("str_interp_file", :skip)
+#   add_test("structure_extra_block_for_dvar_scoping", :skip)
+#   add_test("structure_remove_begin_1", :skip)
+#   add_test("structure_remove_begin_2", :skip)
+#   add_test("structure_unused_literal_wwtt", :skip)
+#   add_test("super", :skip)
+#   add_test("super_block_pass", :skip)
+#   add_test("super_block_splat", :skip)
+#   add_test("super_multi", :skip)
+#   add_test("svalue", :skip)
+#   add_test("to_ary", :skip)
+#   add_test("true", :skip)
+#   add_test("undef", :skip)
+#   add_test("undef_2", :skip)
+#   add_test("undef_3", :skip)
+#   add_test("undef_block_1", :skip)
+#   add_test("undef_block_2", :skip)
+#   add_test("undef_block_3", :skip)
+#   add_test("undef_block_3_post", :skip)
+#   add_test("undef_block_wtf", :skip)
+#   add_test("until_post", :skip)
+#   add_test("until_post_not", :skip)
+#   add_test("until_pre", :skip)
+#   add_test("until_pre_mod", :skip)
+#   add_test("until_pre_not", :skip)
+#   add_test("until_pre_not_mod", :skip)
+#   add_test("valias", :skip)
+#   add_test("vcall", :skip)
+#   add_test("while_post", :skip)
+#   add_test("while_post_not", :skip)
+#   add_test("while_pre", :skip)
+#   add_test("while_pre_mod", :skip)
+#   add_test("while_pre_nil", :skip)
+#   add_test("while_pre_not", :skip)
+#   add_test("while_pre_not_mod", :skip)
+#   add_test("xstr", :skip)
+#   add_test("yield", :skip)
+#   add_test("yield_arg", :skip)  # TODO: make it always have an argslist
+#   add_test("yield_args", :skip) # TODO: array -> argslist
+#   add_test("zarray", :skip)
+#   add_test("zsuper", :skip)
+# end
 
-  def test_call_args
-    @insert = s(:call, s(:lit, 42), :y, s(:array, s(:lit, 24)))
-    @expect = s(:call, s(:lit, 42), :y, s(:arglist, s(:lit, 24)))
-
-    doit
-  end
-
-  def test_call_array_args
-    @insert = s(:call, s(:lit, 42), :y, s(:array))
-    @expect = s(:call, s(:lit, 42), :y, s(:arglist))
-
-    doit
-  end
-
-  def test_call_no_args
-    @insert = s(:call, s(:lit, 42), :y)
-    @expect = s(:call, s(:lit, 42), :y, s(:arglist))
-
-    doit
-  end
-
-  def test_rewrite_bmethod
-    @insert = s(:bmethod,
-                s(:dasgn_curr, :x),
-                s(:call, s(:dvar, :x), :+, s(:array, s(:lit, 1))))
-    @expect = s(:scope,
-                s(:block,
-                  s(:args, :x),
-                  s(:call, s(:lvar, :x), :+, s(:arglist, s(:lit, 1)))))
-
-    doit
-  end
-
-  # [:proc, [:masgn, [:array, [:dasgn_curr, :x], [:dasgn_curr, :y]]]]
-
-  # proc { |x,y| x + y }
-  # =
-  # s(:iter,
-  #  s(:fcall, :proc),
-  #  s(:masgn, s(:array, s(:dasgn_curr, :x), s(:dasgn_curr, :y))),
-  #  s(:call, s(:dvar, :x), :+, s(:array, s(:dvar, :y))))
-
-  def test_rewrite_bmethod_noargs
-    @insert = s(:bmethod,
-                nil,
-                s(:call, s(:vcall, :x), :+, s(:array, s(:lit, 1))))
-    @expect = s(:scope,
-                s(:block,
-                  s(:args),
-                  s(:call, s(:call, nil, :x, s(:arglist)),
-                    :+, s(:arglist, s(:lit, 1)))))
-
-    doit
-  end
-
-  def test_rewrite_bmethod_splat
-    @insert = s(:bmethod,
-                s(:masgn, s(:dasgn_curr, :params)),
-                s(:lit, 42))
-    @expect = s(:scope,
-                s(:block,
-                  s(:args, :"*params"),
-                  s(:lit, 42)))
-
-    doit
-  end
-
-  def test_rewrite_defn
-    @insert = s(:defn, :x, s(:scope, s(:block, s(:args), s(:nil))))
-    @expect = s(:defn, :x, s(:args), s(:scope, s(:block, s(:nil))))
-
-    doit
-  end
-
-  def test_rewrite_defn_attr
-    @insert = s(:defn, :writer=, s(:attrset, :@writer))
-    @expect = s(:defn, :writer=, s(:args), s(:attrset, :@writer))
-
-    doit
-  end
-
-  def test_rewrite_defn_block_arg
-    @insert = s(:defn, :blah,
-                s(:scope,
-                  s(:block,
-                    s(:args, "*args".intern),
-                    s(:block_arg, :block),
-                    s(:block_pass,
-                      s(:lvar, :block),
-                      s(:fcall, :other, s(:splat, s(:lvar, :args)))))))
-    @expect = s(:defn, :blah,
-                s(:args, "*args".intern, s(:block_arg, :block)),
-                s(:scope,
-                  s(:block,
-                    s(:block_pass,
-                      s(:lvar, :block),
-                      s(:call, nil, :other,
-                        s(:splat, s(:lvar, :args)))))))
-
-    doit
-  end
-
-  def test_rewrite_defn_bmethod_alias
-    @insert = s(:defn, :group,
-                s(:fbody,
-                  s(:bmethod,
-                    s(:masgn, s(:dasgn_curr, :params)),
-                    s(:block,
-                      s(:lit, 42)))))
-    @expect = s(:defn, :group,
-                s(:args, :"*params"),
-                s(:scope,
-                  s(:block, s(:lit, 42))))
-
-    doit
-  end
-
-  def test_rewrite_defn_ivar
-    @insert = s(:defn, :reader, s(:ivar, :@reader))
-    @expect = s(:defn, :reader, s(:args), s(:ivar, :@reader))
-
-    doit
-  end
-
-  def test_rewrite_defs
-    @insert = s(:defs, s(:self), :meth, s(:scope, s(:block, s(:args), s(:true))))
-    @expect = s(:defs, s(:self), :meth, s(:args), s(:scope, s(:block, s(:true))))
-
-    doit
-  end
-
-  def test_rewrite_dmethod
-    @insert = s(:dmethod,
-                :a_method,
-                s(:scope,
-                  s(:block,
-                    s(:args, :x),
-                    s(:lit, 42))))
-    @expect = s(:scope,
-                s(:block,
-                  s(:args, :x),
-                  s(:lit, 42)))
-
-    doit
-  end
-
-  def test_rewrite_fcall
-    @insert = s(:fcall,     :puts, s(:array, s(:lit, :blah)))
-    @expect = s(:call, nil, :puts, s(:arglist, s(:lit, :blah)))
-
-    doit
-  end
-
-  def test_rewrite_fcall_loop
-    @insert = s(:iter, s(:fcall, :loop), nil)
-    @expect = s(:iter, s(:call, nil, :loop, s(:arglist)), nil)
-
-    doit
-  end
-
-  def test_rewrite_fcall_splat
-    @insert = s(:fcall, :method, s(:splat, s(:vcall, :a)))
-    @expect = s(:call, nil, :method, s(:splat, s(:call, nil, :a, s(:arglist))))
-    doit
-  end
-
-  # TODO: think about flattening out to 1 resbody only
-  def test_rewrite_resbody
-    @insert = s(:resbody,
-                s(:array, s(:const, :SyntaxError)),
-                s(:block, s(:lasgn, :e1, s(:gvar, :$!)), s(:lit, 2)),
-                s(:resbody,
-                  s(:array, s(:const, :Exception)),
-                  s(:block, s(:lasgn, :e2, s(:gvar, :$!)), s(:lit, 3))))
-
-    @expect = s(:resbody,
-                s(:array, s(:const, :SyntaxError), s(:lasgn, :e1, s(:gvar, :$!))),
-                s(:block, s(:lit, 2)),
-                s(:resbody,
-                  s(:array, s(:const, :Exception), s(:lasgn, :e2, s(:gvar, :$!))),
-                  s(:block, s(:lit, 3))))
-
-    doit
-  end
-
-  def test_rewrite_resbody_empty
-    # begin require 'rubygems'; rescue LoadError; end
-    @insert = s(:begin,
-                s(:rescue,
-                  s(:fcall, :require, s(:array, s(:str, "rubygems"))),
-                  s(:resbody, s(:array, s(:const, :LoadError)))))
-    @expect = s(:begin,
-                s(:rescue,
-                  s(:call, nil, :require, s(:arglist, s(:str, "rubygems"))),
-                  s(:resbody, s(:array, s(:const, :LoadError)), nil)))
-
-    doit
-  end
-
-  def test_rewrite_resbody_lasgn
-    @insert = s(:resbody,
-                s(:array, s(:const, :SyntaxError)),
-                s(:lasgn, :e1, s(:gvar, :$!)),
-                s(:resbody,
-                  s(:array, s(:const, :Exception)),
-                  s(:block, s(:lasgn, :e2, s(:gvar, :$!)), s(:lit, 3))))
-
-    @expect = s(:resbody,
-                s(:array, s(:const, :SyntaxError), s(:lasgn, :e1, s(:gvar, :$!))),
-                nil,
-                s(:resbody,
-                  s(:array, s(:const, :Exception), s(:lasgn, :e2, s(:gvar, :$!))),
-                  s(:block, s(:lit, 3))))
-
-    doit
-  end
-
-  def test_rewrite_vcall
-    @insert = s(:vcall, :puts)
-    @expect = s(:call, nil, :puts, s(:arglist))
-
-    doit
-  end
-end

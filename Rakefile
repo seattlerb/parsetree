@@ -4,6 +4,8 @@ require 'rubygems'
 require 'hoe'
 
 $: << "../../RubyInline/dev/lib"
+$: << "lib"
+
 require './lib/parse_tree.rb'
 
 Hoe.new("ParseTree", ParseTree::VERSION) do |pt|
@@ -15,7 +17,7 @@ Hoe.new("ParseTree", ParseTree::VERSION) do |pt|
   pt.extra_deps << ['RubyInline', '>= 3.6.0']
   pt.spec_extras[:require_paths] = proc { |paths| paths << 'test' }
 
-  pt.multiruby_skip << "1.9" << "rubinius"
+  pt.multiruby_skip << "mri_rel_1_9" << "rubinius" << "mri_trunk"
 end
 
 Hoe::RUBY_FLAGS.sub! /-I/, '-I../../RubyInline/dev/lib:test:'

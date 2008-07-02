@@ -24,7 +24,7 @@ $verbose_methods = {
   "test_block_stmt_both" => true,
 }
 
-class ParseTree
+class RawParseTree
   def process(input, verbose = nil) # TODO: remove
 
     test_method = caller[0][/\`(.*)\'/, 1]
@@ -40,10 +40,19 @@ class ParseTree
   end
 end
 
-class TestParseTree < ParseTreeTestCase
+class TestRawParseTree < ParseTreeTestCase
   def setup
     super
-    @processor = ParseTree.new(false)
+    @processor = RawParseTree.new(false)
+  end
+
+  def test_parse_tree_for_string_with_newlines
+    @processor = RawParseTree.new(true)
+    actual   = @processor.parse_tree_for_string "1 +\n nil", 'test.rb', 5
+    expected = [[:newline, 6, "test.rb",
+                 [:call, [:lit, 1], :+, [:array, [:nil]]]]]
+
+    assert_equal expected, actual
   end
 
   def test_class_initialize
@@ -84,15 +93,6 @@ class TestParseTree < ParseTreeTestCase
     assert_equal expected, actual
   end
 
-  def test_parse_tree_for_string_with_newlines
-    @processor = ParseTree.new(true)
-    actual   = @processor.parse_tree_for_string "1 +\n nil", 'test.rb', 5
-    expected = [[:newline, 6, "test.rb",
-                 [:call, [:lit, 1], :+, [:array, [:nil]]]]]
-
-    assert_equal expected, actual
-  end
-
   def test_parse_tree_for_str
     actual   = @processor.parse_tree_for_str '1 + nil', '(string)', 1
     expected = [[:call, [:lit, 1], :+, [:array, [:nil]]]]
@@ -124,6 +124,7 @@ class TestParseTree < ParseTreeTestCase
         [:fcall, :puts, [:array, [:call, [:lvar, :arg3], :to_s]]],
         [:return,
           [:str, "foo"]]]]]
+
   @@multi_args = [:defn, :multi_args,
     [:scope,
       [:block,
@@ -139,11 +140,13 @@ class TestParseTree < ParseTreeTestCase
         [:fcall, :puts, [:array, [:call, [:lvar, :arg3], :to_s]]],
         [:return,
           [:str, "foo"]]]]]
+
   @@unknown_args = [:defn, :unknown_args,
     [:scope,
       [:block,
         [:args, :arg1, :arg2],
         [:return, [:lvar, :arg1]]]]]
+
   @@bbegin = [:defn, :bbegin,
     [:scope,
       [:block,
@@ -224,4 +227,38 @@ class TestParseTree < ParseTreeTestCase
                  @processor.parse_tree(Something),
                  "Must return a lot of shit")
   end
+end
+
+class TestParseTree < ParseTreeTestCase
+  def setup
+    super
+    @processor = ParseTree.new(false)
+  end
+
+  def test_process_string
+    actual   = @processor.process '1 + nil'
+    expected = s(:call, s(:lit, 1), :+, s(:arglist, s(:nil)))
+
+    assert_equal expected, actual
+
+    actual   = @processor.process 'puts 42'
+    expected = s(:call, nil, :puts, s(:arglist, s(:lit, 42)))
+
+    assert_equal expected, actual
+  end
+
+  def test_process_string_newlines
+    @processor = ParseTree.new(true)
+    actual   = @processor.process "1 +\n nil", false, 'test.rb', 5
+    expected = s(:newline, 6, "test.rb",
+                 s(:call, s(:lit, 1), :+, s(:arglist, s(:nil))))
+
+    assert_equal expected, actual
+  end
+
+  # TODO: test_process_proc ?
+  # TODO: test_process_method ?
+  # TODO: test_process_class ?
+  # TODO: test_process_module ?
+
 end

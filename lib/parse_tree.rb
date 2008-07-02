@@ -7,6 +7,7 @@ raise LoadError, "ParseTree isn't needed with rubinius" if
 
 require 'rubygems'
 require 'inline'
+require 'unified_ruby'
 
 class Module
   def modules
@@ -40,7 +41,7 @@ end
 #                [:args],
 #                [:return, [:call, [:lit, 1], "+", [:array, [:lit, 1]]]]]]]]]
 
-class ParseTree
+class RawParseTree
 
   VERSION = '2.2.0'
 
@@ -350,7 +351,7 @@ void add_to_parse_tree(VALUE self, VALUE ary, NODE * n, ID * locals) {
   static int masgn_level = 0;
 
   if (NIL_P(node_names)) {
-    node_names = rb_const_get_at(rb_path2class("ParseTree"),rb_intern("NODE_NAMES"));
+    node_names = rb_const_get_at(rb_path2class("RawParseTree"),rb_intern("NODE_NAMES"));
   }
 
   if (!node) return;
@@ -1094,4 +1095,34 @@ static VALUE parse_tree_for_str(VALUE source, VALUE filename, VALUE line) {
 }
 
   end # inline call
-end # ParseTree class
+end # RawParseTree class
+
+class ParseTree < RawParseTree
+  ##
+  # Initializes a ParseTree instance. Includes newline nodes if
+  # +include_newlines+ which defaults to +$DEBUG+.
+
+  def initialize(include_newlines=$DEBUG)
+    super
+    @unifier = Unifier.new
+  end
+
+  ##
+  # Main driver for ParseTree. Returns a Sexp instance containing the
+  # AST representing the input given. This is a UnifiedRuby sexp, not
+  # a raw sexp from ruby. If you want raw, use the old
+  # parse_tree_for_xxx methods... Please tell me if/why you want raw,
+  # I'd like to know so I can justify keeping the code around.
+
+  def process(input, verbose = nil, file = "(string)", line = -1)
+    case input
+    when Array then
+      @unifier.process(input)
+    when String then
+      pt = self.parse_tree_for_string(input, file, line, verbose).first
+      @unifier.process(pt)
+    else
+      raise ArgumentError, "Unknown input type #{input.inspect}"
+    end
+  end
+end

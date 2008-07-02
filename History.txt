@@ -1,3 +1,13 @@
+=== 2.3.0 / ????-??-??
+
+* N minor enhancements:
+
+  * ParseTree#process outputs a UnifiedRuby parse tree.
+  * Added UnifiedRuby#process
+  * Restructured ParseTreeTestCase to use new add_tests. Much much cleaner.
+  * Switched all ParseTree tests to RawParseTree tests.
+  * Added ParseTree tests.
+
 === 2.2.0 / 2008-06-09
 
 * 18 minor enhancements:
