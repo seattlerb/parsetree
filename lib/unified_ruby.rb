@@ -9,6 +9,18 @@ module UnifiedRuby
     super
   end
 
+  def rewrite_attrasgn(exp)
+    last = exp.last
+
+    if Sexp === last then
+      last[0] = :arglist if last[0] == :array
+    else
+      exp << s(:arglist)
+    end
+
+    exp
+  end
+
   def rewrite_bmethod(exp)
     exp[0] = :scope
 

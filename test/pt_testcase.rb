@@ -158,15 +158,15 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                s(:attrasgn,
                                  s(:lit, 42),
                                  :method=,
-                                 s(:array, s(:lvar, :y))))) # FIX
+                                 s(:arglist, s(:lvar, :y)))))
 
   add_tests("attrasgn_index_equals",
             "Ruby"        => "a[42] = 24",
             "RawParseTree"=> [:attrasgn, [:vcall, :a], :[]=, [:array, [:lit, 42], [:lit, 24]]],
             "ParseTree"   => s(:attrasgn,
                                s(:call, nil, :a, s(:arglist)),
-                               :[]=, # FIX: arglist!
-                               s(:array, s(:lit, 42), s(:lit, 24))))
+                               :[]=,
+                               s(:arglist, s(:lit, 42), s(:lit, 24))))
 
   add_tests("attrasgn_index_equals_space",
             "Ruby"        => "a = []; a [42] = 24",
@@ -176,8 +176,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                [:array, [:lit, 42], [:lit, 24]]]],
             "ParseTree"   => s(:block,
                               s(:lasgn, :a, s(:zarray)),
-                              s(:attrasgn, s(:lvar, :a), :[]=, # FIX: arglist?
-                               s(:array, s(:lit, 42), s(:lit, 24)))),
+                              s(:attrasgn, s(:lvar, :a), :[]=,
+                               s(:arglist, s(:lit, 42), s(:lit, 24)))),
             "Ruby2Ruby"  => "a = []\na[42] = 24\n")
 
   add_tests("attrset",
@@ -2410,8 +2410,14 @@ end",
                               [:array, [:lasgn, :a], [:attrasgn, [:vcall, :b], :c=]],
                               [:array, [:vcall, :d], [:vcall, :e]]],
             "ParseTree"   => s(:masgn,
-                              s(:array, s(:lasgn, :a), s(:attrasgn, s(:call, nil, :b, s(:arglist)), :c=)),
-                              s(:array, s(:call, nil, :d, s(:arglist)), s(:call, nil, :e, s(:arglist)))))
+                               s(:array,
+                                 s(:lasgn, :a),
+                                 s(:attrasgn,
+                                   s(:call, nil, :b, s(:arglist)),
+                                   :c=, s(:arglist))),
+                               s(:array,
+                                 s(:call, nil, :d, s(:arglist)),
+                                 s(:call, nil, :e, s(:arglist)))))
 
   add_tests("masgn_iasgn",
             "Ruby"        => "a, @b = c, d",
