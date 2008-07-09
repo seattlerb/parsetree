@@ -120,7 +120,16 @@ module UnifiedRuby
     exp.args << block_arg if block_arg
 
     # patch up attr_accessor methods
-    exp.insert 2, s(:args) if weirdo
+    if weirdo then
+      case
+      when exp.ivar then
+        exp.insert 2, s(:args)
+      when exp.attrset then
+        exp.insert 2, s(:args, :arg)
+      else
+        raise "unknown wierdo: #{wierdo.inpsect}"
+      end
+    end
 
     exp
   end
@@ -179,6 +188,11 @@ module UnifiedRuby
   def rewrite_vcall(exp)
     exp.push nil
     rewrite_fcall(exp)
+  end
+
+  def rewrite_zarray(exp)
+    exp[0] = :array
+    exp
   end
 end
 

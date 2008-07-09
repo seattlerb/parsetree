@@ -106,7 +106,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
             "RawParseTree"=> [:lasgn, :a,
                               [:argscat, [:array, [:vcall, :b]], [:vcall, :c]]],
             "ParseTree"   => s(:lasgn, :a,
-                              s(:argscat, s(:array, s(:call, nil, :b, s(:arglist))), s(:call, nil, :c, s(:arglist)))),
+                               s(:argscat, s(:array, s(:call, nil, :b, s(:arglist))), s(:call, nil, :c, s(:arglist)))),
             "Ruby2Ruby"   => "a = b, *c")
 
   add_tests("argscat_svalue",
@@ -117,10 +117,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                 [:array, [:vcall, :b], [:vcall, :c]],
                                 [:vcall, :d]]]],
             "ParseTree"   => s(:lasgn, :a,
-                              s(:svalue,
-                               s(:argscat,
-                                s(:array, s(:call, nil, :b, s(:arglist)), s(:call, nil, :c, s(:arglist))),
-                                s(:call, nil, :d, s(:arglist))))))
+                               s(:svalue,
+                                 s(:argscat,
+                                   s(:array, s(:call, nil, :b, s(:arglist)), s(:call, nil, :c, s(:arglist))),
+                                   s(:call, nil, :d, s(:arglist))))))
 
   add_tests("argspush",
             "Ruby"        => "a[*b] = c",
@@ -129,9 +129,9 @@ class ParseTreeTestCase < Test::Unit::TestCase
                               :[]=,
                               [:argspush, [:splat, [:vcall, :b]], [:vcall, :c]]],
             "ParseTree"   => s(:attrasgn,
-                              s(:call, nil, :a, s(:arglist)),
-                              :[]=,
-                              s(:argspush, s(:splat, s(:call, nil, :b, s(:arglist))), s(:call, nil, :c, s(:arglist)))))
+                               s(:call, nil, :a, s(:arglist)),
+                               :[]=,
+                               s(:argspush, s(:splat, s(:call, nil, :b, s(:arglist))), s(:call, nil, :c, s(:arglist)))))
 
   add_tests("array",
             "Ruby"        => "[1, :b, \"c\"]",
@@ -144,8 +144,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
                               [:str, "--remove"],
                               [:dstr, "", [:evstr, [:ivar, :@gem_repo]]]],
             "ParseTree"   => s(:array,
-                              s(:str, "--remove"),
-                              s(:dstr, "", s(:evstr, s(:ivar, :@gem_repo)))),
+                               s(:str, "--remove"),
+                               s(:dstr, "", s(:evstr, s(:ivar, :@gem_repo)))),
             "Ruby2Ruby"   => "[\"--remove\", \"#\{@gem_repo}\"]")
 
   add_tests("attrasgn",
@@ -154,7 +154,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                               [:lasgn, :y, [:lit, 0]],
                               [:attrasgn, [:lit, 42], :method=, [:array, [:lvar, :y]]]],
             "ParseTree"   => s(:block,
-                              s(:lasgn, :y, s(:lit, 0)),
+                               s(:lasgn, :y, s(:lit, 0)),
                                s(:attrasgn,
                                  s(:lit, 42),
                                  :method=,
@@ -175,16 +175,16 @@ class ParseTreeTestCase < Test::Unit::TestCase
                               [:attrasgn, [:lvar, :a], :[]=,
                                [:array, [:lit, 42], [:lit, 24]]]],
             "ParseTree"   => s(:block,
-                              s(:lasgn, :a, s(:zarray)),
-                              s(:attrasgn, s(:lvar, :a), :[]=,
-                               s(:arglist, s(:lit, 42), s(:lit, 24)))),
+                               s(:lasgn, :a, s(:array)),
+                               s(:attrasgn, s(:lvar, :a), :[]=,
+                                 s(:arglist, s(:lit, 42), s(:lit, 24)))),
             "Ruby2Ruby"  => "a = []\na[42] = 24\n")
 
   add_tests("attrset",
             "Ruby"        => [Examples, :writer=],
             "RawParseTree"=> [:defn, :writer=, [:attrset, :@writer]],
             "ParseTree"   => s(:defn, :writer=,
-                               s(:args), # FIX: needs an arg, for arity
+                               s(:args, :arg),
                                s(:attrset, :@writer)),
             "Ruby2Ruby"   => "attr_writer :writer")
 
@@ -196,10 +196,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
                               [:back_ref, :"'"],
                               [:back_ref, :+]],
             "ParseTree"   => s(:array,
-                              s(:back_ref, :&),
-                              s(:back_ref, :"`"),
-                              s(:back_ref, :"'"),
-                              s(:back_ref, :+)))
+                               s(:back_ref, :&),
+                               s(:back_ref, :"`"),
+                               s(:back_ref, :"'"),
+                               s(:back_ref, :+)))
 
   add_tests("begin",
             "Ruby"        => "begin\n  (1 + 1)\nend",
@@ -215,10 +215,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
   add_tests("begin_rescue_ensure",
             "Ruby" => "begin\nrescue\n  # do nothing\nensure\n  nil\nend",
             "RawParseTree" => [:begin,
-                            [:ensure,
-                             [:rescue,
-                              [:resbody, nil]],
-                             [:nil]]],
+                               [:ensure,
+                                [:rescue,
+                                 [:resbody, nil]],
+                                [:nil]]],
             "ParseTree"    => s(:begin,
                                 s(:ensure,
                                   s(:rescue,
@@ -361,20 +361,20 @@ class ParseTreeTestCase < Test::Unit::TestCase
                               [:fcall, :a,
                                [:array, [:lit, 1], [:lit, 2], [:lit, 3]]]],
             "ParseTree"   => s(:block_pass,
-                              s(:call, nil, :b, s(:arglist)),
-                              s(:call, nil, :a,
-                                s(:arglist,
-                                  s(:lit, 1), s(:lit, 2), s(:lit, 3)))))
+                               s(:call, nil, :b, s(:arglist)),
+                               s(:call, nil, :a,
+                                 s(:arglist,
+                                   s(:lit, 1), s(:lit, 2), s(:lit, 3)))))
 
   add_tests("block_pass_omgwtf",
             "Ruby" => "define_attr_method(:x, :sequence_name, &Proc.new { |*args| nil })",
             "RawParseTree" => [:block_pass,
-                            [:iter,
-                             [:call, [:const, :Proc], :new],
-                             [:masgn, [:dasgn_curr, :args]],
-                             [:nil]],
-                            [:fcall, :define_attr_method,
-                             [:array, [:lit, :x], [:lit, :sequence_name]]]],
+                               [:iter,
+                                [:call, [:const, :Proc], :new],
+                                [:masgn, [:dasgn_curr, :args]],
+                                [:nil]],
+                               [:fcall, :define_attr_method,
+                                [:array, [:lit, :x], [:lit, :sequence_name]]]],
             "ParseTree"    => s(:block_pass,
                                 s(:iter,
                                   s(:call, s(:const, :Proc), :new, s(:arglist)),
@@ -387,13 +387,13 @@ class ParseTreeTestCase < Test::Unit::TestCase
   add_tests("block_pass_splat",
             "Ruby" => "def blah(*args, &block)\n  other(*args, &block)\nend",
             "RawParseTree" => [:defn, :blah,
-                            [:scope,
-                             [:block,
-                              [:args, :"*args"],
-                              [:block_arg, :block],
-                              [:block_pass,
-                               [:lvar, :block],
-                               [:fcall, :other, [:splat, [:lvar, :args]]]]]]],
+                               [:scope,
+                                [:block,
+                                 [:args, :"*args"],
+                                 [:block_arg, :block],
+                                 [:block_pass,
+                                  [:lvar, :block],
+                                  [:fcall, :other, [:splat, [:lvar, :args]]]]]]],
             "ParseTree"    => s(:defn, :blah,
                                 s(:args, :"*args",
                                   s(:block_arg, :block)),
@@ -407,13 +407,13 @@ class ParseTreeTestCase < Test::Unit::TestCase
   add_tests("block_pass_thingy",
             "Ruby"      => "r.read_body(dest, &block)",
             "RawParseTree" => [:block_pass,
-                            [:vcall, :block],
-                            [:call, [:vcall, :r], :read_body,
-                             [:array, [:vcall, :dest]]]],
+                               [:vcall, :block],
+                               [:call, [:vcall, :r], :read_body,
+                                [:array, [:vcall, :dest]]]],
             "ParseTree"    => s(:block_pass,
-                            s(:call, nil, :block, s(:arglist)),
-                            s(:call, s(:call, nil, :r, s(:arglist)), :read_body,
-                             s(:arglist, s(:call, nil, :dest, s(:arglist))))))
+                                s(:call, nil, :block, s(:arglist)),
+                                s(:call, s(:call, nil, :r, s(:arglist)), :read_body,
+                                  s(:arglist, s(:call, nil, :dest, s(:arglist))))))
 
   add_tests("block_stmt_after",
             "Ruby"        => "def f\n  begin\n    b\n  rescue\n    c\n  end\n\n  d\nend",
@@ -511,11 +511,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
   add_tests("bmethod_splat",
             "Ruby" => [Examples, :splatted],
             "RawParseTree" => [:defn, :splatted,
-                            [:bmethod,
-                             [:masgn, [:dasgn_curr, :args]],
-                             [:block,
-                              [:dasgn_curr, :y, [:call, [:dvar, :args], :first]],
-                              [:call, [:dvar, :y], :+, [:array, [:lit, 42]]]]]],
+                               [:bmethod,
+                                [:masgn, [:dasgn_curr, :args]],
+                                [:block,
+                                 [:dasgn_curr, :y, [:call, [:dvar, :args], :first]],
+                                 [:call, [:dvar, :y], :+, [:array, [:lit, 42]]]]]],
             "ParseTree"    => s(:defn, :splatted,
                                 s(:args, :"*args"),
                                 s(:scope,
@@ -532,7 +532,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
             "RawParseTree"=> [:iter,
                               [:fcall, :loop], nil, [:if, [:true], [:break], nil]],
             "ParseTree"   => s(:iter,
-                              s(:call, nil, :loop, s(:arglist)), nil, s(:if, s(:true), s(:break), nil)))
+                               s(:call, nil, :loop, s(:arglist)), nil, s(:if, s(:true), s(:break), nil)))
 
   add_tests("break_arg",
             "Ruby"        => "loop { break 42 if true }",
@@ -540,8 +540,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
                               [:fcall, :loop], nil,
                               [:if, [:true], [:break, [:lit, 42]], nil]],
             "ParseTree"   => s(:iter,
-                              s(:call, nil, :loop, s(:arglist)), nil,
-                              s(:if, s(:true), s(:break, s(:lit, 42)), nil)))
+                               s(:call, nil, :loop, s(:arglist)), nil,
+                               s(:if, s(:true), s(:break, s(:lit, 42)), nil)))
 
   add_tests("call",
             "Ruby"        => "self.method",
@@ -620,7 +620,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                               [:lasgn, :a, [:zarray]],
                               [:call, [:lvar, :a], :[], [:array, [:lit, 42]]]],
             "ParseTree"   => s(:block,
-                              s(:lasgn, :a, s(:zarray)),
+                              s(:lasgn, :a, s(:array)),
                                s(:call, s(:lvar, :a), :[],
                                  s(:arglist, s(:lit, 42)))))
 
@@ -636,7 +636,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                               [:lasgn, :a, [:zarray]],
                               [:call, [:lvar, :a], :[], [:array, [:lit, 42]]]],
             "ParseTree"   => s(:block,
-                              s(:lasgn, :a, s(:zarray)),
+                              s(:lasgn, :a, s(:array)),
                               s(:call, s(:lvar, :a), :[], s(:arglist, s(:lit, 42)))),
             "Ruby2Ruby"   => "a = []\na[42]\n")
 
@@ -1446,7 +1446,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                s(:args),
                                s(:scope,
                                  s(:block,
-                                   s(:lasgn, :a, s(:zarray)),
+                                   s(:lasgn, :a, s(:array)),
                                    s(:return, s(:lvar, :a))))))
 
   add_tests("defs",
@@ -2598,7 +2598,7 @@ end",
                               [:op_asgn1, [:lvar, :b],
                                [:array, [:lit, 3]], :+, [:lit, 12]]],
             "ParseTree"   => s(:block,
-                              s(:lasgn, :b, s(:zarray)),
+                              s(:lasgn, :b, s(:array)),
                               s(:op_asgn1, s(:lvar, :b),
                                s(:array, s(:lit, 1)), :"||", s(:lit, 10)),
                               s(:op_asgn1, s(:lvar, :b),
@@ -2617,7 +2617,7 @@ end",
                               [:op_asgn1, [:ivar, :@b],
                                [:array, [:lit, 3]], :+, [:lit, 12]]],
             "ParseTree"   => s(:block,
-                              s(:iasgn, :@b, s(:zarray)),
+                              s(:iasgn, :@b, s(:array)),
                               s(:op_asgn1, s(:ivar, :@b),
                                s(:array, s(:lit, 1)), :"||", s(:lit, 10)),
                               s(:op_asgn1, s(:ivar, :@b),
@@ -3424,7 +3424,7 @@ end",
   add_tests("zarray",
             "Ruby"        => "a = []",
             "RawParseTree"=> [:lasgn, :a, [:zarray]],
-            "ParseTree"   => s(:lasgn, :a, s(:zarray)))
+            "ParseTree"   => s(:lasgn, :a, s(:array)))
 
   add_tests("zsuper",
             "Ruby"        => "def x\n  super\nend",
