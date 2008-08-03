@@ -136,6 +136,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
   def self.generate_tests klass
     install_missing_reporter
+    clone_same
 
     output_name = klass.name.to_s.sub(/^Test/, '')
     raise "Unknown class #{klass} in @@testcase_order" unless
