@@ -154,7 +154,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
   def self.inherited klass
     super
 
-    generate_tests klass
+    generate_tests klass unless klass.name =~ /TestCase/
   end
 
   def self.install_missing_reporter
