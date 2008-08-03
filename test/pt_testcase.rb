@@ -33,11 +33,9 @@ class Examples
 end
 
 class ParseTreeTestCase < Test::Unit::TestCase
+  undef_method :default_test unless defined? Mini
 
   attr_accessor :processor # to be defined by subclass
-
-  def self.testcase_order; @@testcase_order; end
-  def self.testcases; @@testcases; end
 
   def setup
     super
@@ -45,10 +43,21 @@ class ParseTreeTestCase < Test::Unit::TestCase
     Unique.reset
   end
 
-  # TODO: phase out?
+# TODO:
+#   def self.add_test name, data, klass = self.name[4..-1]
+#     sexp = Sexp.from_array(testcases[name]["ParseTree"])
+#     if data == :same then
+#       super(name, sexp, klass)
+#     else
+#       warn "add_test(#{name.inspect}, :same)" if data == sexp
+#       super(name, Sexp.from_array(data), klass)
+#     end
+#   end
+
   def self.add_test name, data, klass = self.name[4..-1]
     name = name.to_s
     klass = klass.to_s
+
     if testcases.has_key? name then
       if testcases[name].has_key? klass then
         warn "testcase #{klass}##{name} already has data"
@@ -70,11 +79,121 @@ class ParseTreeTestCase < Test::Unit::TestCase
     end
   end
 
-  def self.unsupported_tests *tests
-    tests.flatten.each do |name|
-      add_test name, :unsupported
+  # lets us used unprocessed :self outside of tests, called when subclassed
+  def self.clone_same # TODO: push up to pt_testcase
+    @@testcases.each do |node, data|
+      data.each do |key, val|
+        if val == :same then
+          prev_key = self.previous(key)
+          data[key] = data[prev_key].deep_clone
+        end
+      end
     end
   end
+
+  def self.generate_test klass, node, data, input_name, output_name
+    klass.send(:define_method, "test_#{node}".to_sym) do
+      flunk "Processor is nil" if processor.nil?
+
+      assert data.has_key?(input_name), "Unknown input data"
+      assert data.has_key?(output_name), "Missing test data"
+
+      $missing[node] << output_name unless data.has_key? output_name
+
+      input = data[input_name].deep_clone
+
+      expected = if data[output_name] == :same then
+                   input
+                 else
+                   data[output_name]
+                 end.deep_clone
+
+      case expected
+      when :unsupported then
+        assert_raises(UnsupportedNodeError) do
+          processor.process(input)
+        end
+      else
+        extra_expected = []
+        extra_input = []
+
+        _, expected, extra_expected = *expected if
+          Array === expected and expected.first == :defx
+        _, input, extra_input = *input if
+          Array === input and input.first == :defx
+
+        debug = input.deep_clone
+        assert_equal(expected, processor.process(input),
+                     "failed on input: #{debug.inspect}")
+        extra_input.each do |extra|
+          processor.process(extra)
+        end
+        extra = processor.extra_methods rescue []
+        assert_equal extra_expected, extra
+      end
+    end
+  end
+
+  def self.generate_tests klass
+    install_missing_reporter
+
+    output_name = klass.name.to_s.sub(/^Test/, '')
+    raise "Unknown class #{klass} in @@testcase_order" unless
+      @@testcase_order.include? output_name
+
+    input_name = self.previous(output_name)
+
+    @@testcases.each do |node, data|
+      next if [:skip, :unsupported].include? data[input_name]
+      next if data[output_name] == :skip
+
+      generate_test klass, node, data, input_name, output_name
+    end
+  end
+
+  def self.inherited klass
+    super
+
+    generate_tests klass
+  end
+
+  def self.install_missing_reporter
+    unless defined? $missing then
+      $missing = Hash.new { |h,k| h[k] = [] }
+      at_exit {
+        at_exit {
+          warn ""
+          $missing.sort.each do |name, klasses|
+            warn "add_tests(#{name.inspect},"
+            klasses.map! { |klass| "          #{klass.inspect} => :same" }
+            warn klasses.join("\n") + ")"
+          end
+          warn ""
+        }
+      }
+    end
+  end
+
+  def self.previous(key, extra=0) # FIX: remove R2C code
+    idx = @@testcase_order.index(key)-1-extra
+    case key
+    when "RubyToRubyC" then
+      idx -= 1
+    end
+    @@testcase_order[idx]
+  end
+
+  def self.testcase_order; @@testcase_order; end
+  def self.testcases; @@testcases; end
+
+#   def self.unsupported_tests *tests
+#     tests.flatten.each do |name|
+#       add_test name, :unsupported
+#     end
+#   end
+
+  ############################################################
+  # Shared TestCases:
 
   @@testcase_order = %w(Ruby RawParseTree ParseTree)
 
@@ -3431,70 +3550,4 @@ end",
             "RawParseTree"=> [:defn, :x, [:scope, [:block, [:args], [:zsuper]]]],
             "ParseTree"   => s(:defn, :x, s(:args), s(:scope, s(:block, s(:zsuper)))))
 
-  def self.previous(key, extra=0) # FIX: remove R2C code
-    idx = @@testcase_order.index(key)-1-extra
-    case key
-    when "RubyToRubyC" then
-      idx -= 1
-    end
-    @@testcase_order[idx]
-  end
-
-  def self.inherited(c)
-    super
-
-    output_name = c.name.to_s.sub(/^Test/, '')
-    raise "Unknown class #{c} in @@testcase_order" unless
-      @@testcase_order.include? output_name
-
-    input_name = self.previous(output_name)
-
-    @@testcases.each do |node, data|
-      next if [:skip, :unsupported].include? data[input_name]
-      next if data[output_name] == :skip
-
-      c.send(:define_method, :"test_#{node}") do
-        flunk "Processor is nil" if processor.nil?
-        assert data.has_key?(input_name), "Unknown input data"
-        unless data.has_key?(output_name) then
-          $stderr.puts "add_test(#{node.inspect}, :same)"
-        end
-        assert(data.has_key?(output_name),
-               "Missing test data: #{self.class} #{node}")
-        input = data[input_name].deep_clone
-
-        expected = if data[output_name] == :same then
-                     input
-                   else
-                     data[output_name]
-                   end.deep_clone
-
-        case expected
-        when :unsupported then
-          assert_raises(UnsupportedNodeError) do
-            processor.process(input)
-          end
-        else
-          extra_expected = []
-          extra_input = []
-
-          _, expected, extra_expected = *expected if
-            Array === expected and expected.first == :defx
-          _, input, extra_input = *input if
-            Array === input and input.first == :defx
-
-          debug = input.deep_clone
-          assert_equal(expected, processor.process(input),
-                       "failed on input: #{debug.inspect}")
-          extra_input.each do |extra|
-            processor.process(extra)
-          end
-          extra = processor.extra_methods rescue []
-          assert_equal extra_expected, extra
-        end
-      end
-    end
-  end
-
-  undef_method :default_test rescue nil
 end
