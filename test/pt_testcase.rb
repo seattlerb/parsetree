@@ -2375,7 +2375,7 @@ end",
   add_tests("ivar",
             "Ruby"        => [Examples, :reader],
             "RawParseTree"=> [:defn, :reader, [:ivar, :@reader]],
-            "ParseTree"   => s(:defn, :reader,
+            "ParseTree"   => s(:defn, :reader, # FIX should be unified?
                                s(:args),
                                s(:ivar, :@reader)),
             "Ruby2Ruby"   => "attr_reader :reader")
