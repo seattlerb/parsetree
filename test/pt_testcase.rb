@@ -80,8 +80,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
     end
   end
 
-  # lets us used unprocessed :self outside of tests, called when subclassed
-  def self.clone_same # TODO: push up to pt_testcase
+  def self.clone_same
     @@testcases.each do |node, data|
       data.each do |key, val|
         if val == :same then
@@ -101,13 +100,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
       $missing[node] << output_name unless data.has_key? output_name
 
-      input = data[input_name].deep_clone
-
-      expected = if data[output_name] == :same then
-                   input
-                 else
-                   data[output_name]
-                 end.deep_clone
+      input    = data[input_name].deep_clone
+      expected = data[output_name].deep_clone
 
       case expected
       when :unsupported then
@@ -140,8 +134,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
     clone_same
 
     output_name = klass.name.to_s.sub(/^Test/, '')
-    raise "Unknown class #{klass} in @@testcase_order" unless
-      @@testcase_order.include? output_name
 
     input_name = self.previous(output_name)
 
@@ -177,12 +169,15 @@ class ParseTreeTestCase < Test::Unit::TestCase
   end
 
   def self.previous(key, extra=0) # FIX: remove R2C code
-    idx = @@testcase_order.index(key)-1-extra
+    idx = @@testcase_order.index(key)
+
+    raise "Unknown class #{key} in @@testcase_order" if idx.nil?
+
     case key
     when "RubyToRubyC" then
       idx -= 1
     end
-    @@testcase_order[idx]
+    @@testcase_order[idx - 1 - extra]
   end
 
   def self.testcase_order; @@testcase_order; end
