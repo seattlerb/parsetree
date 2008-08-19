@@ -55,6 +55,12 @@ class ParseTreeTestCase < Test::Unit::TestCase
 #     end
 #   end
 
+  def after_process_hook klass, node, data, input_name, output_name
+  end
+
+  def before_process_hook klass, node, data, input_name, output_name
+  end
+
   def self.add_test name, data, klass = self.name[4..-1]
     name = name.to_s
     klass = klass.to_s
@@ -91,46 +97,51 @@ class ParseTreeTestCase < Test::Unit::TestCase
     end
   end
 
-  def assert_processor klass, node, data, input_name, output_name
-    flunk "Processor is nil" if processor.nil?
-
-    assert data.has_key?(input_name), "Unknown input data"
-    assert data.has_key?(output_name), "Missing test data"
-
-    $missing[node] << output_name unless data.has_key? output_name
-
-    input    = data[input_name].deep_clone
-    expected = data[output_name].deep_clone
-
-    case expected
-    when :unsupported then
-      assert_raises(UnsupportedNodeError) do
-        processor.process(input)
-      end
-    else
-      extra_expected = []
-      extra_input = []
-
-      _, expected, extra_expected = *expected if
-        Array === expected and expected.first == :defx
-      _, input, extra_input = *input if
-        Array === input and input.first == :defx
-
-      debug = input.deep_clone
-      assert_equal(expected, processor.process(input),
-                   "failed on input: #{debug.inspect}")
-      extra_input.each do |extra|
-        processor.process(extra)
-      end
-      extra = processor.extra_methods rescue []
-      assert_equal extra_expected, extra
-    end
-  end
-
   def self.generate_test klass, node, data, input_name, output_name
-    k, n, d, i, o = klass, node, data, input_name, output_name
     klass.send(:define_method, "test_#{node}".to_sym) do
-      assert_processor k, n, d, i, o
+      flunk "Processor is nil" if processor.nil?
+
+      assert data.has_key?(input_name), "Unknown input data"
+      assert data.has_key?(output_name), "Missing test data"
+
+      $missing[node] << output_name unless data.has_key? output_name
+
+      input    = data[input_name].deep_clone
+      expected = data[output_name].deep_clone
+
+      case expected
+      when :unsupported then
+        assert_raises(UnsupportedNodeError) do
+          processor.process(input)
+        end
+      else
+        extra_expected = []
+        extra_input = []
+
+        _, expected, extra_expected = *expected if
+          Array === expected and expected.first == :defx
+        _, input, extra_input = *input if
+          Array === input and input.first == :defx
+
+        # OMG... I can't believe I have to do this this way.  these
+        # hooks are here instead of refactoring this define_method
+        # body into an assertion. It'll allow subclasses to hook in
+        # and add behavior before or after the processor does it's
+        # thing. If you go the body refactor route, some of the
+        # RawParseTree test casese fail for completely bogus reasons.
+
+        before_process_hook klass, node, data, input_name, output_name
+        @result = processor.process input
+        assert_equal(expected, @result,
+                     "failed on input: #{data[input_name].inspect}")
+        after_process_hook klass, node, data, input_name, output_name
+
+        extra_input.each do |extra|
+          processor.process(extra)
+        end
+        extra = processor.extra_methods rescue []
+        assert_equal extra_expected, extra
+      end
     end
   end
 
