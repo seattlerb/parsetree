@@ -1859,6 +1859,23 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                 s(:dstr, "x", s(:evstr, s(:lvar, :argl)),
                                   s(:str, "y"))))
 
+  add_tests("dstr_gross",
+            "Ruby"         => '"a #$global b #@ivar c #@@cvar d"',
+            "RawParseTree" => [:dstr, "a ",
+                               [:evstr, [:gvar, :$global]],
+                               [:str, " b "],
+                               [:evstr, [:ivar, :@ivar]],
+                               [:str, " c "],
+                               [:evstr, [:cvar, :@@cvar]],
+                               [:str, " d"]],
+            "ParseTree"    => s(:dstr, "a ",
+                               s(:evstr, s(:gvar, :$global)),
+                               s(:str, " b "),
+                               s(:evstr, s(:ivar, :@ivar)),
+                               s(:str, " c "),
+                               s(:evstr, s(:cvar, :@@cvar)),
+                               s(:str, " d")))
+
   add_tests("dstr_2",
             "Ruby"         => "argl = 1\n\"x#\{(\"%.2f\" % 3.14159)}y\"\n",
             "RawParseTree" =>   [:block,
