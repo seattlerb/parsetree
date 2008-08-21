@@ -34,7 +34,7 @@ class Examples
 end
 
 class ParseTreeTestCase < Test::Unit::TestCase
-  undef_method :default_test unless defined? Mini
+  undef_method :default_test unless defined? Mini rescue nil
 
   attr_accessor :processor # to be defined by subclass
 
@@ -1869,12 +1869,13 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                [:evstr, [:cvar, :@@cvar]],
                                [:str, " d"]],
             "ParseTree"    => s(:dstr, "a ",
-                               s(:evstr, s(:gvar, :$global)),
-                               s(:str, " b "),
-                               s(:evstr, s(:ivar, :@ivar)),
-                               s(:str, " c "),
-                               s(:evstr, s(:cvar, :@@cvar)),
-                               s(:str, " d")))
+                                s(:evstr, s(:gvar, :$global)),
+                                s(:str, " b "),
+                                s(:evstr, s(:ivar, :@ivar)),
+                                s(:str, " c "),
+                                s(:evstr, s(:cvar, :@@cvar)),
+                                s(:str, " d")),
+            "Ruby2Ruby" => '"a #{$global} b #{@ivar} c #{@@cvar} d"')
 
   add_tests("dstr_2",
             "Ruby"         => "argl = 1\n\"x#\{(\"%.2f\" % 3.14159)}y\"\n",
@@ -2701,6 +2702,13 @@ end",
             "Ruby"         => "(1...10)",
             "RawParseTree" => [:lit, 1...10],
             "ParseTree"    => s(:lit, 1...10))
+
+# TODO: discuss and decide which lit we like
+#   it "converts a regexp to an sexp" do
+#     "/blah/".to_sexp.should == s(:regex, "blah", 0)
+#     "/blah/i".to_sexp.should == s(:regex, "blah", 1)
+#     "/blah/u".to_sexp.should == s(:regex, "blah", 64)
+#   end
 
   add_tests("lit_regexp",
             "Ruby"         => "/x/",
