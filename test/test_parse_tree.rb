@@ -18,17 +18,11 @@ class SomethingWithInitialize
   def protected_meth; end
 end
 
-$verbose_methods = {
-  "test_begin_rescue_twice" => true,
-  "test_block_stmt_after" => true,
-  "test_block_stmt_both" => true,
-}
-
 class RawParseTree
   def process(input, verbose = nil) # TODO: remove
 
     test_method = caller[0][/\`(.*)\'/, 1]
-    verbose = $verbose_methods[test_method]
+    verbose = test_method =~ /mri_verbose_flag/ ? true : nil
 
     # um. kinda stupid, but cleaner
     case input

@@ -167,6 +167,10 @@ module UnifiedRuby
     rewrite_call(exp)
   end
 
+# TODO: masgn should have 2 slots always, locals and splat, nil for either
+#   def rewrite_masgn(exp)
+#   end
+
   def rewrite_resbody(exp)
     exp[1] ||= s(:array)        # no args
 
@@ -183,6 +187,11 @@ module UnifiedRuby
     exp << nil if exp.size == 2 # no body
 
     exp
+  end
+
+  def rewrite_begin(exp)
+    raise "wtf: #{exp.inspect}" if exp.size > 2
+    exp.last
   end
 
   def rewrite_vcall(exp)
