@@ -171,6 +171,11 @@ module UnifiedRuby
 #   def rewrite_masgn(exp)
 #   end
 
+  def rewrite_op_asgn1(exp)
+    exp[2][0] = :arglist # if exp[2][0] == :array
+    exp
+  end
+
   def rewrite_resbody(exp)
     exp[1] ||= s(:array)        # no args
 
@@ -198,6 +203,21 @@ module UnifiedRuby
     exp.push nil
     rewrite_fcall(exp)
   end
+
+#   def rewrite_yield(exp)
+#     if exp.size == 1 then
+#       exp << s(:arglist)
+#     elsif exp.last[0] == :argscat then
+#       # do nothing
+#     elsif exp.last[0] == :array then
+#       exp.last[0] = :arglist
+#     else
+#       exp[-1] = s(:arglist, exp[-1])
+#     end
+
+#     exp
+#   end
+#   alias :rewrite_super :rewrite_yield
 
   def rewrite_zarray(exp)
     exp[0] = :array
