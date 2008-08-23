@@ -171,16 +171,17 @@ class SexpProcessor
   def rewrite(exp)
     type = exp.first
 
-    self.context.unshift type # FIX: first one doubles up because process already unshifted -- look at moving initial rewrite up above
+    self.context.unshift type
+
     exp.map! { |sub| Array === sub ? rewrite(sub) : sub }
+
+    self.context.shift
 
     begin
       meth = @rewriters[type]
       exp  = self.send(meth, exp) if meth
       old_type, type = type, exp.first
     end until old_type == type
-
-    self.context.shift
 
     exp
   end
@@ -192,6 +193,7 @@ class SexpProcessor
 
   def process(exp)
     return nil if exp.nil?
+    exp = self.rewrite(exp) if self.context.empty?
 
     unless @unsupported_checked then
       m = public_methods.grep(/^process_/) { |o| o.to_s.sub(/^process_/, '').intern }
@@ -220,8 +222,6 @@ class SexpProcessor
       @debug.has_key? type or @exceptions.has_key?(type)
 
     raise UnsupportedNodeError, "'#{type}' is not a supported node type" if @unsupported.include? type
-
-    exp = self.rewrite(exp) if self.context.size == 1
 
     if @debug.has_key? type then
       str = exp.inspect

@@ -356,7 +356,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
             "RawParseTree" => [:begin,
                                [:call, [:lit, 1], :+, [:array, [:lit, 1]]]],
             "ParseTree"    => s(:call, s(:lit, 1), :+,
-                                s(:arglist, s(:lit, 1))))
+                                s(:arglist, s(:lit, 1))),
+            "Ruby2Ruby"    => "(1 + 1)")
 
   add_tests("begin_def",
             "Ruby"         => "def m\n  begin\n\n  end\nend",
@@ -413,12 +414,12 @@ class ParseTreeTestCase < Test::Unit::TestCase
   copy_test_case "begin_rescue_twice", "ParseTree"
 
   add_tests("block__sucks",
-            "Ruby" => "def self.setup(ctx)\n  bind = allocate()\n\n  bind.context = ctx\n  return bind\nend",
+            "Ruby" => "def self.setup(ctx)\n  bind = allocate\n  bind.context = ctx\n  return bind\nend",
             "RawParseTree" => [:defs, [:self], :setup,
                                [:scope,
                                 [:block,
                                  [:args, :ctx],
-                                 [:lasgn, :bind, [:fcall, :allocate]],
+                                 [:lasgn, :bind, [:vcall, :allocate]],
                                  [:attrasgn, [:lvar, :bind], :context=,
                                   [:array, [:lvar, :ctx]]],
                                  [:return, [:lvar, :bind]]]]],
@@ -651,10 +652,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                  [:rescue,
                                   [:vcall, :b],
                                   [:resbody, nil, [:vcall, :c]]],
-                                 [:vcall, :d]]]],
-            "Ruby2Ruby"    => "def f\n  b rescue c\n  d\nend")
+                                 [:vcall, :d]]]])
 
   copy_test_case "block_stmt_after", "ParseTree"
+  copy_test_case "block_stmt_after", "Ruby2Ruby"
 
   add_tests("block_stmt_before",
             "Ruby"         => "def f\n  a\n  begin\n    b\n  rescue\n    c\n  end\nend",
@@ -674,7 +675,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                     s(:rescue, s(:call, nil, :b, s(:arglist)),
                                       s(:resbody,
                                         s(:array),
-                                        s(:call, nil, :c, s(:arglist))))))))
+                                        s(:call, nil, :c, s(:arglist))))))),
+            "Ruby2Ruby"    => "def f\n  a\n  b rescue c\nend")
 
   add_tests("block_stmt_before_mri_verbose_flag",
             "Ruby"         => "def f\n  a\n  begin\n    b\n  rescue\n    c\n  end\nend",
@@ -688,6 +690,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                    [:resbody, nil, [:vcall, :c]]]]]]])
 
   copy_test_case "block_stmt_before", "ParseTree"
+  copy_test_case "block_stmt_before", "Ruby2Ruby"
 
   add_tests("block_stmt_both",
             "Ruby"         => "def f\n  a\n  begin\n    b\n  rescue\n    c\n  end\n  d\nend",
@@ -712,7 +715,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                       s(:resbody,
                                         s(:array),
                                         s(:call, nil, :c, s(:arglist)))),
-                                    s(:call, nil, :d, s(:arglist))))))
+                                    s(:call, nil, :d, s(:arglist))))),
+            "Ruby2Ruby"    => "def f\n  a\n  b rescue c\n  d\nend")
 
   add_tests("block_stmt_both_mri_verbose_flag",
             "Ruby"         => "def f\n  a\n  begin\n    b\n  rescue\n    c\n  end\n  d\nend",
@@ -726,10 +730,10 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                   [:resbody,
                                    nil,
                                    [:vcall, :c]]],
-                                 [:vcall, :d]]]],
-            "Ruby2Ruby"    => "def f\n  a\n  b rescue c\n  d\nend")
+                                 [:vcall, :d]]]])
 
   copy_test_case "block_stmt_both", "ParseTree"
+  copy_test_case "block_stmt_both", "Ruby2Ruby"
 
   add_tests("bmethod",
             "Ruby"         => [Examples, :unsplatted],
@@ -2938,7 +2942,7 @@ end",
                                   s(:call, nil, :e, s(:arglist)))))
 
   add_tests("masgn_attrasgn_idx",
-            "Ruby"         => "a, i, j = [], 1, 2; a[i], a[j] = a[j], a[i]",
+            "Ruby"         => "a, i, j = [], 1, 2\na[i], a[j] = a[j], a[i]\n",
             "RawParseTree" => [:block,
                                [:masgn,
                                 [:array,
@@ -3509,7 +3513,8 @@ end",
                                 s(:resbody,
                                   s(:array,
                                     s(:const, :RuntimeError),
-                                    s(:lasgn, :r, s(:gvar, :$!))), nil)))
+                                    s(:lasgn, :r, s(:gvar, :$!))),
+                                  nil)))
 
   add_tests("retry",
             "Ruby"         => "retry",
