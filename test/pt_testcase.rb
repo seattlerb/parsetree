@@ -44,17 +44,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
     Unique.reset
   end
 
-# TODO:
-#   def self.add_test name, data, klass = self.name[4..-1]
-#     sexp = Sexp.from_array(testcases[name]["ParseTree"])
-#     if data == :same then
-#       super(name, sexp, klass)
-#     else
-#       warn "add_test(#{name.inspect}, :same)" if data == sexp
-#       super(name, Sexp.from_array(data), klass)
-#     end
-#   end
-
   def after_process_hook klass, node, data, input_name, output_name
   end
 
@@ -204,11 +193,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
   def self.testcase_order; @@testcase_order; end
   def self.testcases; @@testcases; end
 
-#   def self.unsupported_tests *tests
-#     tests.flatten.each do |name|
-#       add_test name, :unsupported
-#     end
-#   end
+  def self.unsupported_tests *tests
+    tests.flatten.each do |name|
+      add_test name, :unsupported
+    end
+  end
 
   ############################################################
   # Shared TestCases:
@@ -289,14 +278,23 @@ class ParseTreeTestCase < Test::Unit::TestCase
             "ParseTree"    => s(:array, s(:lit, 1), s(:lit, :b), s(:str, "c")))
 
   add_tests("array_pct_W",
-            "Ruby"         => "%W[--remove #\{@gem_repo}]",
-            "RawParseTree" => [:array,
-                               [:str, "--remove"],
-                               [:dstr, "", [:evstr, [:ivar, :@gem_repo]]]],
+            "Ruby"         => "%W[a b c]",
+            "RawParseTree" => [:array, [:str, "a"], [:str, "b"], [:str, "c"]],
             "ParseTree"    => s(:array,
-                                s(:str, "--remove"),
-                                s(:dstr, "", s(:evstr, s(:ivar, :@gem_repo)))),
-            "Ruby2Ruby"    => "[\"--remove\", \"#\{@gem_repo}\"]")
+                                s(:str, "a"), s(:str, "b"), s(:str, "c")),
+            "Ruby2Ruby"    => "[\"a\", \"b\", \"c\"]")
+
+  add_tests("array_pct_W_dstr",
+            "Ruby"         => "%W[a #\{@b} c]",
+            "RawParseTree" => [:array,
+                               [:str, "a"],
+                               [:dstr, "", [:evstr, [:ivar, :@b]]],
+                               [:str, "c"]],
+            "ParseTree"    => s(:array,
+                                s(:str, "a"),
+                                s(:dstr, "", s(:evstr, s(:ivar, :@b))),
+                                s(:str, "c")),
+            "Ruby2Ruby"    => "[\"a\", \"#\{@b}\", \"c\"]")
 
   add_tests("attrasgn",
             "Ruby"         => "y = 0\n42.method = y\n",
@@ -413,7 +411,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
 
   copy_test_case "begin_rescue_twice", "ParseTree"
 
-  add_tests("block__sucks",
+  add_tests("block_attrasgn",
             "Ruby" => "def self.setup(ctx)\n  bind = allocate\n  bind.context = ctx\n  return bind\nend",
             "RawParseTree" => [:defs, [:self], :setup,
                                [:scope,
@@ -489,8 +487,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                    [:argscat,
                                     [:array, [:lit, 42]], [:lvar, :args]]]]]]],
             "ParseTree"    => s(:defn, :blah,
-                                s(:args, :"*args",
-                                  s(:block_arg, :block)),
+                                s(:args, :"*args", s(:block_arg, :block)),
                                 s(:scope,
                                   s(:block,
                                     s(:block_pass,
@@ -2174,8 +2171,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                 s(:dxstr, 'touch ', s(:evstr, s(:lvar, :t)))))
 
   add_tests("ensure",
-            "Ruby"         => "begin\n  (1 + 1)\nrescue SyntaxError => e1\n  2\nrescue Exception => e2\n  3\nelse\n  4\nensure\n  5
-end",
+            "Ruby"         => "begin\n  (1 + 1)\nrescue SyntaxError => e1\n  2\nrescue Exception => e2\n  3\nelse\n  4\nensure\n  5\nend",
             "RawParseTree" => [:begin,
                                [:ensure,
                                 [:rescue,
@@ -2345,9 +2341,7 @@ end",
                                   s(:nil))))
 
   add_tests("flip2_method",
-            "Ruby"         => "if 1..2.a?(b) then
-  nil
-end",
+            "Ruby"         => "if 1..2.a?(b) then\n  nil\nend",
             "RawParseTree" => [:if,
                                [:flip2,
                                 [:lit, 1],
@@ -3636,8 +3630,7 @@ end",
             "Ruby2Ruby"    => "\"  blah\\nblah\\n\\n\"")
 
   add_tests("str_interp_file",
-            "Ruby"         => '"file = #{__FILE__}
-"',
+            "Ruby"         => '"file = #{__FILE__}\n"',
             "RawParseTree" => [:str, "file = (string)\n"],
             "ParseTree"    => s(:str, "file = (string)\n"),
             "Ruby2Ruby"    => '"file = (string)\\n"')
