@@ -180,6 +180,7 @@ class SexpProcessor
     begin
       meth = @rewriters[type]
       exp  = self.send(meth, exp) if meth
+      break unless Sexp === exp
       old_type, type = type, exp.first
     end until old_type == type
 

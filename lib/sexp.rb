@@ -154,11 +154,8 @@ class Sexp < Array # ZenTest FULL
     return "s(#{sexp_str})"
   end
 
-  ##
-  # Returns the node named +node+, deleting it if +delete+ is true.
-
-  def method_missing(meth, delete=false)
-    matches = find_all { | sexp | Sexp === sexp and sexp.first == meth }
+  def find_node name, delete = false
+    matches = find_nodes name
 
     case matches.size
     when 0 then
@@ -168,8 +165,19 @@ class Sexp < Array # ZenTest FULL
       delete match if delete
       match
     else
-      raise NoMethodError, "multiple nodes for #{meth} were found in #{inspect}"
+      raise NoMethodError, "multiple nodes for #{name} were found in #{inspect}"
     end
+  end
+
+  def find_nodes name
+    find_all { | sexp | Sexp === sexp and sexp.first == name }
+  end
+
+  ##
+  # Returns the node named +node+, deleting it if +delete+ is true.
+
+  def method_missing meth, delete = false
+    find_node meth, delete
   end
 
   def pretty_print(q) # :nodoc:
