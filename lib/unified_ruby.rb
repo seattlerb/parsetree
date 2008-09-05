@@ -117,7 +117,11 @@ module UnifiedRuby
 
     # move block_arg up and in
     block_arg = exp.scope.block.block_arg(true) rescue nil
-    exp.args << block_arg if block_arg
+    if block_arg
+      block = args.block(true)
+      args << :"&#{block_arg.last}"
+      args << block if block
+    end
 
     # patch up attr_accessor methods
     if weirdo then
