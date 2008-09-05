@@ -2,7 +2,6 @@ $TESTING = true
 
 require 'test/unit/testcase'
 require 'sexp_processor' # for deep_clone
-require 'unique'
 
 # key:
 # wwtt = what were they thinking?
@@ -41,7 +40,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
   def setup
     super
     @processor = nil
-    Unique.reset
   end
 
   def after_process_hook klass, node, data, input_name, output_name
