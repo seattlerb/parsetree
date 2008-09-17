@@ -14,7 +14,8 @@ Hoe.new("ParseTree", ParseTree::VERSION) do |pt|
   pt.developer('Ryan Davis', 'ryand-ruby@zenspider.com')
 
   pt.clean_globs << File.expand_path("~/.ruby_inline")
-  pt.extra_deps << ['RubyInline', '>= 3.6.0']
+  pt.extra_deps << ['RubyInline',     '>= 3.7.0']
+  pt.extra_deps << ['sexp_processor', '>= 3.0.0']
   pt.spec_extras[:require_paths] = proc { |paths| paths << 'test' }
 
   pt.multiruby_skip << "mri_rel_1_9" << "rubinius" << "mri_trunk"
