@@ -33,7 +33,10 @@ class Examples
 end
 
 class ParseTreeTestCase < Test::Unit::TestCase
-  undef_method :default_test unless defined? Mini rescue nil
+  unless defined? Mini then
+    undef_method :default_test rescue nil
+    alias :refute_nil :assert_not_nil
+  end
 
   attr_accessor :processor # to be defined by subclass
 
@@ -123,7 +126,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
         # RawParseTree test casese fail for completely bogus reasons.
 
         before_process_hook klass, node, data, input_name, output_name
-        assert_not_nil(data[input_name], "testcase does not exist?")
+        refute_nil data[input_name], "testcase does not exist?"
         @result = processor.process input
         assert_equal(expected, @result,
                      "failed on input: #{data[input_name].inspect}")
@@ -514,7 +517,9 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                [:call, [:vcall, :a], :b, [:array, [:lit, 4]]]],
             "ParseTree"    => s(:block_pass,
                                 s(:call, nil, :c, s(:arglist)),
-                                s(:call, s(:call, nil, :a, s(:arglist)), :b,
+                                s(:call,
+                                  s(:call, nil, :a, s(:arglist)),
+                                  :b,
                                   s(:arglist, s(:lit, 4)))))
 
   add_tests("block_pass_call_n",
@@ -525,7 +530,9 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                 [:array, [:lit, 1], [:lit, 2], [:lit, 3]]]],
             "ParseTree"    => s(:block_pass,
                                 s(:call, nil, :c, s(:arglist)),
-                                s(:call, s(:call, nil, :a, s(:arglist)), :b,
+                                s(:call,
+                                  s(:call, nil, :a, s(:arglist)),
+                                  :b,
                                   s(:arglist,
                                     s(:lit, 1), s(:lit, 2), s(:lit, 3)))))
 
@@ -2497,8 +2504,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
             "Ruby2Ruby"    => "a(1) { |c| d }")
 
   add_tests("iter_dasgn_curr_dasgn_madness",
-            "Ruby"         => "as.each { |a|
-  b += a.b(false) }",
+            "Ruby"         => "as.each { |a|\n  b += a.b(false) }",
             "RawParseTree" => [:iter,
                                [:call, [:vcall, :as], :each],
                                [:dasgn_curr, :a],
@@ -2541,9 +2547,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                       :to_s, s(:arglist))))))
 
   add_tests("iter_each_lvar",
-            "Ruby"         => "array = [1, 2, 3]
-array.each { |x| puts(x.to_s) }
-",
+            "Ruby"         => "array = [1, 2, 3]\narray.each { |x| puts(x.to_s) }\n",
             "RawParseTree" => [:block,
                                [:lasgn, :array,
                                 [:array, [:lit, 1], [:lit, 2], [:lit, 3]]],
@@ -2565,15 +2569,7 @@ array.each { |x| puts(x.to_s) }
                                                   :to_s, s(:arglist)))))))
 
   add_tests("iter_each_nested",
-            "Ruby"         => "array1 = [1, 2, 3]
-array2 = [4, 5, 6, 7]
-array1.each do |x|
-  array2.each do |y|
-    puts(x.to_s)
-    puts(y.to_s)
-  end
-end
-",
+            "Ruby"         => "array1 = [1, 2, 3]\narray2 = [4, 5, 6, 7]\narray1.each do |x|\n  array2.each do |y|\n    puts(x.to_s)\n    puts(y.to_s)\n  end\nend\n",
             "RawParseTree" => [:block,
                                [:lasgn, :array1,
                                 [:array, [:lit, 1], [:lit, 2], [:lit, 3]]],
@@ -2693,11 +2689,7 @@ end
                                   s(:arglist, s(:call, nil, :c, s(:arglist))))))
 
   add_tests("iter_shadowed_var",
-            "Ruby"         => "a do |x|
-  b do |x|
-    puts x
-  end
-end",
+            "Ruby"         => "a do |x|\n  b do |x|\n    puts x\n  end\nend",
             "RawParseTree" => [:iter,
                                [:fcall, :a],
                                [:dasgn_curr, :x],
@@ -2732,12 +2724,7 @@ end",
                                       s(:arglist))))))
 
   add_tests("iter_while",
-            "Ruby"         => "argl = 10
-while (argl >= 1) do
-  puts(\"hello\")
-  argl = (argl - 1)
-end
-",
+            "Ruby"         => "argl = 10\nwhile (argl >= 1) do\n  puts(\"hello\")\n  argl = (argl - 1)\nend\n",
             "RawParseTree" => [:block,
                                [:lasgn, :argl, [:lit, 10]],
                                [:while,
