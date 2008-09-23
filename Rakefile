@@ -3,8 +3,9 @@
 require 'rubygems'
 require 'hoe'
 
-$: << "../../RubyInline/dev/lib"
-$: << "lib"
+Hoe.add_include_dirs("../../RubyInline/dev/lib",
+                     "../../sexp_processor/dev/lib",
+                     "lib")
 
 require './lib/parse_tree.rb'
 
@@ -20,8 +21,6 @@ Hoe.new("ParseTree", ParseTree::VERSION) do |pt|
 
   pt.multiruby_skip << "mri_rel_1_9" << "rubinius" << "mri_trunk"
 end
-
-Hoe::RUBY_FLAGS.sub! /-I/, '-I../../RubyInline/dev/lib:test:'
 
 desc 'Run in gdb'
 task :debug do
