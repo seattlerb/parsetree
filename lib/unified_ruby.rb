@@ -180,6 +180,24 @@ module UnifiedRuby
     exp
   end
 
+  def rewrite_rescue(exp)
+    ignored = exp.shift
+    body    = exp.shift
+    resbody = exp.shift
+    els     = exp.shift
+
+    resbodies = []
+
+    while resbody do
+      resbodies << resbody
+      resbody = resbody.resbody(true)
+    end
+
+    resbodies << els if els
+
+    s(:rescue, body, *resbodies)
+  end
+
   def rewrite_resbody(exp)
     exp[1] ||= s(:array)        # no args
 

@@ -2145,13 +2145,13 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                       s(:const, :SyntaxError),
                                       s(:lasgn, :e1, s(:gvar, :$!))),
                                     s(:block,
-                                      s(:lit, 2)),
-                                    s(:resbody,
-                                      s(:array,
-                                        s(:const, :Exception),
-                                        s(:lasgn, :e2, s(:gvar, :$!))),
-                                      s(:block, # TODO: no block
-                                        s(:lit, 3)))),
+                                      s(:lit, 2))),
+                                  s(:resbody,
+                                    s(:array,
+                                      s(:const, :Exception),
+                                      s(:lasgn, :e2, s(:gvar, :$!))),
+                                    s(:block, # TODO: no block
+                                      s(:lit, 3))),
                                   s(:lit, 4)),
                                 s(:lit, 5)))
 
@@ -3456,6 +3456,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                 s(:call, nil, :loop, s(:arglist)),
                                 nil,
                                 s(:if, s(:false), s(:redo), nil)))
+
+  # TODO: need a resbody w/ multiple classes and a splat
 
   add_tests("rescue",
             "Ruby"         => "blah rescue nil",
