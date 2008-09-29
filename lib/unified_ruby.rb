@@ -182,9 +182,9 @@ module UnifiedRuby
 
   def rewrite_rescue(exp)
     ignored = exp.shift
-    body    = exp.shift
+    body    = exp.shift unless exp.first.first == :resbody
     resbody = exp.shift
-    els     = exp.shift
+    els     = exp.shift unless exp.empty?
 
     resbodies = []
 
@@ -195,7 +195,7 @@ module UnifiedRuby
 
     resbodies << els if els
 
-    s(:rescue, body, *resbodies)
+    s(:rescue, body, *resbodies).compact
   end
 
   def rewrite_resbody(exp)
