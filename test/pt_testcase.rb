@@ -1886,9 +1886,9 @@ class ParseTreeTestCase < Test::Unit::TestCase
             "ParseTree"    => s(:dregx, '', s(:evstr, s(:ivar, :@rakefile))))
 
   add_tests("dregx_interp_empty",
-            "Ruby"         => "/#\{}/",
-            "RawParseTree" => [:dregx, '', [:evstr]],
-            "ParseTree"    => s(:dregx, '', s(:evstr)))
+            "Ruby"         => "/a#\{}b/",
+            "RawParseTree" => [:dregx, 'a', [:evstr], [:str, "b"]],
+            "ParseTree"    => s(:dregx, 'a', s(:evstr), s(:str, "b")))
 
   add_tests("dregx_n",
             "Ruby"         => '/#{1}/n',
