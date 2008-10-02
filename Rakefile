@@ -5,6 +5,7 @@ require 'hoe'
 
 Hoe.add_include_dirs("../../RubyInline/dev/lib",
                      "../../sexp_processor/dev/lib",
+                     "../../ZenTest/dev/lib",
                      "lib")
 
 require './lib/parse_tree.rb'
