@@ -315,7 +315,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                 s(:str, "a"),
                                 s(:str, "#\{@b}"),
                                 s(:str, "c")),
-            "Ruby2Ruby"    => "[\"a\", \"#\{@b}\", \"c\"]")
+            "Ruby2Ruby"    => "[\"a\", \"\\\#{@b}\", \"c\"]") # TODO: huh?
 
   add_tests("attrasgn",
             "Ruby"         => "y = 0\n42.method = y\n",
