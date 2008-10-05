@@ -298,6 +298,25 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                 s(:str, "c")),
             "Ruby2Ruby"    => "[\"a\", \"#\{@b}\", \"c\"]")
 
+  add_tests("array_pct_w",
+            "Ruby"         => "%w[a b c]",
+            "RawParseTree" => [:array, [:str, "a"], [:str, "b"], [:str, "c"]],
+            "ParseTree"    => s(:array,
+                                s(:str, "a"), s(:str, "b"), s(:str, "c")),
+            "Ruby2Ruby"    => "[\"a\", \"b\", \"c\"]")
+
+  add_tests("array_pct_w_dstr",
+            "Ruby"         => "%w[a #\{@b} c]",
+            "RawParseTree" => [:array,
+                               [:str, "a"],
+                               [:str, "#\{@b}"],
+                               [:str, "c"]],
+            "ParseTree"    => s(:array,
+                                s(:str, "a"),
+                                s(:str, "#\{@b}"),
+                                s(:str, "c")),
+            "Ruby2Ruby"    => "[\"a\", \"#\{@b}\", \"c\"]")
+
   add_tests("attrasgn",
             "Ruby"         => "y = 0\n42.method = y\n",
             "RawParseTree" => [:block,
@@ -1727,7 +1746,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                 s(:scope, s(:block, s(:nil)))))
 
   add_tests("defn_rescue",
-            "Ruby"         => "\ndef eql?(resource)\n  (self.uuid == resource.uuid)\nrescue\n  false\nend",
+            "Ruby"         => "def eql?(resource)\n  (self.uuid == resource.uuid)\nrescue\n  false\nend",
             "RawParseTree" => [:defn, :eql?,
                                [:scope,
                                 [:block,
@@ -1754,7 +1773,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
             "Ruby2Ruby"    => "def eql?(resource)\n  (self.uuid == resource.uuid) rescue false\nend")
 
   add_tests("defn_rescue_mri_verbose_flag",
-            "Ruby"         => "\ndef eql?(resource)\n  (self.uuid == resource.uuid)\nrescue\n  false\nend",
+            "Ruby"         => "def eql?(resource)\n  (self.uuid == resource.uuid)\nrescue\n  false\nend",
             "RawParseTree" => [:defn, :eql?,
                                [:scope,
                                 [:block,
