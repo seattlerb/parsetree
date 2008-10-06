@@ -1,4 +1,3 @@
-
 require 'sexp_processor'
 
 $TESTING ||= false
@@ -181,16 +180,28 @@ module UnifiedRuby
   end
 
   def rewrite_rescue(exp)
+    # SKETCHY HACK return exp if exp.size > 4
     ignored = exp.shift
     body    = exp.shift unless exp.first.first == :resbody
     resbody = exp.shift
-    els     = exp.shift unless exp.empty?
+    els     = exp.shift unless exp.first.first == :resbody unless exp.empty?
+    rest    = exp.empty? ? nil : exp # graceful re-rewriting (see rewrite_begin)
 
     resbodies = []
 
-    while resbody do
-      resbodies << resbody
-      resbody = resbody.resbody(true)
+    unless rest then
+      while resbody do
+        resbodies << resbody
+        resbody = resbody.resbody(true)
+      end
+
+      resbodies.each do |resbody|
+        if resbody[2] && resbody[2][0] == :block && resbody[2].size == 2 then
+          resbody[2] = resbody[2][-1]
+        end
+      end
+    else
+      resbodies = [resbody] + rest
     end
 
     resbodies << els if els
@@ -209,7 +220,6 @@ module UnifiedRuby
       when :block then
         exp[1] << body.delete_at(1) if body[1][0] == :lasgn &&
           body[1][-1] == s(:gvar, :$!)
-        exp[2] = body.last if body.size == 2 # remove block if 1 item only
       end
     end
 
