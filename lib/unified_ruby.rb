@@ -205,9 +205,11 @@ module UnifiedRuby
     if body then
       case body.first
       when :lasgn then
-        exp[1] << exp.delete_at(2)
+        exp[1] << exp.delete_at(2) if body[-1] == s(:gvar, :$!)
       when :block then
-        exp[1] << body.delete_at(1) if body[1][0] == :lasgn
+        exp[1] << body.delete_at(1) if body[1][0] == :lasgn &&
+          body[1][-1] == s(:gvar, :$!)
+        exp[2] = body.last if body.size == 2 # remove block if 1 item only
       end
     end
 

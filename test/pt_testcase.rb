@@ -1449,7 +1449,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                         s(:array,
                                           s(:const, :Exception),
                                           s(:lasgn, :v, s(:gvar, :$!))),
-                                        s(:block, s(:break))))))))
+                                        s(:break)))))))
 
   add_tests("dasgn_mixed",
             "Ruby"         => "t = 0\nns.each { |n| t += n }\n",
@@ -2180,14 +2180,12 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                     s(:array,
                                       s(:const, :SyntaxError),
                                       s(:lasgn, :e1, s(:gvar, :$!))),
-                                    s(:block,
-                                      s(:lit, 2))),
+                                    s(:lit, 2)),
                                   s(:resbody,
                                     s(:array,
                                       s(:const, :Exception),
                                       s(:lasgn, :e2, s(:gvar, :$!))),
-                                    s(:block, # TODO: no block
-                                      s(:lit, 3))),
+                                    s(:lit, 3)),
                                   s(:lit, 4)),
                                 s(:lit, 5)))
 
@@ -2922,10 +2920,9 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                             s(:array,
                                               s(:const, :RuntimeError),
                                               s(:lasgn, :b, s(:gvar, :$!))),
-                                            s(:block,
-                                              s(:call, nil, :puts,
-                                                s(:arglist,
-                                                  s(:lvar, :b))))))))))))
+                                            s(:call, nil, :puts,
+                                              s(:arglist,
+                                                s(:lvar, :b)))))))))))
 
   add_tests("masgn",
             "Ruby"         => "a, b = c, d",
@@ -3575,6 +3572,46 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                   s(:array,
                                     s(:const, :RuntimeError),
                                     s(:lasgn, :r, s(:gvar, :$!))),
+                                  nil)))
+
+
+  add_tests("rescue_lasgn",
+            "Ruby"         => "begin\n  1\nrescue\n  var = 2\nend",
+            "RawParseTree" => [:begin,
+                               [:rescue,
+                                [:lit, 1],
+                                [:resbody, nil, [:lasgn, :var, [:lit, 2]]]]],
+            "ParseTree"    => s(:rescue,
+                                s(:lit, 1),
+                                s(:resbody,
+                                  s(:array),
+                                  s(:lasgn, :var, s(:lit, 2)))))
+
+  add_tests("rescue_lasgn_var",
+            "Ruby"         => "begin\n  1\nrescue => e\n  var = 2\nend",
+            "RawParseTree" => [:begin,
+                               [:rescue,
+                                [:lit, 1],
+                                [:resbody, nil,
+                                 [:block,
+                                  [:lasgn, :e, [:gvar, :$!]],
+                                  [:lasgn, :var, [:lit, 2]]]]]],
+            "ParseTree"    => s(:rescue,
+                                s(:lit, 1),
+                                s(:resbody,
+                                  s(:array, s(:lasgn, :e, s(:gvar, :$!))),
+                                  s(:lasgn, :var, s(:lit, 2)))))
+
+  add_tests("rescue_lasgn_var_empty",
+            "Ruby"         => "begin\n  1\nrescue => e\n  # do nothing\nend",
+            "RawParseTree" => [:begin,
+                               [:rescue,
+                                [:lit, 1],
+                                [:resbody, nil, [:lasgn, :e, [:gvar, :$!]]]]],
+            "ParseTree"    => s(:rescue,
+                                s(:lit, 1),
+                                s(:resbody,
+                                  s(:array, s(:lasgn, :e, s(:gvar, :$!))),
                                   nil)))
 
   add_tests("retry",
