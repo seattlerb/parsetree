@@ -1,6 +1,10 @@
 $TESTING = true
 
-require 'test/unit/testcase'
+begin
+  require 'mini/test'
+rescue LoadError
+  require 'test/unit/testcase'
+end
 require 'sexp_processor' # for deep_clone
 
 # key:
@@ -3550,6 +3554,26 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                     s(:call, nil, :c, s(:arglist)),
                                     s(:call, nil, :d, s(:arglist))))))
 
+  add_tests("rescue_block_body_3",
+            "Ruby"         => "begin\n  a\nrescue A\n  b\nrescue B\n  c\nrescue C\n  d\nend",
+            "RawParseTree" => [:begin,
+                               [:rescue,
+                                [:vcall, :a],
+                                [:resbody, [:array, [:const, :A]],
+                                 [:vcall, :b],
+                                 [:resbody, [:array, [:const, :B]],
+                                  [:vcall, :c],
+                                  [:resbody, [:array, [:const, :C]],
+                                   [:vcall, :d]]]]]],
+            "ParseTree"    => s(:rescue,
+                                s(:call, nil, :a, s(:arglist)),
+                                s(:resbody, s(:array, s(:const, :A)),
+                                  s(:call, nil, :b, s(:arglist))),
+                                s(:resbody, s(:array, s(:const, :B)),
+                                  s(:call, nil, :c, s(:arglist))),
+                                s(:resbody, s(:array, s(:const, :C)),
+                                  s(:call, nil, :d, s(:arglist)))))
+
   add_tests("rescue_block_nada",
             "Ruby"         => "begin\n  blah\nrescue\n  # do nothing\nend",
             "RawParseTree" => [:begin,
@@ -3585,7 +3609,8 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                 s(:lit, 1),
                                 s(:resbody,
                                   s(:array),
-                                  s(:lasgn, :var, s(:lit, 2)))))
+                                  s(:lasgn, :var, s(:lit, 2)))),
+            "Ruby2Ruby"    => "1 rescue var = 2")
 
   add_tests("rescue_lasgn_var",
             "Ruby"         => "begin\n  1\nrescue => e\n  var = 2\nend",
