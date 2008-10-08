@@ -215,10 +215,10 @@ module UnifiedRuby
     body = exp[2]
     if body then
       case body.first
-      when :lasgn then
+      when :lasgn, :iasgn then
         exp[1] << exp.delete_at(2) if body[-1] == s(:gvar, :$!)
       when :block then
-        exp[1] << body.delete_at(1) if body[1][0] == :lasgn &&
+        exp[1] << body.delete_at(1) if [:lasgn, :iasgn].include?(body[1][0]) &&
           body[1][-1] == s(:gvar, :$!)
       end
     end
