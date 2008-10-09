@@ -239,7 +239,10 @@ module UnifiedRuby
   end
 
   def rewrite_yield(exp)
-    if exp.size == 1 or exp.last[0] == :splat
+    # Literal array in yield, not args.
+    if exp.size == 3 and exp.pop == true
+      exp[1] = s(:arglist, exp[1])
+    elsif exp.size == 1 or exp.last[0] == :splat
       # pass
     elsif exp.last[0] == :array then
       exp.last[0] = :arglist

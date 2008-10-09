@@ -509,9 +509,18 @@ again:
 
   case NODE_BREAK:
   case NODE_NEXT:
+    if (node->nd_stts)
+      add_to_parse_tree(self, current, node->nd_stts, locals);
+
+    break;
+
   case NODE_YIELD:
     if (node->nd_stts)
       add_to_parse_tree(self, current, node->nd_stts, locals);
+
+    if (node->nd_stts && nd_type(node->nd_stts) == NODE_ARRAY && !node->nd_state)
+      rb_ary_push(current, Qtrue);
+
     break;
 
   case NODE_RESCUE:
