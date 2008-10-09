@@ -238,19 +238,17 @@ module UnifiedRuby
     rewrite_fcall(exp)
   end
 
-#   def rewrite_yield(exp)
-#     if exp.size == 1 then
-#       exp << s(:arglist)
-#     elsif exp.last[0] == :argscat then
-#       # do nothing
-#     elsif exp.last[0] == :array then
-#       exp.last[0] = :arglist
-#     else
-#       exp[-1] = s(:arglist, exp[-1])
-#     end
+  def rewrite_yield(exp)
+    if exp.size == 1
+      # pass
+    elsif exp.last[0] == :array then
+      exp.last[0] = :arglist
+    else
+      exp[-1] = s(:arglist, exp[-1])
+    end
 
-#     exp
-#   end
+    exp
+  end
 #   alias :rewrite_super :rewrite_yield
 
   def rewrite_zarray(exp)

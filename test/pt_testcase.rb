@@ -4230,12 +4230,12 @@ class ParseTreeTestCase < Test::Unit::TestCase
   add_tests("yield_1",
             "Ruby"         => "yield(42)",
             "RawParseTree" => [:yield, [:lit, 42]],
-            "ParseTree"    => s(:yield, s(:lit, 42)))
+            "ParseTree"    => s(:yield, s(:arglist, s(:lit, 42))))
 
   add_tests("yield_n",
             "Ruby"         => "yield(42, 24)",
             "RawParseTree" => [:yield, [:array, [:lit, 42], [:lit, 24]]],
-            "ParseTree"    => s(:yield, s(:array, s(:lit, 42), s(:lit, 24))))
+            "ParseTree"    => s(:yield, s(:arglist, s(:lit, 42), s(:lit, 24))))
 
   add_tests("zarray",
             "Ruby"         => "a = []",
