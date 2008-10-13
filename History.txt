@@ -1,14 +1,43 @@
-=== 2.3.0 / ????-??-??
+=== 3.0.0 / ????-??-??
 
-* N minor enhancements:
+* 3 major enhancements:
 
+  * Split out sexp_processor project.
   * ParseTree#process outputs a UnifiedRuby parse tree.
-  * Added UnifiedRuby#process
-  * Restructured ParseTreeTestCase to use new add_tests. Much much cleaner.
-  * Switched all ParseTree tests to RawParseTree tests.
-  * Added ParseTree tests.
-  * Removed dasgn, dasgn_curr, and dvar.
-  * Rewrote rewrite_resbody from scratch... MUUCH cleaner.
+    * Switched all ParseTree tests to RawParseTree tests.
+    * Added ParseTree tests.
+  * Added UnifiedRuby#process.
+
+* 23 minor enhancements:
+
+  * PTTC: Added a comprehensive suite of tests for every combo of defn args.
+  * PTTC: Added a ton of new tests.
+  * PTTC: Added extra tests for mri verbose flag testing (horrid horrid bug imhfo)
+  * PTTC: Don't generate tests if class has "TestCase" in the class name.
+  * PTTC: Made self.previous more overridable.
+  * PTTC: Now all tests that have "mri_verbose_flag" activate $VERBOSE
+  * PTTC: Officially added clone_same phase to generate_tests
+  * PTTC: Refactored test generation to make subclasses more flexible.
+  * PTTC: Refactored to use new add_tests. Much much cleaner.
+  * PTTC: Removed Unique from PTTC... subclasses need to deal with this
+  * PTTC: Removed some stupid tests.
+  * PTTC: Renamed a bunch of tests to be more uniform.
+  * UR: Added rewrite_attrasgn to normalize arg array into arglist.
+  * UR: Added rewrite_op_asgn1 to ensure the arglist is an arglist.
+  * UR: Removed block from rewritten resbody if only 1 element.
+  * UR: Flattened resbodies in rescue node.
+  * UR: Handle yield(*ary) properly
+  * UR: Removed begin node from unified sexps.
+  * UR: Removed dasgn, dasgn_curr, and dvar nodes.
+  * UR: Removed s(:block_arg, :block) in favor of :"&block"
+  * UR: Rewrote rewrite_resbody from scratch... MUUCH cleaner.
+  * UR: zarray -> array
+  * Used Hoe#add_include_dirs to clean up rakefile.
+
+* 2 bug fixes:
+
+  * UR: Fixed a bug with resbody that starts with an lasgn.
+  * UR: Fixed args for attrset
 
 === 2.2.0 / 2008-06-09
 
