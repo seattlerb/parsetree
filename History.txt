@@ -25,8 +25,9 @@
   * UR: Added rewrite_attrasgn to normalize arg array into arglist.
   * UR: Added rewrite_op_asgn1 to ensure the arglist is an arglist.
   * UR: Removed block from rewritten resbody if only 1 element.
+  * UR: Flattened super and yield args yet, deal with array arg properly.
   * UR: Flattened resbodies in rescue node.
-  * UR: Handle yield(*ary) properly
+  * UR: Handle yield(*ary) properly.
   * UR: Removed begin node from unified sexps.
   * UR: Removed dasgn, dasgn_curr, and dvar nodes.
   * UR: Removed s(:block_arg, :block) in favor of :"&block"

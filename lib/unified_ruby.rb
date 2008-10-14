@@ -240,19 +240,19 @@ module UnifiedRuby
 
   def rewrite_yield(exp)
     # Literal array in yield, not args.
-    if exp.size == 3 and exp.pop == true
-      exp[1] = s(:arglist, exp[1])
-    elsif exp.size == 1 or exp.last[0] == :splat
-      # pass
-    elsif exp.last[0] == :array then
-      exp.last[0] = :arglist
-    else
-      exp[-1] = s(:arglist, exp[-1])
+    if exp.size == 3 and exp.pop == true then
+      # exp[1] = s(:arglist, exp[1])
+    elsif exp.size == 2 && exp.last.first == :array then
+      exp.push(*exp.pop[1..-1])
     end
 
     exp
   end
-#   alias :rewrite_super :rewrite_yield
+
+  def rewrite_super(exp)
+    exp.push(*exp.pop[1..-1]) if exp.size == 2 && exp.last.first == :array
+    exp
+  end
 
   def rewrite_zarray(exp)
     exp[0] = :array

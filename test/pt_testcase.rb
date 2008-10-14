@@ -3869,7 +3869,16 @@ class ParseTreeTestCase < Test::Unit::TestCase
             "ParseTree"    => s(:module, :Graffle, s(:scope)),
             "Ruby2Ruby"    => "module Graffle\nend")
 
-  add_tests("super",
+  add_tests("super_0",
+            "Ruby"         => "def x\n  super()\nend",
+            "RawParseTree" => [:defn, :x,
+                               [:scope,
+                                [:block, [:args], [:super]]]],
+            "ParseTree"    => s(:defn, :x,
+                                s(:args),
+                                s(:scope, s(:block, s(:super)))))
+
+  add_tests("super_1",
             "Ruby"         => "def x\n  super(4)\nend",
             "RawParseTree" => [:defn, :x,
                                [:scope,
@@ -3880,7 +3889,37 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                 s(:args),
                                 s(:scope,
                                   s(:block,
-                                    s(:super, s(:array, s(:lit, 4)))))))
+                                    s(:super, s(:lit, 4))))))
+
+  add_tests("super_1_array",
+            "Ruby"         => "def x\n  super([24, 42])\nend",
+            "RawParseTree" => [:defn, :x,
+                               [:scope,
+                                [:block,
+                                 [:args],
+                                 [:super,
+                                  [:array,
+                                   [:array, [:lit, 24], [:lit, 42]]]]]]],
+            "ParseTree"    => s(:defn, :x,
+                                s(:args),
+                                s(:scope,
+                                  s(:block,
+                                    s(:super, s(:array,
+                                                s(:lit, 24),
+                                                s(:lit, 42)))))))
+
+  add_tests("super_n",
+            "Ruby"         => "def x\n  super(24, 42)\nend",
+            "RawParseTree" => [:defn, :x,
+                               [:scope,
+                                [:block,
+                                 [:args],
+                                 [:super, [:array, [:lit, 24], [:lit, 42]]]]]],
+            "ParseTree"    => s(:defn, :x,
+                                s(:args),
+                                s(:scope,
+                                  s(:block,
+                                    s(:super, s(:lit, 24), s(:lit, 42))))))
 
   add_tests("super_block_pass",
             "Ruby"         => "super(a, &b)",
@@ -3889,7 +3928,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
             "ParseTree"    => s(:block_pass,
                                 s(:call, nil, :b, s(:arglist)),
                                 s(:super,
-                                  s(:array, s(:call, nil, :a, s(:arglist))))))
+                                  s(:call, nil, :a, s(:arglist)))))
 
   add_tests("super_block_splat",
             "Ruby"         => "super(a, *b)",
@@ -3901,22 +3940,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                 s(:argscat,
                                   s(:array, s(:call, nil, :a, s(:arglist))),
                                   s(:call, nil, :b, s(:arglist)))))
-
-  add_tests("super_multi",
-            "Ruby"         => "def x\n  super(4, 2, 1)\nend",
-            "RawParseTree" => [:defn, :x,
-                               [:scope,
-                                [:block,
-                                 [:args],
-                                 [:super,
-                                  [:array, [:lit, 4], [:lit, 2], [:lit, 1]]]]]],
-            "ParseTree"    => s(:defn, :x,
-                                s(:args),
-                                s(:scope,
-                                  s(:block,
-                                    s(:super,
-                                      s(:array,
-                                        s(:lit, 4), s(:lit, 2), s(:lit, 1)))))))
 
   add_tests("svalue",
             "Ruby"         => "a = *b",
@@ -4226,12 +4249,12 @@ class ParseTreeTestCase < Test::Unit::TestCase
   add_tests("yield_1",
             "Ruby"         => "yield(42)",
             "RawParseTree" => [:yield, [:lit, 42]],
-            "ParseTree"    => s(:yield, s(:arglist, s(:lit, 42))))
+            "ParseTree"    => s(:yield, s(:lit, 42)))
 
   add_tests("yield_n",
             "Ruby"         => "yield(42, 24)",
             "RawParseTree" => [:yield, [:array, [:lit, 42], [:lit, 24]]],
-            "ParseTree"    => s(:yield, s(:arglist, s(:lit, 42), s(:lit, 24))))
+            "ParseTree"    => s(:yield, s(:lit, 42), s(:lit, 24)))
 
   add_tests("yield_splat",
             "Ruby"         => "yield(*ary)",
@@ -4241,8 +4264,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
   add_tests("yield_array",
             "Ruby"         => "yield([42, 24])",
             "RawParseTree" => [:yield, [:array, [:lit, 42], [:lit, 24]], true],
-            "ParseTree"    => s(:yield, s(:arglist,
-                                s(:array, s(:lit, 42), s(:lit, 24)))))
+            "ParseTree"    => s(:yield, s(:array, s(:lit, 42), s(:lit, 24))))
 
   add_tests("zarray",
             "Ruby"         => "a = []",
