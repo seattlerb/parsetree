@@ -45,6 +45,35 @@ module UnifiedRuby
     exp
   end
 
+  def rewrite_argscat exp
+    _, ary, val = exp
+    ary = s(:array, ary) unless ary.first == :array
+    ary << s(:splat, val)
+  end
+
+  def rewrite_argspush exp
+    exp[0] = :arglist
+    exp
+  end
+
+  def rewrite_block_pass exp
+    if exp.size == 3 then
+      _, block, recv = exp
+      case recv.first
+      when :super then
+        recv << s(:block_pass, block)
+        exp = recv
+      when :call then
+        recv.last << s(:block_pass, block)
+        exp = recv
+      else
+        raise "huh?: #{recv.inspect}"
+      end
+    end
+
+    exp
+  end
+
   def rewrite_call(exp)
     args = exp.last
     case args
@@ -55,7 +84,7 @@ module UnifiedRuby
       when :array, :arglist then
         args[0] = :arglist
       when :argscat, :splat then
-        # do nothing
+        exp[-1] = s(:arglist, args)
       else
         raise "unknown type in call #{args.first.inspect} in #{exp.inspect}"
       end

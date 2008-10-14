@@ -8,7 +8,7 @@
     * Added ParseTree tests.
   * Added UnifiedRuby#process.
 
-* 23 minor enhancements:
+* 28 minor enhancements:
 
   * PTTC: Added a comprehensive suite of tests for every combo of defn args.
   * PTTC: Added a ton of new tests.
@@ -24,13 +24,17 @@
   * PTTC: Renamed a bunch of tests to be more uniform.
   * UR: Added rewrite_attrasgn to normalize arg array into arglist.
   * UR: Added rewrite_op_asgn1 to ensure the arglist is an arglist.
-  * UR: Removed block from rewritten resbody if only 1 element.
-  * UR: Flattened super and yield args yet, deal with array arg properly.
   * UR: Flattened resbodies in rescue node.
+  * UR: Flattened super and yield args yet, deal with array arg properly.
   * UR: Handle yield(*ary) properly.
+  * UR: Nuked argspush.
   * UR: Removed begin node from unified sexps.
+  * UR: Removed block from rewritten resbody if only 1 element.
   * UR: Removed dasgn, dasgn_curr, and dvar nodes.
   * UR: Removed s(:block_arg, :block) in favor of :"&block"
+  * UR: Rewrote argscat to be a splat inside an array.
+  * UR: Rewrote block_pass into arglist of inner call/super.
+  * UR: Rewrote call to ALWAYS have an argslist (no more splat as arglist).
   * UR: Rewrote rewrite_resbody from scratch... MUUCH cleaner.
   * UR: zarray -> array
   * Used Hoe#add_include_dirs to clean up rakefile.
