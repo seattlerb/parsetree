@@ -518,15 +518,18 @@ again:
     if (node->nd_stts)
       add_to_parse_tree(self, current, node->nd_stts, locals);
 
-    if (node->nd_stts && nd_type(node->nd_stts) == NODE_ARRAY && !node->nd_state)
+    if (node->nd_stts
+        && (nd_type(node->nd_stts) == NODE_ARRAY
+            || nd_type(node->nd_stts) == NODE_ZARRAY)
+        && !node->nd_state)
       rb_ary_push(current, Qtrue);
 
     break;
 
   case NODE_RESCUE:
-      add_to_parse_tree(self, current, node->nd_1st, locals);
-      add_to_parse_tree(self, current, node->nd_2nd, locals);
-      add_to_parse_tree(self, current, node->nd_3rd, locals);
+    add_to_parse_tree(self, current, node->nd_1st, locals);
+    add_to_parse_tree(self, current, node->nd_2nd, locals);
+    add_to_parse_tree(self, current, node->nd_3rd, locals);
     break;
 
   /*

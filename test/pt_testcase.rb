@@ -4269,6 +4269,11 @@ class ParseTreeTestCase < Test::Unit::TestCase
             "RawParseTree" => [:yield, [:array, [:lit, 42], [:lit, 24]], true],
             "ParseTree"    => s(:yield, s(:array, s(:lit, 42), s(:lit, 24))))
 
+  add_tests("yield_zarray",
+            "Ruby"         => "yield([])",
+            "RawParseTree" => [:yield, [:zarray], true],
+            "ParseTree"    => s(:yield, s(:array)))
+
   add_tests("zarray",
             "Ruby"         => "a = []",
             "RawParseTree" => [:lasgn, :a, [:zarray]],
