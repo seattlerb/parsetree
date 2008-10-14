@@ -38,6 +38,7 @@
   * UR: Rewrote rewrite_resbody from scratch... MUUCH cleaner.
   * UR: zarray -> array
   * Used Hoe#add_include_dirs to clean up rakefile.
+  * Moved PT dependent code from ruby2ruby to here (eg Proc#to_sexp & friends).
 
 * 2 bug fixes:
 
