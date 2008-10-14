@@ -1,6 +1,6 @@
 require 'test/unit'
 require 'parse_tree'
-require 'parse_tree_r2r'
+require 'parse_tree_extensions'
 require 'tmpdir'
 
 $: << "../../ruby2ruby/dev/lib" # unoffical dependency - user responsibility
