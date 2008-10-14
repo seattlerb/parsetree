@@ -239,8 +239,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
             "ParseTree"    => s(:lasgn, :a,
                                 s(:array,
                                   s(:call, nil, :b, s(:arglist)),
-                                  s(:splat, s(:call, nil, :c, s(:arglist))))),
-            "Ruby2Ruby"    => "a = b, *c")
+                                  s(:splat, s(:call, nil, :c, s(:arglist))))))
 
   add_tests("argscat_svalue",
             "Ruby"         => "a = b, c, *d",
