@@ -678,15 +678,25 @@ again:
 
   case NODE_MASGN:
     masgn_level++;
-    add_to_parse_tree(self, current, node->nd_head, locals);
+    if (node->nd_head) {
+      add_to_parse_tree(self, current, node->nd_head, locals);
+    } else {
+      rb_ary_push(current, Qnil);
+    }
     if (node->nd_args) {
       if (node->nd_args != (NODE *)-1) {
         add_to_parse_tree(self, current, node->nd_args, locals);
       } else {
         rb_ary_push(current, wrap_into_node("splat", 0));
       }
+    } else {
+      rb_ary_push(current, Qnil);
     }
-    add_to_parse_tree(self, current, node->nd_value, locals);
+    if (node->nd_value) {
+      add_to_parse_tree(self, current, node->nd_value, locals);
+    } else {
+      rb_ary_push(current, Qnil);
+    }
     masgn_level--;
     break;
 

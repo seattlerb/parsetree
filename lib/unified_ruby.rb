@@ -23,9 +23,11 @@ module UnifiedRuby
   def rewrite_bmethod(exp)
     exp[0] = :scope
 
+    has_splat = exp.masgn.array.splat.lasgn rescue false
+
     args =
-      if exp.masgn and exp.masgn.lasgn then
-        arg = exp.masgn(true).lasgn(true).sexp_body
+      if has_splat then
+        arg = exp.masgn(true).array.splat.lasgn.sexp_body
         raise "nope: #{arg.size}" unless arg.size == 1
         s(:args, :"*#{arg.last}")
       else
@@ -199,9 +201,20 @@ module UnifiedRuby
     rewrite_call(exp)
   end
 
-# TODO: masgn should have 2 slots always, locals and splat, nil for either
-#   def rewrite_masgn(exp)
-#   end
+  def rewrite_masgn(exp)
+    raise "wtf: #{exp}" unless exp.size == 4
+
+    t, lhs, lhs_splat, rhs = exp
+
+    lhs ||= s(:array)
+
+    if lhs_splat then
+      lhs_splat = s(:splat, lhs_splat) unless lhs_splat[0] == :splat
+      lhs << lhs_splat
+    end
+
+    s(t, lhs, rhs).compact
+  end
 
   def rewrite_op_asgn1(exp)
     exp[2][0] = :arglist # if exp[2][0] == :array
