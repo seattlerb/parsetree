@@ -646,13 +646,6 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                         s(:splat, s(:lvar, :args)),
                                         s(:block_pass, s(:lvar, :block))))))))
 
-  add_tests("block_pass_super",
-            "Ruby"         => "super(&prc)",
-            "RawParseTree" => [:block_pass, [:vcall, :prc], [:super]],
-            "ParseTree"    => s(:super,
-                                s(:block_pass,
-                                  s(:call, nil, :prc, s(:arglist)))))
-
   add_tests("block_pass_thingy",
             "Ruby"         => "r.read_body(dest, &block)",
             "RawParseTree" => [:block_pass,
@@ -1874,14 +1867,15 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                 s(:scope, s(:block))))
 
   add_tests("defs_expr_wtf",
-            "Ruby"         => "def (1 + 1).empty(*)\n  # do nothing\nend",
+            "Ruby"         => "def (a.b).empty(*)\n  # do nothing\nend",
             "RawParseTree" => [:defs,
-                               [:call, [:lit, 1], :+, [:array, [:lit, 1]]],
+                               [:call, [:vcall, :a], :b],
                                :empty,
                                [:scope, [:args, :*]]],
             "ParseTree"    => s(:defs,
-                                s(:call, s(:lit, 1), :+,
-                                  s(:arglist, s(:lit, 1))),
+                                s(:call,
+                                  s(:call, nil, :a, s(:arglist)),
+                                  :b, s(:arglist)),
                                 :empty,
                                 s(:args, :*),
                                 s(:scope, s(:block))))
