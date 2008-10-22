@@ -44,6 +44,7 @@
 
   * UR: Fixed a bug with resbody that starts with an lasgn.
   * UR: Fixed args for attrset
+  * Fixed export of symbols to work across platforms.
 
 === 2.2.0 / 2008-06-09
 

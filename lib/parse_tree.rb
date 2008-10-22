@@ -289,7 +289,7 @@ class RawParseTree
     # 1) Get me a login on your box so I can repro this and get it fixed.
     # 2) Fix it and send me the patch
     # 3) (quick, but dirty and bad), comment out the following line:
-    builder.add_compile_flags "-Werror"
+    builder.add_compile_flags "-Werror" unless RUBY_PLATFORM =~ /mswin/
 
     builder.prefix %{
         #define nd_3rd   u3.node
@@ -1074,9 +1074,12 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE is_cls_meth) {
 }
 }
 
-    builder.prefix " extern NODE *ruby_eval_tree_begin; " \
+    extern_mode = RUBY_PLATFORM =~ /mswin/ ? 'RUBY_EXTERN' : 'extern'
+    builder.prefix " #{extern_mode} NODE *ruby_eval_tree_begin; " \
       if RUBY_VERSION < '1.9.0'
 
+    # FIXME: ruby_in_eval is not properly exported across platforms
+    # http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-core/13558
     builder.c %Q{
 static VALUE parse_tree_for_str(VALUE source, VALUE filename, VALUE line) {
   VALUE tmp;
