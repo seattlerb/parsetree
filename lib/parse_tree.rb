@@ -43,7 +43,7 @@ end
 
 class RawParseTree
 
-  VERSION = '3.0.0'
+  VERSION = '3.0.1'
 
   ##
   # Front end translation method.
