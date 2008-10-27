@@ -23,6 +23,16 @@ class R2RTestCase < Test::Unit::TestCase
     assert_equal s, p.to_sexp
   end
 
+  def test_proc_to_sexp_args
+    util_setup_inline
+    p = proc {|a, b, c|}
+    s = s(:iter,
+          s(:call, nil, :proc, s(:arglist)),
+          s(:masgn, s(:array, s(:lasgn, :a), s(:lasgn, :b), s(:lasgn, :c))))
+
+    assert_equal s, p.to_sexp
+  end
+
   def test_unbound_method_to_ruby
     util_setup_inline
     r = "proc { ||\n  util_setup_inline\n  p = proc { (1 + 1) }\n  s = s(:iter, s(:call, nil, :proc, s(:arglist)), nil, s(:call, s(:lit, 1), :+, s(:arglist, s(:lit, 1))))\n  assert_equal(s, p.to_sexp)\n}"
