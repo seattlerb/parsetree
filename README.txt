@@ -36,9 +36,7 @@ becomes:
 == FEATURES/PROBLEMS:
 
 * Uses RubyInline, so it just drops in.
-* Includes SexpProcessor and CompositeSexpProcessor.
-  * Allows you to write very clean filters.
-* Includes UnifiedRuby, allowing you to automatically rewrite ruby quirks.
+* Uses UnifiedRuby by default, automatically rewriting ruby quirks.
 * ParseTree#parse_tree_for_string lets you parse arbitrary strings of ruby.
 * Includes parse_tree_show, which lets you quickly snoop code.
   * echo "1+1" | parse_tree_show -f for quick snippet output.
@@ -53,19 +51,6 @@ becomes:
   sexp_array = ParseTree.translate(klass)
   sexp_array = ParseTree.translate(klass, :method)
   sexp_array = ParseTree.translate("1+1")
-
-or:
-
-  class MyProcessor < SexpProcessor
-    def initialize
-      super
-      self.strict = false
-    end
-    def process_lit(exp)
-      val = exp.shift
-      return val
-    end
-  end
 
 or:
 
@@ -85,8 +70,6 @@ or:
 
 == INSTALL:
 
-* rake install_gem
-* sudo rake install
 * sudo gem install ParseTree
 
 == LICENSE:
