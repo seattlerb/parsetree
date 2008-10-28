@@ -33,7 +33,7 @@ class R2RTestCase < Test::Unit::TestCase
     assert_equal s, p.to_sexp
   end
 
-  def test_parse_tree-for_proc # TODO: move?
+  def test_parse_tree_for_proc # TODO: move?
     p = proc {|a, b, c|}
     s = s(:iter,
           s(:call, nil, :proc, s(:arglist)),
