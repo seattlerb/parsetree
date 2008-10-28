@@ -21,30 +21,38 @@ module UnifiedRuby
   end
 
   def rewrite_bmethod(exp)
-    exp[0] = :scope
+    _, args, body = exp
 
-    has_splat = exp.masgn.array.splat.lasgn rescue false
+    args ||= s(:array)
+    body ||= s(:block)
 
-    args =
-      if has_splat then
-        arg = exp.masgn(true).array.splat.lasgn.sexp_body
-        raise "nope: #{arg.size}" unless arg.size == 1
-        s(:args, :"*#{arg.last}")
-      else
-        args = exp.lasgn(true)
-        if args then
-          s(:args, *args.sexp_body)
+    args = s(:args, args) unless args[0] == :array
+
+    args = args[1] if args[1] && args[1][0] == :masgn # TODO: clean up
+    args = args[1] if args[1] && args[1][0] == :array
+    args[0] = :args
+
+    # this is ugly because rewriters are depth first.
+    # TODO: maybe we could come up with some way to do both forms of rewriting.
+    args.map! { |s|
+      if Sexp === s
+        case s[0]
+        when :lasgn then
+          s[1]
+        when :splat then
+          :"*#{s[1][1]}"
         else
-          exp.delete_at 1 # nil
-          s(:args)
+          raise "huh?: #{s.inspect}"
         end
+      else
+        s
       end
+    }
 
-    exp = s(:scope, s(:block, *exp.sexp_body)) unless exp.block
-    exp.block.insert 1, args
-    exp.find_and_replace_all(:dvar, :lvar)
+    body = s(:block, body) unless body[0] == :block
+    body.insert 1, args
 
-    exp
+    s(:scope, body)
   end
 
   def rewrite_argscat exp
