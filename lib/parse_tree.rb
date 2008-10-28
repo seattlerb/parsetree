@@ -258,6 +258,8 @@ class RawParseTree
     builder.include '"st.h"'
     builder.include '"env.h"'
 
+    builder.prefix '#define _sym(s) ID2SYM(rb_intern((s)))'
+
     if RUBY_VERSION < "1.8.6" then
       builder.prefix '#define RARRAY_PTR(s) (RARRAY(s)->ptr)'
       builder.prefix '#define RARRAY_LEN(s) (RARRAY(s)->len)'
@@ -301,7 +303,7 @@ class RawParseTree
     builder.prefix %{
       static VALUE wrap_into_node(const char * name, VALUE val) {
         VALUE n = rb_ary_new();
-        rb_ary_push(n, ID2SYM(rb_intern(name)));
+        rb_ary_push(n, _sym(name));
         if (val) rb_ary_push(n, val);
         return n;
       }
@@ -368,7 +370,7 @@ again:
         (RNODE(node)->u3.node != NULL ? "u3 " : "   "));
     }
   } else {
-    node_name = ID2SYM(rb_intern("ICKY"));
+    node_name = _sym("ICKY");
   }
 
   current = rb_ary_new();
@@ -639,10 +641,10 @@ again:
 #endif
     switch (node->nd_mid) {
     case 0:
-      rb_ary_push(current, ID2SYM(rb_intern("||")));
+      rb_ary_push(current, _sym("||"));
       break;
     case 1:
-      rb_ary_push(current, ID2SYM(rb_intern("&&")));
+      rb_ary_push(current, _sym("&&"));
       break;
     default:
       rb_ary_push(current, ID2SYM(node->nd_mid));
@@ -657,10 +659,10 @@ again:
 
     switch (node->nd_next->nd_mid) {
     case 0:
-      rb_ary_push(current, ID2SYM(rb_intern("||")));
+      rb_ary_push(current, _sym("||"));
       break;
     case 1:
-      rb_ary_push(current, ID2SYM(rb_intern("&&")));
+      rb_ary_push(current, _sym("&&"));
       break;
     default:
       rb_ary_push(current, ID2SYM(node->nd_next->nd_mid));
@@ -1005,8 +1007,8 @@ again:
     /* Nothing to do here... we are in an iter block */
     break;
 
-  case NODE_CFUNC:
   case NODE_IFUNC:
+  case NODE_CFUNC:
     rb_ary_push(current, INT2NUM((long)node->nd_cfnc));
     rb_ary_push(current, INT2NUM(node->nd_argc));
     break;
@@ -1041,6 +1043,26 @@ again:
 @ # end of add_to_parse_tree block
 
     builder.c %Q{
+  static VALUE parse_tree_for_proc(VALUE proc) {
+    VALUE result = rb_ary_new();
+    struct BLOCK *data;
+    Data_Get_Struct(proc, struct BLOCK, data);
+
+    rb_ary_push(result, _sym("iter"));
+    rb_ary_push(result, rb_ary_new3(4, _sym("call"), Qnil, _sym("proc"),
+                                    rb_ary_new3(1, _sym("arglist"))));
+    if (data->var) {
+      add_to_parse_tree(self, result, data->var, NULL);
+    } else {
+      rb_ary_push(result, Qnil);
+    }
+    add_to_parse_tree(self, result, data->body, NULL);
+
+    return result;
+  }
+}
+
+    builder.c %Q{
 static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE is_cls_meth) {
   VALUE n;
   NODE *node = NULL;
@@ -1060,9 +1082,9 @@ static VALUE parse_tree_for_meth(VALUE klass, VALUE method, VALUE is_cls_meth) {
   }
   if (st_lookup(RCLASS(klass)->m_tbl, id, &n)) {
     node = (NODE*)n;
-    rb_ary_push(result, ID2SYM(rb_intern(is_cls_meth ? "defs": "defn")));
+    rb_ary_push(result, _sym(is_cls_meth ? "defs": "defn"));
     if (is_cls_meth) {
-      rb_ary_push(result, rb_ary_new3(1, ID2SYM(rb_intern("self"))));
+      rb_ary_push(result, rb_ary_new3(1, _sym("self")));
     }
     rb_ary_push(result, ID2SYM(id));
     add_to_parse_tree(self, result, node->nd_body, NULL);

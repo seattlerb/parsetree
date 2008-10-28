@@ -47,37 +47,10 @@ class UnboundMethod
 end
 
 class Proc
-  def to_method
-    name = ProcStoreTmp.new_name
-    ProcStoreTmp.send(:define_method, name, self)
-    ProcStoreTmp.new.method(name)
-  end
-
   def to_sexp
-    sexp = self.to_method.to_sexp
-    body = sexp.scope.block
-    args = sexp.args
-    args = nil if args.size == 1
-    body = body[1] if body.size == 2
-
-    if args then
-      args.map! { |s|
-        case s.to_s
-        when "args" then
-          :array
-        when /^\*(.*)/ then
-          s(:splat, s(:lasgn, $1.to_sym))
-        else
-          s(:lasgn, s)
-        end
-      }
-      args = s(:masgn, args)
-    end
-    body = nil if body == s(:block)
-
-    exp = s(:iter, s(:call, nil, :proc, s(:arglist)), args)
-    exp << body if body
-    exp
+    pt = ParseTree.new(false)
+    sexp = pt.parse_tree_for_proc(self)
+    Unifier.new.process(sexp)
   end
 
   def to_ruby
