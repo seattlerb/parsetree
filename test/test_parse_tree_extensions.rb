@@ -13,6 +13,25 @@ class R2RTestCase < Test::Unit::TestCase
     assert_equal 'proc { puts("something") }', block.to_ruby
   end
 
+  # TODO: bus error
+#   def test_proc_to_ruby_args_0
+#     util_setup_inline
+#     block = proc { || puts 42 }
+#     assert_equal 'proc { || puts(42) }', block.to_ruby
+#   end
+
+  def test_proc_to_ruby_args_1
+    util_setup_inline
+    block = proc { |x| puts x }
+    assert_equal 'proc { |x| puts(x) }', block.to_ruby
+  end
+
+  def test_proc_to_ruby_args_n
+    util_setup_inline
+    block = proc { |x| puts x }
+    assert_equal 'proc { |x| puts(x) }', block.to_ruby
+  end
+
   def test_proc_to_sexp
     util_setup_inline
     p = proc { 1 + 1 }
@@ -23,12 +42,36 @@ class R2RTestCase < Test::Unit::TestCase
     assert_equal s, p.to_sexp
   end
 
-  def test_proc_to_sexp_args
+  # TODO: bus error
+#   def test_proc_to_sexp_args_0
+#     util_setup_inline
+#     p = proc { || 1 + 1 }
+#     s = s(:iter,
+#           s(:call, nil, :proc, s(:arglist)),
+#           nil,
+#           s(:call, s(:lit, 1), :+, s(:arglist, s(:lit, 1))))
+#     assert_equal s, p.to_sexp
+#   end
+
+  def test_proc_to_sexp_args_1
     util_setup_inline
-    p = proc {|a, b, c|}
+    p = proc {|x| puts x }
     s = s(:iter,
           s(:call, nil, :proc, s(:arglist)),
-          s(:masgn, s(:array, s(:lasgn, :a), s(:lasgn, :b), s(:lasgn, :c))))
+          s(:lasgn, :x),
+          s(:call, nil, :puts, s(:arglist, s(:lvar, :x))))
+
+    assert_equal s, p.to_sexp
+  end
+
+  def test_proc_to_sexp_args_n
+    util_setup_inline
+    p = proc {|x, y| puts x + y }
+    s = s(:iter,
+          s(:call, nil, :proc, s(:arglist)),
+          s(:masgn, s(:array, s(:lasgn, :x), s(:lasgn, :y))),
+          s(:call, nil, :puts,
+            s(:arglist, s(:call, s(:lvar, :x), :+, s(:arglist, s(:lvar, :y))))))
 
     assert_equal s, p.to_sexp
   end

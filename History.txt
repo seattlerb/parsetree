@@ -1,6 +1,13 @@
+=== 3.0.2 / 2008-11-01
+
+* N bug fixes:
+
+  * Fixed 1 arg form of parse_tree_for_proc
+  * KNOWN ISSUE: 0 arg form (||) of parse_tree_for_proc segfaults.
+
 === 3.0.1 / 2008-10-23
 
-* 1 bug fix
+* 1 bug fix:
 
   * Fixed the dependency on sexp_processor (accidentally camelcased). thanks ez!
 

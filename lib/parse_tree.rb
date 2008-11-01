@@ -43,7 +43,7 @@ end
 
 class RawParseTree
 
-  VERSION = '3.0.1'
+  VERSION = '3.0.2'
 
   ##
   # Front end translation method.
@@ -276,7 +276,8 @@ class RawParseTree
       builder.add_compile_flags "-Wno-long-long"
 
       # NOTE: this flag doesn't work w/ gcc 2.95.x - the FreeBSD default
-      # builder.add_compile_flags "-Wno-strict-aliasing"
+      builder.add_compile_flags "-Wno-strict-aliasing"
+
       # ruby.h screws these up hardcore:
       # builder.add_compile_flags "-Wundef"
       # builder.add_compile_flags "-Wconversion"
@@ -298,6 +299,7 @@ class RawParseTree
         static unsigned case_level = 0;
         static unsigned when_level = 0;
         static unsigned inside_case_args = 0;
+        static int masgn_level = 0;
     }
 
     builder.prefix %{
@@ -350,7 +352,6 @@ void add_to_parse_tree(VALUE self, VALUE ary, NODE * n, ID * locals) {
   VALUE current;
   VALUE node_name;
   static VALUE node_names = Qnil;
-  static int masgn_level = 0;
 
   if (NIL_P(node_names)) {
     node_names = rb_const_get_at(rb_path2class("RawParseTree"),rb_intern("NODE_NAMES"));
@@ -1051,12 +1052,14 @@ again:
     rb_ary_push(result, _sym("iter"));
     rb_ary_push(result, rb_ary_new3(4, _sym("call"), Qnil, _sym("proc"),
                                     rb_ary_new3(1, _sym("arglist"))));
+    masgn_level++;
     if (data->var) {
       add_to_parse_tree(self, result, data->var, NULL);
     } else {
       rb_ary_push(result, Qnil);
     }
     add_to_parse_tree(self, result, data->body, NULL);
+    masgn_level--;
 
     return result;
   }
