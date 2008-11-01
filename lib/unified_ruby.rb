@@ -1,4 +1,5 @@
 require 'sexp_processor'
+require 'composite_sexp_processor'
 
 $TESTING ||= false
 
@@ -84,6 +85,7 @@ module UnifiedRuby
     exp
   end
 
+require 'pp'
   def rewrite_call(exp)
     args = exp.last
     case args
@@ -93,6 +95,9 @@ module UnifiedRuby
       case args.first
       when :array, :arglist then
         args[0] = :arglist
+#         args.map! { |s|
+#           Sexp === s && s.first == :splat ? rewrite(s) : s
+#         }
       when :argscat, :splat then
         exp[-1] = s(:arglist, args)
       else
@@ -204,20 +209,25 @@ module UnifiedRuby
   def rewrite_fcall(exp)
     exp[0] = :call
     exp.insert 1, nil
-    exp.push nil if exp.size <= 3
 
     rewrite_call(exp)
   end
 
   def rewrite_masgn(exp)
-    raise "wtf: #{exp}" unless exp.size == 4
-
+    raise "wtf: #{exp}" unless exp.size == 4 # TODO: remove 2009-01-29
     t, lhs, lhs_splat, rhs = exp
 
     lhs ||= s(:array)
 
     if lhs_splat then
-      lhs_splat = s(:splat, lhs_splat) unless lhs_splat[0] == :splat
+      case lhs_splat.first
+      when :array then
+        lhs_splat = lhs_splat.last if lhs_splat.last.first == :splat
+      when :splat then
+        # do nothing
+      else
+        lhs_splat = s(:splat, lhs_splat)
+      end
       lhs << lhs_splat
     end
 
@@ -289,17 +299,29 @@ module UnifiedRuby
   end
 
   def rewrite_yield(exp)
-    # Literal array in yield, not args.
-    if exp.size == 3 and exp.pop == true then
-      # exp[1] = s(:arglist, exp[1])
-    elsif exp.size == 2 && exp.last.first == :array then
-      exp.push(*exp.pop[1..-1])
+    case exp.size
+    when 3 then # s(:yield, values, true)
+      exp.pop # nuke the true on the end
+    when 2 then # s(:yield, values)
+      # TODO: clean up using structure?
+      if exp.last.first == :array then
+        if exp.last.size > 1 && exp.last.last.first != :splat then
+          exp.push(*exp.pop[1..-1])
+        end
+      end
     end
 
     exp
   end
 
+  def rewrite_splat(exp)
+    good = [:arglist, :argspush, :array, :svalue].include? context.first
+    exp = s(:array, exp) unless good
+    exp
+  end
+
   def rewrite_super(exp)
+    return exp if exp.structure.flatten.first(3) == [:super, :array, :splat]
     exp.push(*exp.pop[1..-1]) if exp.size == 2 && exp.last.first == :array
     exp
   end
@@ -310,14 +332,45 @@ module UnifiedRuby
   end
 end
 
-##
-# Quick and easy SexpProcessor that unified the sexp structure.
+class PreUnifier < SexpProcessor
+  def initialize
+    super
+    @unsupported.delete :newline
+  end
 
-class Unifier < SexpProcessor
+  def rewrite_call exp
+    exp << s(:arglist) if exp.size < 4
+    exp.last[0] = :arglist if exp.last.first == :array
+    exp
+  end
+
+  def rewrite_fcall exp
+    exp << s(:arglist) if exp.size < 3
+    if exp[-1][0] == :array then
+      has_splat = exp[-1].find { |s| Array === s && s.first == :splat }
+      exp[-1] = s(:arglist, exp[-1]) if has_splat
+      exp[-1][0] = :arglist
+    end
+    exp
+  end
+end
+
+class PostUnifier < SexpProcessor
   include UnifiedRuby
 
   def initialize
     super
     @unsupported.delete :newline
+  end
+end
+
+##
+# Quick and easy SexpProcessor that unified the sexp structure.
+
+class Unifier < CompositeSexpProcessor
+  def initialize
+    super
+    self << PreUnifier.new
+    self << PostUnifier.new
   end
 end

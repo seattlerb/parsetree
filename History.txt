@@ -2,6 +2,7 @@
 
 * N bug fixes:
 
+  * Fixed ambiguities in splatted nodes in a bunch of contexts.
   * Fixed 1 arg form of parse_tree_for_proc
   * KNOWN ISSUE: 0 arg form (||) of parse_tree_for_proc segfaults.
 
