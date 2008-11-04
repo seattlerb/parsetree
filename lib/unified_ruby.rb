@@ -9,6 +9,17 @@ module UnifiedRuby
     super
   end
 
+  def rewrite_argscat exp
+    _, ary, val = exp
+    ary = s(:array, ary) unless ary.first == :array
+    ary << s(:splat, val)
+  end
+
+  def rewrite_argspush exp
+    exp[0] = :arglist
+    exp
+  end
+
   def rewrite_attrasgn(exp)
     last = exp.last
 
@@ -16,6 +27,29 @@ module UnifiedRuby
       last[0] = :arglist if last[0] == :array
     else
       exp << s(:arglist)
+    end
+
+    exp
+  end
+
+  def rewrite_begin(exp)
+    raise "wtf: #{exp.inspect}" if exp.size > 2
+    exp.last
+  end
+
+  def rewrite_block_pass exp
+    if exp.size == 3 then
+      _, block, recv = exp
+      case recv.first
+      when :super then
+        recv << s(:block_pass, block)
+        exp = recv
+      when :call then
+        recv.last << s(:block_pass, block)
+        exp = recv
+      else
+        raise "huh?: #{recv.inspect}"
+      end
     end
 
     exp
@@ -56,36 +90,6 @@ module UnifiedRuby
     s(:scope, body)
   end
 
-  def rewrite_argscat exp
-    _, ary, val = exp
-    ary = s(:array, ary) unless ary.first == :array
-    ary << s(:splat, val)
-  end
-
-  def rewrite_argspush exp
-    exp[0] = :arglist
-    exp
-  end
-
-  def rewrite_block_pass exp
-    if exp.size == 3 then
-      _, block, recv = exp
-      case recv.first
-      when :super then
-        recv << s(:block_pass, block)
-        exp = recv
-      when :call then
-        recv.last << s(:block_pass, block)
-        exp = recv
-      else
-        raise "huh?: #{recv.inspect}"
-      end
-    end
-
-    exp
-  end
-
-require 'pp'
   def rewrite_call(exp)
     args = exp.last
     case args
@@ -95,9 +99,6 @@ require 'pp'
       case args.first
       when :array, :arglist then
         args[0] = :arglist
-#         args.map! { |s|
-#           Sexp === s && s.first == :splat ? rewrite(s) : s
-#         }
       when :argscat, :splat then
         exp[-1] = s(:arglist, args)
       else
@@ -243,6 +244,25 @@ require 'pp'
     exp
   end
 
+  def rewrite_resbody(exp)
+    exp[1] ||= s(:array)        # no args
+
+    body = exp[2]
+    if body then
+      case body.first
+      when :lasgn, :iasgn then
+        exp[1] << exp.delete_at(2) if body[-1] == s(:gvar, :$!)
+      when :block then
+        exp[1] << body.delete_at(1) if [:lasgn, :iasgn].include?(body[1][0]) &&
+          body[1][-1] == s(:gvar, :$!)
+      end
+    end
+
+    exp << nil if exp.size == 2 # no body
+
+    exp
+  end
+
   def rewrite_rescue(exp)
     # SKETCHY HACK return exp if exp.size > 4
     ignored = exp.shift
@@ -273,28 +293,16 @@ require 'pp'
     s(:rescue, body, *resbodies).compact
   end
 
-  def rewrite_resbody(exp)
-    exp[1] ||= s(:array)        # no args
-
-    body = exp[2]
-    if body then
-      case body.first
-      when :lasgn, :iasgn then
-        exp[1] << exp.delete_at(2) if body[-1] == s(:gvar, :$!)
-      when :block then
-        exp[1] << body.delete_at(1) if [:lasgn, :iasgn].include?(body[1][0]) &&
-          body[1][-1] == s(:gvar, :$!)
-      end
-    end
-
-    exp << nil if exp.size == 2 # no body
-
+  def rewrite_splat(exp)
+    good = [:arglist, :argspush, :array, :svalue, :yield, :super].include? context.first
+    exp = s(:array, exp) unless good
     exp
   end
 
-  def rewrite_begin(exp)
-    raise "wtf: #{exp.inspect}" if exp.size > 2
-    exp.last
+  def rewrite_super(exp)
+    return exp if exp.structure.flatten.first(3) == [:super, :array, :splat]
+    exp.push(*exp.pop[1..-1]) if exp.size == 2 && exp.last.first == :array
+    exp
   end
 
   def rewrite_vcall(exp)
@@ -313,18 +321,6 @@ require 'pp'
       end
     end
 
-    exp
-  end
-
-  def rewrite_super(exp)
-    return exp if exp.structure.flatten.first(3) == [:super, :array, :splat]
-    exp.push(*exp.pop[1..-1]) if exp.size == 2 && exp.last.first == :array
-    exp
-  end
-
-  def rewrite_splat(exp)
-    good = [:arglist, :argspush, :array, :svalue, :yield, :super].include? context.first
-    exp = s(:array, exp) unless good
     exp
   end
 
