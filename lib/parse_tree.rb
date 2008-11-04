@@ -521,6 +521,11 @@ again:
     if (node->nd_stts)
       add_to_parse_tree(self, current, node->nd_stts, locals);
 
+    // if node is newline, it is aref_args w/ a splat, eg: yield([*[1]])
+    if (node->nd_stts && nd_type(node->nd_stts) == NODE_NEWLINE)
+      rb_ary_push(current, Qtrue);
+
+    // array is an array, not list of args
     if (node->nd_stts
         && (nd_type(node->nd_stts) == NODE_ARRAY
             || nd_type(node->nd_stts) == NODE_ZARRAY)

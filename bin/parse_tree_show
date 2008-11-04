@@ -10,8 +10,10 @@ $h ||= false
 $n ||= false
 $r ||= false
 $s ||= false
-$u ||= false
+$U ||= false
 $n = $n.intern if $n
+
+$u ||= ! $U
 
 if $h then
   puts "usage: #{File.basename $0} [options] [file...]"
@@ -21,7 +23,8 @@ if $h then
   puts "-n=node : only display matching nodes"
   puts "-r      : raw arrays, no sexps"
   puts "-s      : structural sexps, strip all content and show bare tree"
-  puts "-u      : unified sexps"
+  puts "-u      : unified sexps (now the default)"
+  puts "-U      : UNunified sexps"
 
   exit 1
 end
@@ -32,7 +35,7 @@ if $u then
   require 'sexp_processor'
   require 'unified_ruby'
 
-  class Unifier < SexpProcessor
+  class Unifier
     include UnifiedRuby
   end
 end

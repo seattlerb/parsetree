@@ -151,9 +151,11 @@ require 'pp'
 
   def rewrite_defn(exp)
     weirdo = exp.ivar || exp.attrset
+    fbody  = exp.fbody(true)
 
-    fbody = exp.fbody(true)
-    exp.push(fbody.scope) if fbody
+    weirdo ||= fbody.cfunc if fbody
+
+    exp.push(fbody.scope) if fbody unless weirdo
 
     args = exp.scope.block.args(true) unless weirdo
     exp.insert 2, args if args
@@ -169,6 +171,8 @@ require 'pp'
     # patch up attr_accessor methods
     if weirdo then
       case
+      when fbody && fbody.cfunc then
+        exp.insert 2, s(:args, :"*args")
       when exp.ivar then
         exp.insert 2, s(:args)
       when exp.attrset then
@@ -187,7 +191,7 @@ require 'pp'
     # TODO: I think this would be better as rewrite_scope, but that breaks others
     exp = s(exp.shift, exp.shift,
             s(:scope,
-              s(:block, exp.scope.args))) if exp.scope.args
+              s(:block, exp.scope.args))) if exp.scope && exp.scope.args
 
     result = rewrite_defn(exp)
     result.insert 1, receiver
@@ -299,30 +303,28 @@ require 'pp'
   end
 
   def rewrite_yield(exp)
-    case exp.size
-    when 3 then # s(:yield, values, true)
-      exp.pop # nuke the true on the end
-    when 2 then # s(:yield, values)
-      # TODO: clean up using structure?
-      if exp.last.first == :array then
-        if exp.last.size > 1 && exp.last.last.first != :splat then
-          exp.push(*exp.pop[1..-1])
-        end
+    real_array = exp.pop if exp.size == 3
+
+    if exp.size == 2 then
+      if real_array then
+        exp[-1] = s(:array, exp[-1]) if exp[-1][0] != :array
+      else
+        exp.push(*exp.pop[1..-1]) if exp.last.first == :array
       end
     end
 
     exp
   end
 
-  def rewrite_splat(exp)
-    good = [:arglist, :argspush, :array, :svalue].include? context.first
-    exp = s(:array, exp) unless good
-    exp
-  end
-
   def rewrite_super(exp)
     return exp if exp.structure.flatten.first(3) == [:super, :array, :splat]
     exp.push(*exp.pop[1..-1]) if exp.size == 2 && exp.last.first == :array
+    exp
+  end
+
+  def rewrite_splat(exp)
+    good = [:arglist, :argspush, :array, :svalue, :yield, :super].include? context.first
+    exp = s(:array, exp) unless good
     exp
   end
 

@@ -1,7 +1,12 @@
-=== 3.0.2 / 2008-11-01
+=== 3.0.2 / 2008-11-04
+
+* N minor enhancements:
+
+  * parse_tree_show now defaults to unified, added -U to UNunify output.
 
 * N bug fixes:
 
+  * UnifiedRuby#rewrite_defn kinda sorta deals with cfunc now. Stupid rails.
   * Fixed ambiguities in splatted nodes in a bunch of contexts.
   * Fixed 1 arg form of parse_tree_for_proc
   * KNOWN ISSUE: 0 arg form (||) of parse_tree_for_proc segfaults.
