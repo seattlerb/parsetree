@@ -213,8 +213,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
             "RawParseTree" => [:class, :X, nil,
                                [:scope, [:alias, [:lit, :y], [:lit, :x]]]],
             "ParseTree"    => s(:class, :X, nil,
-                                s(:scope, s(:alias, s(:lit, :y), s(:lit, :x)))),
-            "Ruby2Ruby"    => "class X\n  alias_method :y, :x\nend")
+                                s(:scope, s(:alias, s(:lit, :y), s(:lit, :x)))))
 
   add_tests("alias_ugh",
             "Ruby"         => "class X\n  alias y x\nend",
@@ -222,7 +221,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                [:scope, [:alias, [:lit, :y], [:lit, :x]]]],
             "ParseTree"    => s(:class, :X, nil,
                                 s(:scope, s(:alias, s(:lit, :y), s(:lit, :x)))),
-            "Ruby2Ruby"    => "class X\n  alias_method :y, :x\nend")
+            "Ruby2Ruby"    => "class X\n  alias :y :x\nend")
 
   add_tests("and",
             "Ruby"         => "(a and b)",
@@ -3093,7 +3092,7 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                       s(:lit, 2),
                                       s(:lit, 3))))))
 
-  add_tests("masgn_splat",
+  add_tests("masgn_splat_lhs",
             "Ruby"         => "a, b, *c = d, e, f, g",
             "RawParseTree" => [:masgn,
                                [:array, [:lasgn, :a], [:lasgn, :b]],
@@ -3111,6 +3110,35 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                   s(:call, nil, :e, s(:arglist)),
                                   s(:call, nil, :f, s(:arglist)),
                                   s(:call, nil, :g, s(:arglist)))))
+
+  add_tests("masgn_splat_rhs_1",
+            "Ruby"         => "a, b = *c",
+            "RawParseTree" => [:masgn,
+                               [:array, [:lasgn, :a], [:lasgn, :b]],
+                               nil,
+                               [:splat, [:vcall, :c]]],
+            "ParseTree"    => s(:masgn,
+                                s(:array,
+                                  s(:lasgn, :a),
+                                  s(:lasgn, :b)),
+                                s(:splat, s(:call, nil, :c, s(:arglist)))))
+
+  add_tests("masgn_splat_rhs_n",
+            "Ruby"         => "a, b = c, d, *e",
+            "RawParseTree" => [:masgn,
+                               [:array, [:lasgn, :a], [:lasgn, :b]],
+                               nil,
+                               [:argscat,
+                                [:array, [:vcall, :c], [:vcall, :d]],
+                                [:vcall, :e]]],
+            "ParseTree"    => s(:masgn,
+                                s(:array,
+                                  s(:lasgn, :a),
+                                  s(:lasgn, :b)),
+                                s(:array,
+                                  s(:call, nil, :c, s(:arglist)),
+                                  s(:call, nil, :d, s(:arglist)),
+                                  s(:splat, s(:call, nil, :e, s(:arglist))))))
 
   add_tests("masgn_splat_no_name_to_ary",
             "Ruby"         => "a, b, * = c",
@@ -3900,6 +3928,12 @@ class ParseTreeTestCase < Test::Unit::TestCase
                                       :+,
                                       s(:arglist, s(:str, "  second\n")))))),
             "Ruby2Ruby"    => "a = (a + ((\"  first\\n\" + b) + \"  second\\n\"))")
+
+  add_tests("str_heredoc_empty", # yes... tarded
+            "Ruby"         => "<<'EOM'\nEOM",
+            "RawParseTree" => [:str, ""],
+            "ParseTree"    => s(:str, ""),
+            "Ruby2Ruby"    => '""')
 
   add_tests("str_heredoc_indent",
             "Ruby"         => "<<-EOM\n  blah\nblah\n\n  EOM",
