@@ -236,6 +236,10 @@ module UnifiedRuby
       lhs << lhs_splat
     end
 
+    # unwrap RHS from array IF it is only a splat node
+    rhs = rhs.last if rhs && # TODO: rhs.structure =~ s(:array, s(:splat))
+      rhs.size == 2 && rhs.structure.flatten.first(2) == [:array, :splat]
+
     s(t, lhs, rhs).compact
   end
 
