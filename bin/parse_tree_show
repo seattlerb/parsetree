@@ -13,7 +13,7 @@ $s ||= false
 $U ||= false
 $n = $n.intern if $n
 
-$u ||= ! $U
+$u ||= ! ($U || $r)
 
 if $h then
   puts "usage: #{File.basename $0} [options] [file...]"
