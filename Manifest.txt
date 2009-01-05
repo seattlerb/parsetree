@@ -8,6 +8,7 @@ bin/parse_tree_audit
 bin/parse_tree_deps
 bin/parse_tree_show
 demo/printer.rb
+lib/gauntlet_parsetree.rb
 lib/parse_tree.rb
 lib/parse_tree_extensions.rb
 lib/unified_ruby.rb
