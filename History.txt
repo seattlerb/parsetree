@@ -1,3 +1,12 @@
+=== 3.0.3 / 2009-01-20
+
+* 4 bug fixes:
+
+  * Added gauntlet_parsetree.rb. Bug finding/fixing much faster & easier now.
+  * Fixed alias tests for r2r. Added masgn and heredoc tests.
+  * Fixed conflicting flags (-u vs -r).
+  * Unwrap RHS from array IF it is only a splat node.
+
 === 3.0.2 / 2008-11-04
 
 * 1 minor enhancement:
