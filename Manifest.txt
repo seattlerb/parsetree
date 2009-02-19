@@ -15,7 +15,6 @@ lib/unified_ruby.rb
 lib/unique.rb
 test/pt_testcase.rb
 test/something.rb
-test/test_all.rb
 test/test_parse_tree.rb
 test/test_parse_tree_extensions.rb
 test/test_unified_ruby.rb
