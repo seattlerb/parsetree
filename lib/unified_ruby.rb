@@ -218,6 +218,21 @@ module UnifiedRuby
     rewrite_call(exp)
   end
 
+  def rewrite_flip2(exp)
+    # from:
+    # s(:flip2,
+    #   s(:call, s(:lit, 1), :==, s(:arglist, s(:gvar, :$.))),
+    #   s(:call, s(:lit, 2), :a?, s(:arglist, s(:call, nil, :b, s(:arglist)))))
+    # to:
+    # s(:flip2,
+    #   s(:lit, 1),
+    #   s(:call, s(:lit, 2), :a?, s(:arglist, s(:call, nil, :b, s(:arglist)))))
+    exp[1] = exp[1][1] if exp[1][0] == :call && exp[1][1][0] == :lit
+    exp
+  end
+
+  alias :rewrite_flip3 :rewrite_flip2
+
   def rewrite_masgn(exp)
     raise "wtf: #{exp}" unless exp.size == 4 # TODO: remove 2009-01-29
     t, lhs, lhs_splat, rhs = exp
