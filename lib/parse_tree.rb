@@ -570,10 +570,31 @@ again:
     add_to_parse_tree(self, current, node->nd_2nd, locals);
     break;
 
-  case NODE_DOT2:
-  case NODE_DOT3:
   case NODE_FLIP2:
   case NODE_FLIP3:
+    if (nd_type(node->nd_beg) == NODE_LIT) {
+      /*
+       new somewhere between 1.8.6 p287 to p368 and 1.8.7 p72 to p160.
+       [:flip2, [:call, [:lit, 1], :==, [:array, [:gvar, :$.]]],
+      */
+      VALUE result = rb_ary_new3(1, _sym("call"));
+      add_to_parse_tree(self, result, node->nd_beg, locals);
+      rb_ary_push(result, _sym("=="));
+      rb_ary_push(result, rb_ary_new3(2, _sym("array"),
+                                      rb_ary_new3(2, _sym("gvar"),
+                                                     _sym("$."))));
+      rb_ary_push(current, result);
+    } else {
+      add_to_parse_tree(self, current, node->nd_beg, locals);
+    }
+
+
+    // add_to_parse_tree(self, current, node->nd_beg, locals);
+    add_to_parse_tree(self, current, node->nd_end, locals);
+    break;
+
+  case NODE_DOT2:
+  case NODE_DOT3:
     add_to_parse_tree(self, current, node->nd_beg, locals);
     add_to_parse_tree(self, current, node->nd_end, locals);
     break;
@@ -939,15 +960,10 @@ again:
   case NODE_STR:              /* u1 */
   case NODE_LIT:
     rb_ary_push(current, node->nd_lit);
-    if (node->nd_cflag) {
-      rb_ary_push(current, INT2FIX(node->nd_cflag));
-    }
     break;
 
   case NODE_MATCH:            /* u1 -> [:lit, u1] */
-    {
-      rb_ary_push(current, wrap_into_node("lit", node->nd_lit));
-    }
+    rb_ary_push(current, wrap_into_node("lit", node->nd_lit));
     break;
 
   case NODE_NEWLINE:
