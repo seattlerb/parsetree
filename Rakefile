@@ -8,21 +8,21 @@ Hoe.add_include_dirs("../../RubyInline/dev/lib",
                      "../../ZenTest/dev/lib",
                      "lib")
 
-require './lib/parse_tree.rb'
+Hoe.plugin :seattlerb
 
-Hoe.new("ParseTree", ParseTree::VERSION) do |pt|
-  pt.rubyforge_name = "parsetree"
+Hoe.spec "ParseTree" do
+  developer 'Ryan Davis', 'ryand-ruby@zenspider.com'
 
-  pt.developer('Ryan Davis', 'ryand-ruby@zenspider.com')
+  clean_globs << File.expand_path("~/.ruby_inline")
+  extra_deps  << ['RubyInline',     '>= 3.7.0']
+  extra_deps  << ['sexp_processor', '>= 3.0.0']
 
-  pt.clean_globs << File.expand_path("~/.ruby_inline")
-  pt.extra_deps << ['RubyInline',     '>= 3.7.0']
-  pt.extra_deps << ['sexp_processor', '>= 3.0.0']
-  pt.spec_extras[:require_paths] = proc { |paths| paths << 'test' }
+  spec_extras[:require_paths] = proc { |paths| paths << 'test' }
 
-  pt.multiruby_skip << "1.9.1"
-  pt.multiruby_skip << "mri_rel_1_9" << "rubinius" << "mri_trunk"
+  multiruby_skip << "1.9.1" << "mri_rel_1_9" << "rubinius" << "mri_trunk"
 end
+
+task :test => :clean
 
 desc 'Run in gdb'
 task :debug do
