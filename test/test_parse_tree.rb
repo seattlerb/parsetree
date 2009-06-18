@@ -8,7 +8,7 @@ if test ?d, dir then
   FileUtils.rm_r dir, :force => true
 end
 
-require 'test/unit'
+require 'minitest/autorun'
 require 'parse_tree'
 require 'pt_testcase'
 require 'test/something'

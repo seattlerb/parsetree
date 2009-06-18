@@ -1,4 +1,4 @@
-require 'test/unit'
+require 'minitest/autorun'
 require 'parse_tree'
 require 'parse_tree_extensions'
 require 'tmpdir'
@@ -6,7 +6,7 @@ require 'tmpdir'
 $: << "../../ruby2ruby/dev/lib" # unoffical dependency - user responsibility
 require 'ruby2ruby'
 
-class R2RTestCase < Test::Unit::TestCase
+class R2RTestCase < MiniTest::Unit::TestCase
   def test_proc_to_ruby
     util_setup_inline
     block = proc { puts "something" }

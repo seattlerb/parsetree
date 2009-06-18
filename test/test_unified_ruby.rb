@@ -2,13 +2,13 @@
 
 $TESTING = true
 
-require 'test/unit' if $0 == __FILE__ unless defined? $ZENTEST and $ZENTEST
+require 'minitest/autorun' if $0 == __FILE__ unless defined? $ZENTEST and $ZENTEST
 require 'test/unit/testcase'
 require 'sexp'
 require 'sexp_processor'
 require 'unified_ruby'
 
-class TestUnifier < Test::Unit::TestCase
+class TestUnifier < MiniTest::Unit::TestCase
   def test_pre_fcall
     u = PreUnifier.new
 

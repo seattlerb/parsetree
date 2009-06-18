@@ -1,6 +1,6 @@
 $TESTING = true
 
-require 'test/unit/testcase'
+require 'minitest/unit'
 require 'sexp_processor' # for deep_clone
 
 # key:
@@ -32,12 +32,7 @@ class Examples
     RUBY_VERSION < "1.9"
 end
 
-class ParseTreeTestCase < Test::Unit::TestCase
-  unless defined? Mini then
-    undef_method :default_test rescue nil
-    alias :refute_nil :assert_not_nil
-  end
-
+class ParseTreeTestCase < MiniTest::Unit::TestCase
   attr_accessor :processor # to be defined by subclass
 
   def setup
