@@ -1,3 +1,17 @@
+=== 3.0.4 / 2009-06-23
+
+* 4 minor enhancements:
+
+  * Pulled unique.rb from ParseTree to sexp_processor.
+  * Switched to minitest
+  * UnifiedRuby strips flip2 back down to expected values
+  * Updated Rakefile for new hoe
+
+* 2 bug fixes:
+
+  * 1.8.6p287 & 1.8.7 changed flip2 with fixnum start. fixed
+  * 1.8.6p287 & 1.8.7 removed the begin node. fixed.
+
 === 3.0.3 / 2009-01-20
 
 * 4 bug fixes:
