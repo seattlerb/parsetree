@@ -651,7 +651,8 @@ again:
 #endif
 
   case NODE_METHOD:
-    add_to_parse_tree(self, current, node->nd_3rd, locals);
+    // You should not ever get here. parse_tree_for_meth passes nd_body
+    add_to_parse_tree(self, current, node->nd_body, locals);
     break;
 
   case NODE_SCOPE:
