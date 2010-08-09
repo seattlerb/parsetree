@@ -5,7 +5,7 @@ raise LoadError, "ParseTree doesn't work with ruby #{RUBY_VERSION}" if
 raise LoadError, "ParseTree isn't needed with rubinius" if
   defined? RUBY_ENGINE and RUBY_ENGINE == "rbx"
 
-require 'rubygems'
+begin; require 'rubygems'; rescue LoadError; end
 require 'inline'
 require 'unified_ruby'
 

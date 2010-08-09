@@ -14,7 +14,7 @@ end
 
 PARSE_TREE_ABC=true
 
-begin require 'rubygems' rescue LoadError end
+begin; require 'rubygems'; rescue LoadError; end
 require 'sexp'
 require 'parse_tree'
 require 'sexp_processor'
