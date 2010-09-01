@@ -1,3 +1,9 @@
+=== 3.0.6 / 2010-09-01
+
+* 1 bug fix:
+
+  * fixed requires (e-tobi)
+
 === 3.0.5 / 2010-03-27
 
 * 1 bug fix:
