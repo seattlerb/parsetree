@@ -158,7 +158,7 @@ module UnifiedRuby
 
     exp.push(fbody.scope) if fbody unless weirdo
 
-    args = exp.scope.block.args(true) unless weirdo
+    args = exp.scope.block.args(true) unless weirdo if exp.scope
     exp.insert 2, args if args
 
     # move block_arg up and in
