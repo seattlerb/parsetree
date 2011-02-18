@@ -1,3 +1,9 @@
+=== 3.0.7 / 2011-02-18
+
+* 1 bug fix:
+
+  * Fixed odd error cropping up from heckle w/ attr methods (raggi)
+
 === 3.0.6 / 2010-09-01
 
 * 1 bug fix:
