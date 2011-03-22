@@ -13,6 +13,19 @@ require 'parse_tree'
 require 'pt_testcase'
 require 'test/something'
 
+module Mod1
+  define_method :mod_method do
+  end
+end
+
+module Mod2
+  include Mod1
+end
+
+class ClassInclude
+  include Mod2
+end
+
 class SomethingWithInitialize
   def initialize; end # this method is private
   protected
@@ -221,6 +234,18 @@ class TestRawParseTree < ParseTreeTestCase
     assert_equal([@@__all],
                  @processor.parse_tree(Something),
                  "Must return a lot of shit")
+  end
+
+  def test_process_modules
+    exp = [[:module, :Mod1, [:defn, :mod_method, [:bmethod, nil]]]]
+    assert_equal exp, @processor.parse_tree(Mod1)
+
+    exp = [[:module, :Mod2, [:fcall, :include, [:array, [:const, :Mod1]]]]]
+    assert_equal exp, @processor.parse_tree(Mod2)
+
+    exp = [[:class, :ClassInclude, [:const, :Object],
+            [:fcall, :include, [:array, [:const, :Mod2]]]]]
+    assert_equal exp, @processor.parse_tree(ClassInclude)
   end
 end
 

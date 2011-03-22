@@ -123,11 +123,11 @@ class RawParseTree
         code << r
       end
 
-      klass.modules.each do |mod| # TODO: add a test for this damnit
-        mod.instance_methods.each do |m|
-          r = parse_tree_for_method(mod, m.to_sym)
-          code << r
-        end
+      mods = klass.modules
+      mods -= mods.map { |mod| mod.modules }.flatten
+
+      mods.each do |mod| # TODO: add a test for this damnit
+        code << process("include #{mod}")
       end
 
       klass.singleton_methods(false).sort.each do |m|
