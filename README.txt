@@ -1,8 +1,7 @@
 = ParseTree
 
-* http://rubyforge.org/projects/parsetree/
-* http://www.zenspider.com/ZSS/Products/ParseTree/
-* ryand-ruby@zenspider.com
+home :: https://github.com/seattlerb/parsetree
+rdoc :: http://parsetree.rubyforge.org/
 
 == DESCRIPTION:
 
@@ -76,7 +75,7 @@ or:
 
 (The MIT License)
 
-Copyright (c) 2001-2007 Ryan Davis, Zen Spider Software
+Copyright (c) Ryan Davis, seattle.rb
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
