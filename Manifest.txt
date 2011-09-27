@@ -12,7 +12,6 @@ lib/gauntlet_parsetree.rb
 lib/parse_tree.rb
 lib/parse_tree_extensions.rb
 lib/unified_ruby.rb
-test/pt_testcase.rb
 test/something.rb
 test/test_parse_tree.rb
 test/test_parse_tree_extensions.rb
