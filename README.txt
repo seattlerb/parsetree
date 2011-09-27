@@ -1,7 +1,7 @@
 = ParseTree
 
 home :: https://github.com/seattlerb/parsetree
-rdoc :: http://parsetree.rubyforge.org/
+rdoc :: http://docs.seattlerb.org/ParseTree/
 
 == DESCRIPTION:
 
