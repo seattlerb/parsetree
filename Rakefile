@@ -19,7 +19,7 @@ Hoe.spec "ParseTree" do
 
   spec_extras[:require_paths] = proc { |paths| paths << 'test' }
 
-  multiruby_skip << "1.9"
+  multiruby_skip << "1.9" << "trunk"
 end
 
 task :test => :clean
