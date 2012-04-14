@@ -486,7 +486,9 @@ again:
 
   case NODE_BLOCK_PASS:
     add_to_parse_tree(self, current, node->nd_body, locals);
-    add_to_parse_tree(self, current, node->nd_iter, locals);
+    if (node->nd_iter != (NODE *)1) {
+      add_to_parse_tree(self, current, node->nd_iter, locals);
+    }
     break;
 
   case NODE_ITER:

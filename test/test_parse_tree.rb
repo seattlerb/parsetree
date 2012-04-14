@@ -8,6 +8,7 @@ if test ?d, dir then
   FileUtils.rm_r dir, :force => true
 end
 
+require 'rubygems'
 require 'minitest/autorun'
 require 'parse_tree'
 require 'pt_testcase'
@@ -290,9 +291,11 @@ class ParseTreeTestCase
                                 [:masgn, nil, [:splat], nil]],
                                [:dvar, :block]])
 
-  # HACK causes crash
-  # add_tests("lambda_args_block",
-  #           "RawParseTree" => s(:woot!))
+  add_tests("lambda_args_block",
+            "RawParseTree" => [:iter,
+                               [:fcall, :lambda],
+                               [:block_pass, [:dasgn_curr, :block]],
+                               [:dvar, :block]])
 
   add_tests("lambda_args_norm_anon_star", # FIX: think this is wrong
             "RawParseTree" => [:iter,

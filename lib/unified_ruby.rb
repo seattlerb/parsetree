@@ -38,7 +38,17 @@ module UnifiedRuby
   end
 
   def rewrite_block_pass exp
-    if exp.size == 3 then
+    case exp.size
+    when 2 then
+      _, block = exp
+      case block.first
+      when :lasgn then
+        block[-1] = :"&#{block[-1]}"
+        exp = block
+      else
+        raise "huh?: #{block.inspect}"
+      end
+    when 3 then
       _, block, recv = exp
       case recv.first
       when :super then
@@ -98,13 +108,15 @@ module UnifiedRuby
     t, recv, args, body = exp
 
     # unwrap masgn args if there is only 1 thing to assign and it isn't splat
-    if args.sexp_type == :masgn and args.array.size == 2 then
+    if Sexp === args and args.sexp_type == :masgn and args.array.size == 2 then
       if args.array.last.sexp_type != :splat then
         args = args.array.last
       end
     end
 
-    s(t, recv, args, body)
+    r = s(t, recv, args, body)
+    r.delete_at 3 unless body # HACK omg this sucks
+    r
   end
 
   def rewrite_call(exp)
