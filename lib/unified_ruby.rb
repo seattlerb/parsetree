@@ -47,6 +47,10 @@ module UnifiedRuby
       when :call then
         recv.last << s(:block_pass, block)
         exp = recv
+      when :masgn then
+        block[-1] = :"&#{block[-1]}"
+        recv.last << block
+        exp = recv
       else
         raise "huh?: #{recv.inspect}"
       end
@@ -88,6 +92,19 @@ module UnifiedRuby
     body.insert 1, args
 
     s(:scope, body)
+  end
+
+  def rewrite_iter(exp)
+    t, recv, args, body = exp
+
+    # unwrap masgn args if there is only 1 thing to assign and it isn't splat
+    if args.sexp_type == :masgn and args.array.size == 2 then
+      if args.array.last.sexp_type != :splat then
+        args = args.array.last
+      end
+    end
+
+    s(t, recv, args, body)
   end
 
   def rewrite_call(exp)
@@ -234,7 +251,6 @@ module UnifiedRuby
   alias :rewrite_flip3 :rewrite_flip2
 
   def rewrite_masgn(exp)
-    raise "wtf: #{exp}" unless exp.size == 4 # TODO: remove 2009-01-29
     t, lhs, lhs_splat, rhs = exp
 
     lhs ||= s(:array)

@@ -270,6 +270,95 @@ class ParseTreeTestCase
                                [:call, [:vcall, :r], :read_body,
                                 [:array, [:vcall, :dest]]]])
 
+  add_tests("lambda_args_star",
+            "RawParseTree" => [:iter,
+                               [:fcall, :lambda],
+                               [:masgn, nil, [:dasgn_curr, :star], nil],
+                               [:dvar, :star]])
+
+  add_tests("lambda_args_anon_star", # FIX: think this is wrong
+            "RawParseTree" => [:iter,
+                               [:fcall, :lambda],
+                               [:masgn, nil, [:splat], nil],
+                               [:nil]])
+
+  add_tests("lambda_args_anon_star_block", # FIX: think this is wrong
+            "RawParseTree" => [:iter,
+                               [:fcall, :lambda],
+                               [:block_pass,
+                                [:dasgn_curr, :block],
+                                [:masgn, nil, [:splat], nil]],
+                               [:dvar, :block]])
+
+  # HACK causes crash
+  # add_tests("lambda_args_block",
+  #           "RawParseTree" => s(:woot!))
+
+  add_tests("lambda_args_norm_anon_star", # FIX: think this is wrong
+            "RawParseTree" => [:iter,
+                               [:fcall, :lambda],
+                               [:masgn,
+                                [:array, [:dasgn_curr, :a]], [:splat], nil],
+                               [:dvar, :a]])
+
+  add_tests("lambda_args_norm_anon_star_block", # FIX: think this is wrong
+            "RawParseTree" => [:iter,
+                               [:fcall, :lambda],
+                               [:block_pass,
+                                [:dasgn_curr, :block],
+                                [:masgn,
+                                 [:array, [:dasgn_curr, :a]], [:splat], nil]],
+                               [:dvar, :block]])
+
+  add_tests("lambda_args_norm_block", # FIX: think this is wrong
+            "RawParseTree" => [:iter,
+                               [:fcall, :lambda],
+                               [:block_pass,
+                                [:dasgn_curr, :block],
+                                [:masgn,
+                                 [:array, [:dasgn_curr, :a]], nil, nil]],
+                               [:dvar, :block]])
+
+  add_tests("lambda_args_norm_comma", # FIX: think this is wrong
+            "RawParseTree" => [:iter,
+                               [:fcall, :lambda],
+                               [:masgn, [:array, [:dasgn_curr, :a]], nil, nil],
+                               [:dvar, :a]])
+
+  add_tests("lambda_args_norm_comma2", # FIX: think this is wrong
+            "RawParseTree" => [:iter,
+                               [:fcall, :lambda],
+                               [:masgn,
+                                [:array, [:dasgn_curr, :a], [:dasgn_curr, :b]],
+                                nil, nil],
+                               [:dvar, :a]])
+
+  add_tests("lambda_args_norm_star",
+            "RawParseTree" => [:iter,
+                               [:fcall, :lambda],
+                               [:masgn,
+                                [:array, [:dasgn_curr, :a]],
+                                [:dasgn_curr, :star], nil],
+                               [:dvar, :star]])
+
+  add_tests("lambda_args_norm_star_block",
+            "RawParseTree" => [:iter,
+                               [:fcall, :lambda],
+                               [:block_pass,
+                                [:dasgn_curr, :block],
+                                [:masgn,
+                                 [:array, [:dasgn_curr, :a]],
+                                 [:dasgn_curr, :star], nil]],
+                               [:dvar, :block]])
+
+  add_tests("lambda_args_star_block",
+            "RawParseTree" => [:iter,
+                               [:fcall, :lambda],
+                               [:block_pass,
+                                [:dasgn_curr, :block],
+                                [:masgn, nil, [:dasgn_curr, :star], nil]],
+                               [:dvar, :block]])
+
   add_tests("block_stmt_after",
             "RawParseTree" => [:defn, :f,
                                [:scope,
@@ -1128,7 +1217,7 @@ class ParseTreeTestCase
             "RawParseTree" => [:if, [:fcall, :block_given?], [:lit, 42], nil])
 
   add_tests("fcall_inside_parens",
-            "RawParseTree" => [:fcall, :c, [:array, [:vcall, :d], [:vcall, :e]]])
+            "RawParseTree" => [:fcall, :a, [:array, [:vcall, :b], [:vcall, :c]]])
 
   add_tests("flip2",
             "RawParseTree" => [:lasgn,
