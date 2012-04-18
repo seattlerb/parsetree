@@ -3,7 +3,7 @@ require 'parse_tree'
 require 'parse_tree_extensions'
 require 'tmpdir'
 
-$: << "../../ruby2ruby/dev/lib" # unoffical dependency - user responsibility
+$: << "../../ruby2ruby/1.3.1/lib" # unoffical dependency - user responsibility
 require 'ruby2ruby'
 
 class R2RTestCase < MiniTest::Unit::TestCase

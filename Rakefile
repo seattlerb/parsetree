@@ -4,7 +4,7 @@ require 'rubygems'
 require 'hoe'
 
 Hoe.add_include_dirs("../../RubyInline/dev/lib",
-                     "../../sexp_processor/dev/lib",
+                     "../../sexp_processor/3.2.0/lib",
                      "../../ZenTest/dev/lib",
                      "lib")
 
@@ -14,8 +14,9 @@ Hoe.spec "ParseTree" do
   developer 'Ryan Davis', 'ryand-ruby@zenspider.com'
 
   clean_globs << File.expand_path("~/.ruby_inline")
-  extra_deps  << ['RubyInline',     '>= 3.7.0']
-  extra_deps  << ['sexp_processor', '>= 3.0.0']
+
+  dependency 'RubyInline',     '~> 3.9.0'
+  dependency 'sexp_processor', '~> 3.2.0'
 
   spec_extras[:require_paths] = proc { |paths| paths << 'test' }
 
