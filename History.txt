@@ -1,3 +1,20 @@
+=== 3.0.9 / 2012-05-01
+
+* 6 minor enhancements:
+
+  * Added a bunch of new tests from PTTC.
+  * Added masgn handling inside block_pass
+  * Added rewrite_iter to unwrap masgns w/ only 1 arg.
+  * Handle rewriting block_pass in iter.
+  * Imported RawParseTree test data from PTTC.
+  * Removed rewrite_masgn requirement for 4 slots.
+
+* 3 bug fixes:
+
+  * Fixed dependencies to ensure they're not going to use ruby_parser 3 and friends.
+  * Fixed segv for NODE_BLOCK_PASS in iter (nd_iter == 1... go boom)
+  * Remove nil body in iter (I think this is wrong, but whatevs).
+
 === 3.0.8 / 2011-09-27
 
 * 1 minor enhancement:
