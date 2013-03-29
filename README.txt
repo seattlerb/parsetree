@@ -45,7 +45,7 @@ becomes:
 * Includes parse_tree_deps, which shows you basic class level dependencies.
 * Does not work on the core classes, as they are not ruby (yet).
 
-== SYNOPSYS:
+== SYNOPSIS:
 
   sexp_array = ParseTree.translate(klass)
   sexp_array = ParseTree.translate(klass, :method)
