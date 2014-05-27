@@ -5,6 +5,8 @@ rdoc :: http://docs.seattlerb.org/ParseTree/
 
 == DESCRIPTION:
 
+NOTE: This project is EOL'd since it relies on MRI 1.8 internals.
+
 ParseTree is a C extension (using RubyInline) that extracts the parse
 tree for an entire class or a specific method and returns it as a
 s-expression (aka sexp) using ruby's arrays, strings, symbols, and
